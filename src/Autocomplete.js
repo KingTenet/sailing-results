@@ -2,8 +2,8 @@ import React, {useState} from 'react'
 import {useCombobox} from 'downshift'
 import {menuStyles, comboboxStyles} from './shared';
 
-export default function({data, itemToString, filterData, label, onSelectedItemChange}) {
-  const [inputItems, setInputItems] = useState(data)
+export default function({data, itemToString, filterData, label, handleSelectedHelmChange, groupBy = "group"}) {
+  const [inputItems, setInputItems] = useState(data);
 
   const {
     isOpen,
@@ -16,11 +16,26 @@ export default function({data, itemToString, filterData, label, onSelectedItemCh
     getItemProps,
   } = useCombobox({
     items: inputItems,
-    onSelectedItemChange,
     itemToString,
+    onSelectedItemChange: ({selectedItem}) => handleSelectedHelmChange(selectedItem),
     onInputValueChange: ({inputValue}) => setInputItems(filterData(inputValue)),
   });
-  console.log(label);
+
+  let groupedItems = inputItems
+    .map((item, index) => ({
+      ...item,
+      index:index,
+    }))
+    .reduce((acc, item, index) => {
+      // debugger;
+      if (groupBy && item[groupBy] && (!acc.length || (acc[acc.length-1][groupBy] && acc[acc.length-1][groupBy] !== item[groupBy]))) {
+        acc.push({
+          titleGroup: item[groupBy]
+        })
+      }
+      acc.push(item);
+      return acc;
+  }, []);
 
   return (
     <div>
@@ -36,18 +51,27 @@ export default function({data, itemToString, filterData, label, onSelectedItemCh
         </button>
       </div>
       <ul {...getMenuProps()} style={menuStyles}>
-        {isOpen &&
-        inputItems.map((item, index) => (
-          <li
-            style={
-              highlightedIndex === index ? {backgroundColor: '#bde4ff'} : {}
-            }
-            key={`${itemToString(item)}${index}`}
-            {...getItemProps({item, index})}
-          >
-            {itemToString(item)}
-          </li>
-        ))}
+        {isOpen
+          && groupedItems.map((item, index) =>
+          item.titleGroup
+            ? (<li
+              key={`group-${index}`}
+              style={{
+                backgroundColor: '#bde4ff'
+              }}
+            >{item.titleGroup}</li>)
+            : (
+              <li
+                style={
+                  highlightedIndex === item.index ? {backgroundColor: '#bde4ff'} : {}
+                }
+                key={`${itemToString(item)}${item.index}`}
+                {...getItemProps({item, index: item.index})}
+              >
+                {itemToString(item)}
+              </li>
+            )
+        )}
       </ul>
     </div>
   )
