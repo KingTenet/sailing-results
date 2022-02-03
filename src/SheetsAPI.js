@@ -142,7 +142,7 @@ function sheetsDateToJSDate(sheetsDateNumber) {
     return new Date(sheetsDateNumber * 86400000 + sheetsEpoch.getTime());
 }
 
-const transformSheetsDateToDate = (s) => {
+function transformSheetsDateToDate(s) {
     const b = s.split(/\D+/);
     return new Date(Date.UTC(b[2], --b[1], b[0]));
 }

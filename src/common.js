@@ -1,14 +1,44 @@
 import { useNavigate } from "react-router-dom";
 import { GoogleSpreadsheet } from "google-spreadsheet";
 
+export function generateId(Type, obj) {
+    const KEY_SEP = "::";
+    assertType(obj, Array);
+    return [Type.name, ...obj].join(KEY_SEP);
+}
+
 export function useBack() {
     let navigate = useNavigate();
     return () => navigate(-1);
 }
 
-export function parseISOString(ISOString) {
+export const promiseSleep = (timeout) => new Promise((resolve) => setTimeout(resolve, timeout));
+
+export function assertType(obj, Type) {
+    if (typeof Type === "string") {
+        if (Type === "number" && isNaN(obj)) {
+            throw new Error(`Object isNaN but should be type:${Type}`);
+        }
+        if (Type === "number" && !Number.isInteger(obj)) {
+            throw new Error(`Object should be an integer value`);
+        }
+        if (typeof obj !== Type) {
+            throw new Error(`Object has type:${typeof obj} but should be type:${Type}`);
+        }
+    }
+    else if (!(obj instanceof Type)) {
+        throw new Error(`Object is not of correct type:${Type.name}`);
+    }
+    return obj;
+}
+
+export function parseBoolean(input) {
+    return !Boolean(!input || (typeof input === "string" && input.toLowerCase() === "false"));
+}
+
+export function parseISOString(ISOString, defaultDate = new Date()) {
     if (!ISOString) {
-        return;
+        return defaultDate;
     }
     const b = ISOString.split(/\D+/);
     return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
@@ -18,15 +48,22 @@ export function getURLDate(date) {
     return date.toISOString().slice(0, 10);
 }
 
+export function parseURLDate(urlDate) {
+    return parseISOString([urlDate, "T00:00:00.000Z"].join(""));
+}
 
+export function transformSheetsDateToDate(s) {
+    const b = s.split(/\D+/);
+    return new Date(Date.UTC(b[2], --b[1], b[0]));
+}
 
-// export function getURLDate(date) {
-//     // return date.getUTCFullYear
-//     let mdate = new Date;
-//     mdate.getUTCFullYear;
-//     mdate.getUTCMonth;
-//     mdate.getUTCDate;
-// }
+export function transformDateToSheetsDate(date = Date.now()) {
+    const padZeros = (num) => `0${num}`.slice(-2);
+    let year = date.getUTCFullYear();
+    let month = padZeros(date.getUTCMonth() + 1);
+    let day = padZeros(date.getUTCDate());
+    return [day, month, year].join("/");
+}
 
 export function getISOStringFromDate(date = new Date()) {
     return date.toISOString();

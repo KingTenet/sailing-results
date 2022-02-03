@@ -27,3 +27,6 @@ yarn-error.log*
 fleet.json
 oods.json
 pursuits.json
+
+
+.vscode
