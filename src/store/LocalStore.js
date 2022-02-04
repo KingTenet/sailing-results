@@ -1,4 +1,4 @@
-import StoreObject from "./StoreObject.js"
+import StoreObject from "./types/StoreObject.js"
 const KEY_SEP = "##"
 
 export default class LocalStore {
@@ -69,6 +69,10 @@ export default class LocalStore {
             throw new Error(`Attempting to add object with key ${key} to local storage when it already exists`);
         }
         this.localStorage.setItem(storeKey, JSON.stringify(value));
+    }
+
+    has(key) {
+        return this.cache.has(key);
     }
 
     get(key) {

@@ -80,6 +80,10 @@ export default class Store {
             .map(this.fromStore);
     }
 
+    has(key) {
+        return this.localStore.has(key);
+    }
+
     add(obj) {
         return this.localStore.add(this.getKeyFromObj(obj), obj);
     }

@@ -1,7 +1,7 @@
 import cheerio from "cheerio";
 import fetch from "node-fetch";
 import auth from "./auth.js";
-import { AutoMap, parseISOString } from "../src/common.js"
+import { parseISOString } from "../src/common.js"
 import { SheetsAPI } from "../src/SheetsAPI.js";
 
 const outputSheetId = "1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw";
@@ -21,6 +21,22 @@ const expectedColumnHeaders = [
     "PI%",
     "PH",
 ];
+
+class AutoMap extends Map {
+    constructor(getKey = JSON.stringify, getDefaultValue) {
+        super();
+        this.getKey = getKey;
+        this.getDefaultValue = getDefaultValue;
+    }
+
+    upsert(obj, transform = (prev, obj, key) => obj) {
+        let key = this.getKey(obj);
+        if (!this.has(key) && this.getDefaultValue !== undefined) {
+            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
+        }
+        return this.set(key, transform(super.get(key), obj, key))
+    }
+}
 
 const deepEquals = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const assert = (testResult, errMsg) => {

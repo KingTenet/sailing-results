@@ -1,5 +1,5 @@
 import StoreObject from "./StoreObject.js";
-import { assertType, generateId, parseBoolean } from "../common.js";
+import { assertType, generateId, parseBoolean } from "../../common.js";
 
 export default class Helm extends StoreObject {
     constructor(name, yearOfBirth, gender, noviceInFirstRace, metaData) {

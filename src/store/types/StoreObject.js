@@ -1,4 +1,4 @@
-import { parseISOString, assertType } from "../common.js";
+import { parseISOString, assertType } from "../../common.js";
 
 export default class StoreObject {
     constructor({ lastUpdated, dateCreated }) {
@@ -17,6 +17,14 @@ export default class StoreObject {
         obj.dateCreated = date;
         obj.lastUpdated = date;
         return obj;
+    }
+
+    getLastUpdated() {
+        return this.lastUpdated;
+    }
+
+    getDateCreated() {
+        return this.dateCreated;
     }
 
     updatedAfterDate(date) {

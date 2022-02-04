@@ -1,10 +1,28 @@
 import { useNavigate } from "react-router-dom";
 import { GoogleSpreadsheet } from "google-spreadsheet";
 
+const KEY_SEP = "::";
+
+
+export function parseIntOrUndefined(test) {
+    let int = parseInt(test);
+    return isNaN(int) ? undefined : int;
+}
+
+export function assert(condition, message) {
+    if (!condition) {
+        // console.log(message);
+        throw message || "Assertion failed";
+    }
+}
+
 export function generateId(Type, obj) {
-    const KEY_SEP = "::";
     assertType(obj, Array);
     return [Type.name, ...obj].join(KEY_SEP);
+}
+
+export function fromId(id) {
+    return id.split(KEY_SEP).slice(1);
 }
 
 export function useBack() {
@@ -75,22 +93,6 @@ export function flattenMap(map) {
         output.push(...values);
     }
     return output;
-}
-
-export class AutoMap extends Map {
-    constructor(getKey = JSON.stringify, getDefaultValue) {
-        super();
-        this.getKey = getKey;
-        this.getDefaultValue = getDefaultValue;
-    }
-
-    upsert(obj, transform = (prev, obj, key) => obj) {
-        let key = this.getKey(obj);
-        if (!this.has(key) && this.getDefaultValue !== undefined) {
-            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
-        }
-        return this.set(key, transform(super.get(key), obj, key))
-    }
 }
 
 export async function getGoogleSheetDoc(sheetId, clientEmail, privateKey) {
@@ -166,10 +168,4 @@ export async function getAllCellsFromSheet(sheetId, auth, sheetName, filterEmpty
         }
         return cells;
     });
-}
-
-export function groupBy(arr, groupFunction) {
-    const map = new AutoMap(groupFunction, () => []);
-    arr.forEach((item) => map.upsert(item, (prev, obj) => [...prev, obj]));
-    return [...map];
 }

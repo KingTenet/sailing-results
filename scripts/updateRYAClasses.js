@@ -1,5 +1,5 @@
 import auth from "./auth.js";
-import { AutoMap, flattenMap, limitSheetsRequest, getGoogleSheetDoc, parseISOString } from "../src/common.js"
+import { flattenMap, limitSheetsRequest, getGoogleSheetDoc, parseISOString } from "../src/common.js"
 import { SheetsAPI } from "../src/SheetsAPI.js";
 
 // This helps filter out invalid rows..
@@ -30,6 +30,22 @@ const allYearsFull = [
     [2019, RYASheetId2019],
     [2020, RYASheetId2020],
 ];
+
+class AutoMap extends Map {
+    constructor(getKey = JSON.stringify, getDefaultValue) {
+        super();
+        this.getKey = getKey;
+        this.getDefaultValue = getDefaultValue;
+    }
+
+    upsert(obj, transform = (prev, obj, key) => obj) {
+        let key = this.getKey(obj);
+        if (!this.has(key) && this.getDefaultValue !== undefined) {
+            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
+        }
+        return this.set(key, transform(super.get(key), obj, key))
+    }
+}
 
 const mapFullRowToClass = (year) => ({ "Class Name": className, "No. of Crew": crew, "Rig": rig, "Spinnaker": spinnaker, "Number": PY, "Type": type, ...rest }) => ({
     className: className.trim(),

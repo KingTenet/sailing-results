@@ -1,4 +1,4 @@
-import { AutoMap, getGoogleSheetDoc, getURLDate, parseISOString, getISOStringFromDate } from "./common.js"
+import { getGoogleSheetDoc, getURLDate, parseISOString, getISOStringFromDate } from "./common.js"
 
 function getDateFromSheetsDate() {
 

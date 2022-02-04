@@ -1,4 +1,4 @@
-import Result from "./Result.js";
+import Result from "./types/Result.js";
 import Store from "./Store.js";
 
 function debugCreationErrors(func, storeObject) {
@@ -34,8 +34,16 @@ export default class StoreWrapper {
         return helms.map((helm) => func(helm));
     }
 
+    count() {
+        return this.all().length;
+    }
+
     get(key) {
         return this.store.get(key);
+    }
+
+    has(key) {
+        return this.store.has(key);
     }
 
     add(key, value) {
