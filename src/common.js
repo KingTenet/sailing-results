@@ -4,6 +4,29 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 const KEY_SEP = "::";
 
 
+export class AutoMap extends Map {
+    constructor(getKey = JSON.stringify, getDefaultValue) {
+        super();
+        this.getKey = getKey;
+        this.getDefaultValue = getDefaultValue;
+    }
+
+    upsert(obj, transform = (prev, obj, key) => obj) {
+        let key = this.getKey(obj);
+        if (!this.has(key) && this.getDefaultValue !== undefined) {
+            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
+        }
+        return this.set(key, transform(super.get(key), obj, key))
+    }
+}
+
+export function groupBy(arr, groupFunction) {
+    const map = new AutoMap(groupFunction, () => []);
+    arr.forEach((item) => map.upsert(item, (prev, obj) => [...prev, obj]));
+    return [...map];
+}
+
+
 export function parseIntOrUndefined(test) {
     let int = parseInt(test);
     return isNaN(int) ? undefined : int;

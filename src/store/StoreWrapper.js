@@ -46,8 +46,8 @@ export default class StoreWrapper {
         return this.store.has(key);
     }
 
-    add(key, value) {
-        return this.store.add(key, value);
+    add(value) {
+        return this.store.add(value);
     }
 
     update(...args) {

@@ -62,7 +62,7 @@ export default class LocalStore {
     }
 
     addToLocalStorage(key, value) {
-        console.log(`Adding key ${key} to local storage`);
+        // console.log(`Adding key ${key} to local storage`);
         let storeKey = this.keyToStoreKey(key);
         if (this.localStorage.getItem(storeKey)) {
             debugger;

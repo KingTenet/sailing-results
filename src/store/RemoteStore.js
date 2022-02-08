@@ -20,7 +20,7 @@ export default class RemoteStore {
             throw new Error(`Couldn't get sheet named ${this.sheetName}, check it exists in the spreadsheet`);
         }
         console.log("Adding rows");
-        console.log(JSON.stringify(rows, null, 4));
+        // console.log(JSON.stringify(rows, null, 4));
         return await sheet.addRows(rows);
     }
 

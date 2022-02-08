@@ -38,12 +38,19 @@ export default class Race {
         return this.raceNumber;
     }
 
-    sort(otherRace) {
-        assertType(otherRace, Race);
-        if (this.date === otherRace.date) {
-            return this.raceNumber > otherRace.raceNumber ? 1 : -1;
+    sortByRaceAsc(secondRace) {
+        assertType(secondRace, Race);
+        return this.isBefore(secondRace)
+            ? -1
+            : 1;
+    }
+
+    isBefore(race) {
+        assertType(race, Race);
+        if (this.date.getTime() === race.date.getTime()) {
+            return this.raceNumber < race.raceNumber;
         }
-        return this.date > otherRace.date ? 1 : -1;
+        return this.date < race.date;
     }
 
     static fromResult(result) {

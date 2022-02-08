@@ -1,14 +1,11 @@
 
-import { assert, assertType, getSheetIdFromURL } from "../src/common.js"
-import { getHelmId } from "../src/SheetsAPI.js";
+import { groupBy, getSheetIdFromURL } from "../src/common.js";
 import Stores from "../src/store/Stores.js";
 import Result from "../src/store/types/Result.js";
 import auth from "./auth.js";
 import SeriesRace from "../src/store/types/SeriesRace.js";
-import StoreObject from "../src/store/types/StoreObject.js";
 import Race from "../src/store/types/Race.js";
 import Series from "../src/store/types/Series.js";
-import BoatClass from "../src/store/types/BoatClass.js";
 import CorrectedResult from "../src/store/types/CorrectedResult.js";
 
 
@@ -42,23 +39,31 @@ PH = PI / 100 * (class PN)
 The values of PH in each race are shown on the race results, and saved in a database to be used to calculate the fixed average personal handicap used for the personal handicap based series results
 
 */
-function calculateSCTFromRaceResults(classCorrectedFinishTimesDesc) {
+function calculateSCTFromRaceResults(raceResults) {
+    const finishers = raceResults
+        .filter((result) => result.finishCode.validFinish());
+    const raceMaxLaps = getLapsForNormalisation(finishers);
+
     let compliesWithRYA = true;
 
-    if (classCorrectedFinishTimesDesc.length < 4) {
+    if (finishers.length < 4) {
         compliesWithRYA = false;
     }
 
-    const classes = groupBy(classCorrectedFinishTimesDesc, Result.getBoatClassId);
+    const classes = groupBy(finishers, Result.getBoatClassId);
     if (classes.length < 2) {
         compliesWithRYA = false;
     }
 
-    const resultsToCountForACT = Math.ceil(classCorrectedFinishTimesDesc.length * 2 / 3);
-    const finishTimes = classCorrectedFinishTimesDesc.map((result) => result.getClassCorrectedTime());
-    const ACT = average(finishTimes.slice(0, resultsToCountForACT));
+    const resultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
 
-    return average(finishTimes.filter((time) => time < (ACT * 1.05)));
+    const finishTimes = finishers
+        .map((result) => result.getClassCorrectedTime(raceMaxLaps))
+        .sort((a, b) => a - b);
+
+    const ACT = average(finishTimes.slice(-resultsToCountForACT));
+
+    return [average(finishTimes.filter((time) => time < (ACT * 1.05))), raceMaxLaps];
 }
 
 function calculatePersonalHandicap(helmResult,) {
@@ -94,50 +99,70 @@ function processPursuitRace() {
 }
 
 
-function processFleetRace(raceResults) {
-    const raceMaxLaps = getLapsForNormalisation(raceResults);
-    const correctedSeriesResults = raceResults
-        .map(CorrectedResult.fromResult);
+function getCorrectedResultsForRace(raceResults, correctedResults) {
+    const [standardCorrectedTime, raceMaxLaps] = calculateSCTFromRaceResults(raceResults);
+    const allResultsByRaceAsc = correctedResults.sort(Result.sortByRaceAsc);
+    const helmResultsByRaceAsc = new Map(groupBy(allResultsByRaceAsc, Result.getHelmId));
+    const getHelmResults = (helmId) => helmResultsByRaceAsc.get(helmId) || [];
 
-    debugger;
-    correctedSeriesResults
-        .forEach((result) => result.calculateClassCorrectedTime(raceMaxLaps));
-
-    const sortedFinishers = correctedSeriesResults
-        .filter((result) => result.finishCode.validFinish())
-        .sort((resultA, resultB) => resultA.sortByCorrectedFinishTime(resultB));
-
-    const standardCorrectedTime = calculateSCTFromRaceResults(sortedFinishers);
-
-    correctedSeriesResults
-        .forEach((result) => result.calculatePersonalHandicap(standardCorrectedTime));
-
-    return correctedSeriesResults;
+    return raceResults
+        .map((result) => CorrectedResult.fromResult(result, getHelmResults(Result.getHelmId(result)), standardCorrectedTime, raceMaxLaps));
 }
 
-function updateSeriesResults(series, seriesRaces, allResults) {
-    const season = series.getSeasonName();
-    const seriesName = series.getSeriesName();
-    const allResultsByRaceAsc = groupBy(allResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
-    const allResultsByRace = new Map(allResultsByRaceAsc);
+// function updateSeriesResults(series, seriesRaces, allResults, correctedResultsStore) {
+//     const season = series.getSeasonName();
+//     const seriesName = series.getSeriesName();
+//     const allResultsByRaceAsc = groupBy(allResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
+//     const allCorrectedResultsByRaceAsc = groupBy(allCorrectedResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
+//     const allResultsByRace = new Map(allResultsByRaceAsc);
 
-    for (let seriesRace of seriesRaces) {
-        let raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace))
-        if (!raceResults) {
-            console.log(`WARNING: No results found for Race: ${seriesRace.getRace().prettyPrint()}`);
-            continue;
-        }
+//     for (let seriesRace of seriesRaces) {
+//         let raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace))
+//         if (!raceResults) {
+//             console.log(`WARNING: No results found for Race: ${seriesRace.getRace().prettyPrint()}`);
+//             continue;
+//         }
+//         if (!Race.isPursuitRace(raceResults)) {
+//             const correctedResults = processFleetRace(raceResults, allCorrectedResultsAsc);
+//             console.log(correctedResults);
+//         }
+//         else {
+//             processPursuitRace();
+//         }
+//         break;
+//     }
+
+//     console.log(`Updated series: '${season}/${seriesName}'`);
+// }
+
+function getLatestProcessedRace(correctedResults) {
+    const results = groupResultsByRaceAsc(correctedResults);
+    if (results.length) {
+        return groupResultsByRaceAsc(correctedResults).at(-1)[0];
+    }
+    return undefined;
+}
+
+function groupResultsByRaceAsc(results) {
+    debugger;
+    return groupBy(results, Result.getRaceId)
+        .map(([raceId, raceResults]) => [Race.fromId(raceId), raceResults])
+        .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
+}
+
+async function updateCorrectedResults(allResults, correctedResultsStore) {
+    const latestProcessedRace = getLatestProcessedRace(correctedResultsStore.all());
+    const resultsByRaceAscToProcess = groupResultsByRaceAsc(allResults)
+        .filter(([race]) => !latestProcessedRace || latestProcessedRace.isBefore(race));
+
+    for (let [, raceResults] of resultsByRaceAscToProcess) {
         if (!Race.isPursuitRace(raceResults)) {
-            const correctedResults = processFleetRace(raceResults);
-            console.log(correctedResults);
+            getCorrectedResultsForRace(raceResults, correctedResultsStore.all())
+                .forEach((result) => correctedResultsStore.add(result));
         }
-        else {
-            processPursuitRace();
-        }
-        break;
     }
 
-    console.log(`Updated series: '${season}/${seriesName}'`);
+    console.log("Updated corrected results");
 }
 
 async function updateAllSeriesResults(sourceResultsURL, seriesResultsURL) {
@@ -146,26 +171,30 @@ async function updateAllSeriesResults(sourceResultsURL, seriesResultsURL) {
 
     const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
 
-    const allResults = stores.results.all();
-    const allSeriesRaces = stores.seriesRaces.all();
+    await updateCorrectedResults(stores.results.all(), stores.correctedResults);
 
-    const allResultsByRace = new Map(groupBy(allResults, Result.getRaceId));
-    const allSeries = new Map(groupBy(allSeriesRaces, SeriesRace.getSeriesId))
+    stores.correctedResults.sync();
 
-    const seriesRacesToUpdate = new Map();
 
-    for (let seriesRace of allSeriesRaces) {
-        let seriesId = SeriesRace.getSeriesId(seriesRace);
-        let lastImportedDate = seriesRace.getLastImported();
-        const raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace)) || [];
-        if (raceResults.some((result) => result.updatedAfterDate(lastImportedDate))) {
-            seriesRacesToUpdate.set(seriesId, allSeries.get(seriesId));
-        }
-    }
+    // const allSeriesRaces = stores.seriesRaces.all();
+    // const allSeries = new Map(groupBy(allSeriesRaces, SeriesRace.getSeriesId));
 
-    for (let [seriesId] of [...seriesRacesToUpdate]) {
-        updateSeriesResults(Series.fromId(seriesId), allSeries.get(seriesId), allResults);
-    }
+    // getSeriesWithRacesLaterThanDate();
+
+    // const seriesRacesToUpdate = new Map();
+
+    // for (let seriesRace of allSeriesRaces) {
+    //     let seriesId = SeriesRace.getSeriesId(seriesRace);
+    //     let lastImportedDate = seriesRace.getLastImported();
+    //     const raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace)) || [];
+    //     if (raceResults.some((result) => result.updatedAfterDate(lastImportedDate))) {
+    //         seriesRacesToUpdate.set(seriesId, allSeries.get(seriesId));
+    //     }
+    // }
+
+    // for (let [seriesId] of [...seriesRacesToUpdate]) {
+    //     updateSeriesResults(Series.fromId(seriesId), allSeries.get(seriesId), allResults, stores.correctedResults);
+    // }
 
     // Read source results etc.
     // Check last updated date of source results
@@ -176,26 +205,3 @@ async function updateAllSeriesResults(sourceResultsURL, seriesResultsURL) {
 updateAllSeriesResults(...process.argv.slice(2))
     .then(() => console.log("Finished"))
     .catch((err) => console.log(err));
-
-
-class AutoMap extends Map {
-    constructor(getKey = JSON.stringify, getDefaultValue) {
-        super();
-        this.getKey = getKey;
-        this.getDefaultValue = getDefaultValue;
-    }
-
-    upsert(obj, transform = (prev, obj, key) => obj) {
-        let key = this.getKey(obj);
-        if (!this.has(key) && this.getDefaultValue !== undefined) {
-            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
-        }
-        return this.set(key, transform(super.get(key), obj, key))
-    }
-}
-
-function groupBy(arr, groupFunction) {
-    const map = new AutoMap(groupFunction, () => []);
-    arr.forEach((item) => map.upsert(item, (prev, obj) => [...prev, obj]));
-    return [...map];
-}

@@ -5,6 +5,18 @@ import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
 
 
+function calculateClassCorrectedTime(PY, finishTime, lapsCompleted, lapsToUse) {
+    return lapsCompleted ? finishTime * lapsToUse * 1000 / (lapsCompleted * PY) : undefined;
+}
+
+function calculatePersonalCorrectedTime(classCorrectedTime, PI) {
+    return classCorrectedTime / (1 + PI / 100);
+}
+
+function calculatePersonalInterval(classCorrectedTime, standardCorrectedTime) {
+    return (classCorrectedTime / standardCorrectedTime - 1) * 100;
+}
+
 class FinishCode {
     constructor(code) {
         assert(!code || ["DNF", "DNS", "OCS"].includes(code), `${code} is an invalid finish code`);
@@ -49,6 +61,11 @@ export default class Result extends StoreObject {
         return Race.getId(result.race);
     }
 
+    static getHelmId(result) {
+        assertType(result, Result);
+        return Helm.getId(result.helm);
+    }
+
     static getBoatClassId(result) {
         assertType(result, Result);
         return BoatClass.getId(result.boatClass);
@@ -57,6 +74,12 @@ export default class Result extends StoreObject {
     static getLaps(result) {
         assertType(result, Result);
         return result.getLaps();
+    }
+
+    static sortByRaceAsc(firstResult, secondResult) {
+        assertType(firstResult, Result);
+        assertType(secondResult, Result);
+        return firstResult.getRace().sortByRaceAsc(secondResult.getRace())
     }
 
     static fromStore(storeResult, getHelm, getBoatClassForDate) {
@@ -76,6 +99,29 @@ export default class Result extends StoreObject {
         return new Result(race, getHelm(helmId), getBoatClassForDate(boatClassName, race.getDate()), parseInt(boatSailNumber), parseIntOrUndefined(laps), parseIntOrUndefined(pursuitFinishPosition), parseIntOrUndefined(finishTime), finishCode, StoreObject.fromStore(storeResult));
     }
 
+    getClassCorrectedTime(raceMaxLaps) {
+        let boatClass = this.getBoatClass();
+        if (!this.finishCode.validFinish()) {
+            throw new Error("Cannot calculate a class corrected time for a non-finisher");
+        }
+        return calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
+    }
+
+    sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {
+        assertType(secondResult, Result);
+        return secondResult.getClassCorrectedTime(maxLaps) - this.getClassCorrectedTime(maxLaps);
+    }
+
+    getPersonalInterval(raceMaxLaps, standardCorrectedTime) {
+        return Math.round(calculatePersonalInterval(this.getClassCorrectedTime(raceMaxLaps), standardCorrectedTime));
+    }
+
+    getCorrectedTimes(helmPI, raceMaxLaps) {
+        const classCorrectedTime = this.getClassCorrectedTime(raceMaxLaps);
+        const personalCorrectedTime = calculatePersonalCorrectedTime(classCorrectedTime, helmPI);
+        return [personalCorrectedTime, classCorrectedTime];
+    }
+
     getPursuitFinishPosition() {
         return this.pursuitFinishPosition;
     }
@@ -90,6 +136,14 @@ export default class Result extends StoreObject {
 
     getLaps() {
         return this.laps;
+    }
+
+    getRace() {
+        return this.race;
+    }
+
+    getHelm() {
+        return this.helm;
     }
 
     toStore() {
