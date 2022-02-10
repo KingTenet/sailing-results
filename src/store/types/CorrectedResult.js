@@ -43,73 +43,16 @@ export default class CorrectedResult extends Result {
         return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
     }
 
-    static fromStore(result, raceFinish) {
-        return CorrectedResult.fromResult(result, [], raceFinish);
-        assertType(result, Result);
-        const previousResults = helmResultsByRaceAsc
-            .filter((result) => result.getRace().isBefore(raceFinish));
-
-        let {
-            "Gender": gender,
-            "Novice": novice,
-            "Cadet": cadet,
-            "Junior": junior,
-            "Crew": crew,
-            "Rig": rig,
-            "Spinnaker": spinnaker,
-            "PY": PY,
-            "Club Boat": clubBoat,
-            "Class Corrected Finish Time": correctedFinishTime,
-            "Personal Corrected Finish Time": personalCorrectedTime,
-            "Corrected Laps": raceMaxLaps,
-            "PH From Race": totalPersonalHandicapFromRace,
-            "NHEBSC PH (Single Class) Before Race": rollingClassPIBefore,
-            "NHEBSC PI (All Classes) Before Race": rollingOverallPIBefore,
-            // "NHEBSC PH (Single Class) After Race": rollingClassPIAfter,
-            // "NHEBSC PI (All Classes) After Race": rollingOverallPIAfter,
-        } = correctedResultFromStore;
-
-        const correctedResult = new CorrectedResult(
-            result,
-            gender,
-            parseBoolean(novice),
-            parseBoolean(cadet),
-            parseBoolean(junior),
-            parseInt(PY),
-            parseInt(totalPersonalHandicapFromRace),
-            parseInt(correctedFinishTime),
-            parseInt(rollingClassPIBefore),
-            parseInt(personalCorrectedTime),
-            parseInt(rollingOverallPIBefore),
-            parseInt(raceMaxLaps),
-        );
-        // totalPersonalHandicapFromRace,
-        // classCorrectedTime,
-        // rollingPersonalHandicapBeforeRace,
-        // personalCorrectedTime,
-        // rollingOverallPIBefore,
-        // raceMaxLaps,
-        // correctedResult.setPostRaceRollingPI(parseInt(rollingClassPIAfter));
-        // correctedResult.setPostRaceRollingPersonalHandicap(parseInt(rollingOverallPIAfter));
-        return correctedResult;
-    }
-
     static fromResult(result, helmResultsByRaceAsc, raceFinish) {
         assertType(result, Result);
         const previousResults = helmResultsByRaceAsc
             .filter((result) => result.getRace().isBefore(raceFinish));
 
-        try {
-            return new CorrectedResult(
-                result,
-                previousResults,
-                raceFinish,
-            );
-        }
-        catch (err) {
-            debugger;
-            throw err;
-        }
+        return new CorrectedResult(
+            result,
+            previousResults,
+            raceFinish,
+        );
     }
 
     toStore() {

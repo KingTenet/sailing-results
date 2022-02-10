@@ -108,6 +108,6 @@ export default class LocalStore {
         }
 
         let mappedValues = this.fromStore(keyValues.map(([, values]) => values));
-        mappedValues.forEach((mappedValue, i) => this.cache.set(keys[i], mappedValue));
+        mappedValues.forEach((mappedValue, i) => this.cache.set(keyValues[i][0], mappedValue));
     }
 }

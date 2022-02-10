@@ -1,4 +1,3 @@
-import Result from "./types/Result.js";
 import Store from "./Store.js";
 
 function debugCreationErrors(func, storeObject) {
@@ -46,6 +45,7 @@ export default class StoreWrapper {
     }
 
     get(key) {
+        debugger;
         return this.store.get(key);
     }
 

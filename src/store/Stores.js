@@ -48,6 +48,9 @@ export default class Stores {
                     getCorrectedResultsForRace(raceResults, correctedResults)
                         .forEach((result) => correctedResults.push(result));
                 }
+                else {
+                    console.log(`Skipping pursuit race raceDate:${raceFinish.getDate()} raceNumber:${raceFinish.getNumber()}`);
+                }
             }
             const correctedResultsById = new Map(groupBy(correctedResults, Result.getId));
             return storeOrderedResults.map(Result.getId).map((id) => correctedResultsById.get(id)[0]);

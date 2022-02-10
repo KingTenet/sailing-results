@@ -5,6 +5,7 @@ import Result from "../src/store/types/Result.js";
 import auth from "./auth.js";
 import Race from "../src/store/types/Race.js";
 import { getCorrectedResultsForRace } from "./resultCorrection.js";
+import Helm from "../src/store/types/Helm.js";
 
 function getLatestProcessedRace(correctedResults) {
     const results = Race.groupResultsByRaceAsc(correctedResults);
