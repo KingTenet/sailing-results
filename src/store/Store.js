@@ -10,8 +10,8 @@ export default class Store {
         this.fromStore = fromStore;
         this.getKeyFromObj = getKeyFromObj;
         this.metadataKey = `metadata::${this.storeName}`;
-        this.localStore = new LocalStore(storeName, toStore, fromStore, getKeyFromObj);
-        this.promiseRemoteStore = RemoteStore.createRemoteStore(sheetsDoc, storeName, toStore, fromStore)
+        this.localStore = new LocalStore(storeName, toStore, fromStore);
+        this.promiseRemoteStore = RemoteStore.createRemoteStore(sheetsDoc, storeName)
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 
@@ -76,8 +76,7 @@ export default class Store {
 
     async pullRemoteState() {
         await this.promiseRemoteStore;
-        return (await this.remoteStore.getAllRows())
-            .map(this.fromStore);
+        return this.fromStore(await this.remoteStore.getAllRows());
     }
 
     has(key) {

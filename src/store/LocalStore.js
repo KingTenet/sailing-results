@@ -96,13 +96,18 @@ export default class LocalStore {
         // const keys = Object.keys(this.localStorage);
         const keys = this.localStorage._keys;
         let i = keys.length;
+        const keyValues = [];
 
         while (i--) {
             let key = this.storeKeyToKey(keys[i]);
             if (!key) {
                 continue;
             }
-            this.cache.set(key, this.fromStore(JSON.parse(this.localStorage.getItem(keys[i]))));
+
+            keyValues.push([key, JSON.parse(this.localStorage.getItem(keys[i]))]);
         }
+
+        let mappedValues = this.fromStore(keyValues.map(([, values]) => values));
+        mappedValues.forEach((mappedValue, i) => this.cache.set(keys[i], mappedValue));
     }
 }

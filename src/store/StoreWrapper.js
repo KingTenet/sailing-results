@@ -30,8 +30,15 @@ export default class StoreWrapper {
     }
 
     map(func) {
-        let helms = this.store.all();
-        return helms.map((helm) => func(helm));
+        let objs = this.store.all();
+        return objs.map((obj) => func(obj));
+    }
+
+    mapReplace(func) {
+        this.map((...args) => {
+            let newObj = func(...args);
+            return this.update(newObj);
+        })
     }
 
     count() {
@@ -58,8 +65,8 @@ export default class StoreWrapper {
         return await this.store.syncRemoteStateToLocalState();
     }
 
-    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, toStore = (obj) => obj.toStore(), getId = Type.getId) {
-        let store = new Store(storeName, raceResultsDocument, toStore, (...args) => debugCreationErrors(() => fromStore(...args), ...args), getId, services);
+    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), toStore = (obj) => obj.toStore(), getId = Type.getId) {
+        let store = new Store(storeName, raceResultsDocument, toStore, (...args) => debugCreationErrors(() => batch(...args), ...args), getId, services);
         await store.init();
         return new StoreWrapper(store);
     }

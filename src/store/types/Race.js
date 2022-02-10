@@ -1,4 +1,4 @@
-import { assertType, generateId, fromId, parseISOString } from "../../common.js";
+import { assertType, generateId, fromId, parseISOString, groupBy } from "../../common.js";
 import Result from "./Result.js";
 
 export default class Race {
@@ -56,5 +56,11 @@ export default class Race {
     static fromResult(result) {
         assertType(result, Result);
         return new Race(result.raceDate, result.raceNumber)
+    }
+
+    static groupResultsByRaceAsc(results) {
+        return groupBy(results, Result.getRaceId)
+            .map(([raceId, raceResults]) => [Race.fromId(raceId), raceResults])
+            .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
     }
 }

@@ -7,23 +7,16 @@ import Race from "../src/store/types/Race.js";
 import { getCorrectedResultsForRace } from "./resultCorrection.js";
 
 function getLatestProcessedRace(correctedResults) {
-    const results = groupResultsByRaceAsc(correctedResults);
+    const results = Race.groupResultsByRaceAsc(correctedResults);
     if (results.length) {
-        return groupResultsByRaceAsc(correctedResults).at(-1)[0];
+        return Race.groupResultsByRaceAsc(correctedResults).at(-1)[0];
     }
     return undefined;
 }
 
-function groupResultsByRaceAsc(results) {
-    debugger;
-    return groupBy(results, Result.getRaceId)
-        .map(([raceId, raceResults]) => [Race.fromId(raceId), raceResults])
-        .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
-}
-
 async function updateCorrectedResults(allResults, correctedResultsStore) {
     const latestProcessedRace = getLatestProcessedRace(correctedResultsStore.all());
-    const resultsByRaceAscToProcess = groupResultsByRaceAsc(allResults)
+    const resultsByRaceAscToProcess = Race.groupResultsByRaceAsc(allResults)
         .filter(([race]) => !latestProcessedRace || latestProcessedRace.isBefore(race));
 
     for (let [, raceResults] of resultsByRaceAscToProcess) {
@@ -42,9 +35,9 @@ async function updateAllSeriesResults(sourceResultsURL, seriesResultsURL) {
 
     const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
 
-    await updateCorrectedResults(stores.results.all(), stores.correctedResults);
+    await updateCorrectedResults(stores.results.all(), stores.correctedResultsStore);
 
-    stores.correctedResults.sync();
+    stores.correctedResultsStore.sync();
 
 
     // const allSeriesRaces = stores.seriesRaces.all();

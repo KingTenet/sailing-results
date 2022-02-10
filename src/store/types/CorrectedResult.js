@@ -3,7 +3,7 @@ import Helm from "./Helm.js";
 import Race from "./Race.js";
 import Result from "./Result.js";
 import StoreObject from "./StoreObject.js";
-import { getRollingHandicaps, calculatePersonalInterval } from "../../../scripts/personalHandicapHelpers.js";
+import { getRollingHandicaps, calculatePersonalInterval, calculatePersonalHandicapFromPI } from "../../../scripts/personalHandicapHelpers.js";
 
 export default class CorrectedResult extends Result {
     constructor(result, previousResults, raceFinish) {
@@ -43,7 +43,12 @@ export default class CorrectedResult extends Result {
         return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
     }
 
-    static fromStore(storeResult, result) {
+    static fromStore(result, raceFinish) {
+        return CorrectedResult.fromResult(result, [], raceFinish);
+        assertType(result, Result);
+        const previousResults = helmResultsByRaceAsc
+            .filter((result) => result.getRace().isBefore(raceFinish));
+
         let {
             "Gender": gender,
             "Novice": novice,
@@ -62,7 +67,7 @@ export default class CorrectedResult extends Result {
             "NHEBSC PI (All Classes) Before Race": rollingOverallPIBefore,
             // "NHEBSC PH (Single Class) After Race": rollingClassPIAfter,
             // "NHEBSC PI (All Classes) After Race": rollingOverallPIAfter,
-        } = storeResult;
+        } = correctedResultFromStore;
 
         const correctedResult = new CorrectedResult(
             result,
@@ -144,8 +149,8 @@ export default class CorrectedResult extends Result {
         if (!this.finishCode.validFinish()) {
             return;
         }
-        const personalInterval = this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()); // % diff on class SCT
-        return Math.round((100 + personalInterval) * this.getBoatClass().getPY() / 100);
+        const PI = this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()); // % diff on class SCT
+        return Math.round(calculatePersonalHandicapFromPI(this.getBoatClass().getPY(), PI))
     }
 
 }

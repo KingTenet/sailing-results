@@ -101,7 +101,7 @@ function getRollingMetric(allMetrics) {
     return (sum - worst) / (metricsToCount.length - 1);
 }
 
-function calculatePersonalHandicapFromPI(classPY, PI) {
+export function calculatePersonalHandicapFromPI(classPY, PI) {
     return classPY * (100 + PI) / 100;
 }
 
