@@ -4,20 +4,7 @@ import Helm from "./Helm.js";
 import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
 import FinishCode from "./FinishCode.js";
-
-
-function calculateClassCorrectedTime(PY, finishTime, lapsCompleted, lapsToUse) {
-    return lapsCompleted ? finishTime * lapsToUse * 1000 / (lapsCompleted * PY) : undefined;
-}
-
-function calculatePersonalCorrectedTime(classCorrectedTime, PI) {
-    return classCorrectedTime / (1 + PI / 100);
-}
-
-function calculatePersonalInterval(classCorrectedTime, standardCorrectedTime) {
-    console.log(`Getting personal interval from ${classCorrectedTime} and ${standardCorrectedTime}`);
-    return (classCorrectedTime / standardCorrectedTime - 1) * 100;
-}
+import { calculateClassCorrectedTime, calculatePersonalInterval } from "../../../scripts/classHandicapHelpers.js";
 
 export default class Result extends StoreObject {
     constructor(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, metadata) {
@@ -92,10 +79,7 @@ export default class Result extends StoreObject {
             throw new Error("Cannot calculate a class corrected time for a non-finisher");
         }
 
-        const classCorrectedTime = calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
-        // console.log(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
-        // console.log(classCorrectedTime);
-        return classCorrectedTime;
+        return calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
     }
 
     sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {

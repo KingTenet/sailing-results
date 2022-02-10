@@ -73,6 +73,34 @@ async function updateAllSeriesResults(sourceResultsURL, seriesResultsURL) {
     // If any dates are later, reprocess whole series
 }
 
+
+// function updateSeriesResults(series, seriesRaces, allResults, correctedResultsStore) {
+//     const season = series.getSeasonName();
+//     const seriesName = series.getSeriesName();
+//     const allResultsByRaceAsc = groupBy(allResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
+//     const allCorrectedResultsByRaceAsc = groupBy(allCorrectedResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
+//     const allResultsByRace = new Map(allResultsByRaceAsc);
+
+//     for (let seriesRace of seriesRaces) {
+//         let raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace))
+//         if (!raceResults) {
+//             console.log(`WARNING: No results found for Race: ${seriesRace.getRace().prettyPrint()}`);
+//             continue;
+//         }
+//         if (!Race.isPursuitRace(raceResults)) {
+//             const correctedResults = processFleetRace(raceResults, allCorrectedResultsAsc);
+//             console.log(correctedResults);
+//         }
+//         else {
+//             processPursuitRace();
+//         }
+//         break;
+//     }
+
+//     console.log(`Updated series: '${season}/${seriesName}'`);
+// }
+
+
 updateAllSeriesResults(...process.argv.slice(2))
     .then(() => console.log("Finished"))
     .catch((err) => console.log(err));

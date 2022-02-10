@@ -140,45 +140,6 @@ function createRace4() {
         .map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
 }
 
-
-
-function createRaceOld() {
-    // Date	1/10/17	Race	2	
-    /**
-     * Note:: the old results systems computes a different SCT due to:
-     *  using Math.round(numFinishers * 2/3)
-     *  instead of Math.ceil(numFinishers * 2/3)
-     *  
-     * I believe this was by mistake as the notes indicate the algorithm should round up number finishers.
-     * 
-Bananaman   Laser	        3175	1096	191874  52:55:00	5	579.4	1	1	-4.4	-48
-Mickey Mouse   Laser	        3289	1096	177463  54:49:00	5	600.2	2	2	-1	    -11
-Scrooge McDuck   Mirror 1	    3318	1373	69187   55:18:00	4	604.2	3	3	-0.3	-4
-Itchy   Laser Radial	3489	1147	197778  58:09:00	5	608.4	4	4	0.4	    5
-Scratchy   Solo	        3517	1133	4746    58:37:00	5	620.8	5	5	2.4	    27
-Wallace   Buzz	        3294	1055	916     54:54:00	5	624.5	6	6	3	    32
-Olive Oyl   Laser	        3544	1096	205154  59:04:00	5	646.7	7	7	6.7	    73
-Minnie Mouse   Laser Radial	3723	1147	191046  62:03:00	5	649.2	8	8	7.1	    81
-Betty Boop   LASER 4.7	    3148	1200	0       52:28:00	4	655.8	9	9	8.2	    98
-Peter Rabbit  Argo (No Spin)	3233	1175	11423   53:53:00	4	687.9	10	10	13.5	159
-Donald Duck  Argo (No Spin)	2681	1175	11420   44:41:00	3	760.6	11	11	25.5	300
-     */
-    return [
-        ["Bananaman", 1096, 3175, 5],
-        ["Mickey Mouse", 1096, 3289, 5],
-        ["Scrooge McDuck", 1373, 3318, 4],
-        ["Itchy", 1147, 3489, 5],
-        ["Scratchy", 1133, 3517, 5],
-        ["Wallace", 1055, 3294, 5],
-        ["Olive Oyl", 1096, 3544, 5],
-        ["Minnie Mouse", 1147, 3723, 5],
-        ["Betty Boop", 1200, 3148, 4],
-        ["Peter Rabbit", 1175, 3233, 4],
-        ["Donald Duck", 1175, 2681, 3],
-    ]
-        .map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
-}
-
 function createResult({
     helmName = DEFAULT_HELM_NAME,
     helmYearOfBirth = DEFAULT_HELM_helmYearOfBirth,
@@ -204,27 +165,9 @@ function createResult({
 }
 
 function transformResult(result) {
-    let {
-        totalPersonalHandicapFromRace,
-        classCorrectedTime,
-        personalCorrectedTime,
-        // rollingPersonalHandicapBeforeRace,
-        rollingOverallPIBefore,
-        rollingPersonalHandicapBeforeRace,
-        // rollingClassPIAfter,
-        // rollingOverallPIAfter,
-        raceMaxLaps,
-    } = result;
-
     return {
+        ...result,
         helmName: result.getHelm().name,
-        classCorrectedTime,
-        personalCorrectedTime,
-        // personalHandicap,
-        raceMaxLaps,
-        rollingOverallPIBefore,
-        totalPersonalHandicapFromRace,
-        rollingPersonalHandicapBeforeRace
     }
 }
 
@@ -459,9 +402,8 @@ function processRaces(races, transformInputs) {
     for (let [key, race] of races.entries()) {
         input.push([]);
         for (let result of race) {
-            const args = transformInputs(result[0]);
+            const args = transformInputs(result[0], key);
             input[key].push(createResult({
-                // boatClassName: args["boatPY"] ? `${args["boatPY"]}` : undefined,
                 raceDate: new Date(key),
                 ...args,
             }));
@@ -579,17 +521,70 @@ function testRollingNoviceHelm() {
     );
 }
 
+function testNoviceTransition() {
+    // Input:
+    //    helm, wasNoviceInFirstRace
+    //                          
+    // Output:              novice
+    const varying = [
+        [["helm 1", true], [true]], // race 1, 1970-01-01
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]],
+        [["helm 1", true], [true]], // race 11
+        [["helm 1", true], [true]], // this is the last race as novice (12th race)
+        [["helm 1", true], [false]], // 13
+        [["helm 1", true], [false]], // 14
+        [["helm 1", true], [false]], // race 15, 1970-12-17T00:00:00.000Z
+        [["helm 1", true], [false]], // race 16, 1971-01-11T00:00:00.000Z
+    ];
+
+    const fixed = [
+        [["helm 2", false], [false]],
+        [["helm 3", false], [false]],
+    ];
+
+    const MILLIS_IN_25_DAYS = 25 * 24 * 60 * 60 * 1000;
+
+    const [raceInputs, expected] = generateRaces(
+        ([helmName, helmNoviceInFirstRace], raceId) => ({ helmName, helmNoviceInFirstRace, raceDate: new Date(MILLIS_IN_25_DAYS * raceId) }),
+        fixed,
+        varying,
+    );
+
+    const correctedResults = [];
+    for (let raceResults of raceInputs) {
+        correctedResults.push(...getCorrectedResultsForRace(raceResults, correctedResults));
+    }
+
+    deepEqualsResults(
+        expected,
+        correctedResults
+            .map(transformResult)
+            .map((r) => [r.novice]),
+        "testRollingNoviceHelm failed",
+    );
+}
+
+
 function runTests() {
     try {
-        testCorrectedTimeSameLaps();
-        testCorrectedTimeDifferentLaps();
-        testCorrectedTimeForRace();
-        testGetPH1();
-        testGetPH2();
-        testGetPH3();
-        testGetPH4();
+        // testCorrectedTimeSameLaps();
+        // testCorrectedTimeDifferentLaps();
+        // testCorrectedTimeForRace();
+        // testGetPH1();
+        // testGetPH2();
+        // testGetPH3();
+        // testGetPH4();
         testRollingPH();
-        testRollingNoviceHelm();
+        // testRollingNoviceHelm();
+        // testNoviceTransition();
     }
     catch (err) {
         console.log(err);

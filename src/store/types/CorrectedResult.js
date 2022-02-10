@@ -3,6 +3,11 @@ import Helm from "./Helm.js";
 import Race from "./Race.js";
 import Result from "./Result.js";
 import StoreObject from "./StoreObject.js";
+import { getRollingHandicaps } from "../../../scripts/personalHandicapHelpers.js";
+
+
+
+
 
 export default class CorrectedResult extends Result {
     constructor(
@@ -17,7 +22,7 @@ export default class CorrectedResult extends Result {
         rollingPersonalHandicapBeforeRace,
         personalCorrectedTime,
         rollingOverallPIBefore,
-        raceMaxLaps,
+        raceFinish,
         metaData) {
 
         assertType(result, Result);
@@ -34,11 +39,12 @@ export default class CorrectedResult extends Result {
         this.PY = assertType(PY, "number");
 
         this.rollingPersonalHandicapBeforeRace = assertType(rollingPersonalHandicapBeforeRace, "number");
-        this.rollingOverallPIBefore = rollingOverallPIBefore;//assertType(, "number");
+        this.rollingOverallPIBeforeRace = rollingOverallPIBefore;//assertType(, "number");
         // this.rollingClassPIAfter = assertType(rollingClassPIAfter, "number");
         // this.rollingOverallPIAfter = assertType(rollingOverallPIAfter, "number");
+        this.raceFinish = raceFinish;
 
-        this.raceMaxLaps = validFinish ? assertType(raceMaxLaps, "number") : undefined;
+        // this.raceMaxLaps = validFinish ? assertType(raceMaxLaps, "number") : undefined;
     }
 
     static getId(result) {
@@ -46,7 +52,7 @@ export default class CorrectedResult extends Result {
         return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
     }
 
-    static fromResult(result, helmResultsByRaceAsc, standardCorrectedTime, raceMaxLaps) {
+    static fromResult(result, helmResultsByRaceAsc, raceFinish) {
         assertType(result, Result);
 
         const helm = result.getHelm();
@@ -65,17 +71,17 @@ export default class CorrectedResult extends Result {
         //     console.log(Result.getId(result))
         // }
 
-        const personalInterval = validFinish ? result.getPersonalInterval(raceMaxLaps, standardCorrectedTime) : undefined; // % diff on class SCT
+
+        //standardCorrectedTime, raceMaxLaps
+        const personalInterval = validFinish ? result.getPersonalInterval(raceFinish.getMaxLaps(), raceFinish.getSCT()) : undefined; // % diff on class SCT
         const totalPersonalHandicapForClass = validFinish ? (100 + personalInterval) * result.getBoatClass().getPY() / 100 : undefined;
 
         const previousResults = helmResultsByRaceAsc
             .filter((result) => result.getRace().isBefore(race));
 
+        const [rollingPH, rollingPI] = getRollingHandicaps(previousResults, result);
 
-        debugger;
-        const rollingPersonalHandicapBeforeRace = Math.round(helm.getRollingPersonalHandicapFromResults(previousResults, result.getBoatClass()));
-        const rollingPIBeforeRace = Math.round(helm.getRollingPIFromResults(previousResults, result.getBoatClass()));
-        const [personalCorrectedTime, classCorrectedTime] = validFinish ? result.getCorrectedTimes(rollingPersonalHandicapBeforeRace, raceMaxLaps) : [];
+        const [personalCorrectedTime, classCorrectedTime] = validFinish ? result.getCorrectedTimes(rollingPH, raceFinish.getMaxLaps()) : [];
 
         try {
             return new CorrectedResult(
@@ -87,52 +93,35 @@ export default class CorrectedResult extends Result {
                 result.getBoatClass().getPY(),
                 totalPersonalHandicapForClass && Math.round(totalPersonalHandicapForClass),
                 classCorrectedTime && Math.round(classCorrectedTime),
-                rollingPersonalHandicapBeforeRace,
+                rollingPH,
                 personalCorrectedTime && Math.round(personalCorrectedTime),
-                rollingPIBeforeRace,
-                raceMaxLaps,
+                rollingPI,
+                raceFinish,
             );
         }
         catch (err) {
             debugger;
+            throw err;
         }
 
-        // newResult.setPostRacePIs(helmResultsByRaceAsc);
+        newResult.setPostRacePIs(previousResults);
         // return newResult;
     }
 
-    // setPostRacePIs(helmResultsByRaceAsc) {
-    //     const [rollingOverallPI, rollingClassPI] = this.getHelm().getRollingPersonalHandicapFromResults([...helmResultsByRaceAsc, this], this.getBoatClass());
-    //     this.setPostRaceRollingClassPI(rollingClassPI);
-    //     this.setPostRaceRollingOverallPI(rollingOverallPI);
-    // }
-
-    // setPostRaceRollingClassPI(rollingClassPI) {
-    //     this.rollingClassPIAfter = rollingClassPI;
-    // }
-
-    // setPostRaceRollingOverallPI(rollingOverallPI) {
-    //     this.rollingOverallPIAfter = rollingOverallPI;
-    // }
-
-    // getPI() {
-    //     return this.personalInterval;
-    // }
-
-    // getPersonalHandicapFromRace() {
-    //     return this.getPI();
-    // }
-
-    // getRollingOverallPIBeforeRace() {
-    //     return this.rollingOverallPIBefore;
-    // }
+    setPostRacePIs(previousResults) {
+        const [rollingPH, rollingPI] = getRollingHandicaps([...previousResults, this], this);
+        this.rollingPersonalHandicapAfterRace = rollingPH;
+        this.rollingOverallPIAfterRace = rollingPI;
+    }
 
     getRollingPersonalHandicapBeforeRace() {
         return this.rollingPersonalHandicapBeforeRace;
     }
 
     getPersonalHandicapFromRace() {
-        return this.totalPersonalHandicapFromRace;
+        // return this.totalPersonalHandicapFromRace;
+        const personalInterval = this.finishCode.validFinish() ? this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()) : undefined; // % diff on class SCT
+        return this.finishCode.validFinish() ? (100 + personalInterval) * this.getBoatClass().getPY() / 100 : undefined;
     }
 
     toStore() {
@@ -150,10 +139,10 @@ export default class CorrectedResult extends Result {
             "PY": this.PY,
             "Corrected Laps": this.raceMaxLaps,
             "PH From Race": this.totalPersonalHandicapFromRace,
-            "NHEBSC PI (Single Class) Before Race": this.rollingPersonalHandicapBeforeRace,
-            "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBefore,
-            // "NHEBSC PI (Single Class) After Race": this.rollingClassPIAfter,
-            // "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfter,
+            "NHEBSC PH (Single Class) Before Race": this.rollingPersonalHandicapBeforeRace,
+            "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
+            "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
+            "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
             ...super.toStore(this),
         };
         // console.log(correctedToStore);
@@ -175,9 +164,9 @@ export default class CorrectedResult extends Result {
             "Personal Corrected Finish Time": personalCorrectedTime,
             "Corrected Laps": raceMaxLaps,
             "PH From Race": totalPersonalHandicapFromRace,
-            "NHEBSC PI (Single Class) Before Race": rollingClassPIBefore,
-            // "NHEBSC PI (All Classes) Before Race": rollingOverallPIBefore,
-            // "NHEBSC PI (Single Class) After Race": rollingClassPIAfter,
+            "NHEBSC PH (Single Class) Before Race": rollingClassPIBefore,
+            "NHEBSC PI (All Classes) Before Race": rollingOverallPIBefore,
+            // "NHEBSC PH (Single Class) After Race": rollingClassPIAfter,
             // "NHEBSC PI (All Classes) After Race": rollingOverallPIAfter,
         } = storeResult;
 
@@ -192,10 +181,17 @@ export default class CorrectedResult extends Result {
             parseInt(correctedFinishTime),
             parseInt(rollingClassPIBefore),
             parseInt(personalCorrectedTime),
-            undefined && parseInt(rollingOverallPIBefore),
+            parseInt(rollingOverallPIBefore),
             parseInt(raceMaxLaps),
         );
-        // correctedResult.setPostRaceRollingClassPI(parseInt(rollingClassPIAfter));
-        // correctedResult.setPostRaceRollingOverallPI(parseInt(rollingOverallPIAfter));
+        // totalPersonalHandicapFromRace,
+        // classCorrectedTime,
+        // rollingPersonalHandicapBeforeRace,
+        // personalCorrectedTime,
+        // rollingOverallPIBefore,
+        // raceMaxLaps,
+        // correctedResult.setPostRaceRollingPI(parseInt(rollingClassPIAfter));
+        // correctedResult.setPostRaceRollingPersonalHandicap(parseInt(rollingOverallPIAfter));
+        return correctedResult;
     }
 }

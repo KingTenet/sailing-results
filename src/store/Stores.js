@@ -43,6 +43,7 @@ export default class Stores {
                 return CorrectedResult.fromStore(result, getResultFromStore(result))
             }
             catch (err) {
+                throw err;
                 console.log(err);
                 debugger;
             }
