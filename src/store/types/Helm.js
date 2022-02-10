@@ -9,8 +9,27 @@ const MAX_NOVICE_RACES = 10;
 const PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP = 10;
 
 // TODO - change initial PI for novice helms
-const INITIAL_PI_FOR_NOVICE_HELM = 0; // In percent
+const INITIAL_PI_FOR_NOVICE_HELM = 20; // In percent
 const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent
+
+function calculatePersonalHandicapFromPI(classPY, PI) {
+    return classPY * (100 + PI) / 100;
+}
+
+function calculatePIFromPersonalHandicap(classPY, PH) {
+    return (PH / classPY) * 100 - 100;
+}
+
+function transformPersonalHandicapToPI(validResults, boatClass) {
+    assertType(boatClass, BoatClass);
+    validResults.forEach((result) => assertType(result, Result));
+    const firstResult = validResults.at(0);
+    const initialPersonalHandicap = firstResult.getRollingPersonalHandicapBeforeRace();
+    return [
+        calculatePIFromPersonalHandicap(firstResult.getBoatClass().getPY(), initialPersonalHandicap),
+        ...validResults.map((result) => calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()))
+    ];
+}
 
 export default class Helm extends StoreObject {
     constructor(name, yearOfBirth, gender, noviceInFirstRace, metaData) {
@@ -54,7 +73,7 @@ export default class Helm extends StoreObject {
     }
 
     wasNoviceAfterResults(results) {
-        return this.noviceInFirstRace && results.length >= MAX_NOVICE_RACES;
+        return this.noviceInFirstRace && results.length <= MAX_NOVICE_RACES;
     }
 
     getInitialPI(helmResultsAsc, race) {
@@ -63,55 +82,51 @@ export default class Helm extends StoreObject {
             : INITIAL_PI_FOR_EXPERIENCED_HELM
     }
 
-    getPersonalHandicapsFromResults(previousResults, boatClass, debug) {
+    getRollingPIFromResults(previousResults, boatClass) {
         assertType(boatClass, BoatClass);
         previousResults.forEach((result) => assertType(result, Result));
 
-        const intitialPI = this.wasNoviceAfterResults(previousResults)
-            ? INITIAL_PI_FOR_NOVICE_HELM
-            : INITIAL_PI_FOR_EXPERIENCED_HELM
+        const allPreviousResults = previousResults
+            .filter((result) => result.getPersonalHandicapFromRace() !== undefined);
 
-        if (!previousResults.length) {
-            return [Math.round(intitialPI), Math.round(intitialPI)];
+        debugger;
+        if (!allPreviousResults.length) {
+            return this.wasNoviceAfterResults(previousResults)
+                ? INITIAL_PI_FOR_NOVICE_HELM
+                : INITIAL_PI_FOR_EXPERIENCED_HELM;
         }
 
-        const initialOverallPI = previousResults.at(0).getRollingOverallPIBeforeRace();
-        const previousResultsPI = previousResults
-            .filter((result) => Number.isInteger(result.getPI()))
-            .map((result) => result.getPI());
-
-        const classPreviousResults = previousResults
-            .filter((result) => result.getBoatClass().getClassName() === boatClass.getClassName());
-
-        const overallPI = this.getRollingPI([initialOverallPI, ...previousResultsPI]);
-
-        if (!classPreviousResults.length) {
-            return [Math.round(overallPI), Math.round(overallPI)];
-        }
-
-        const initialClassPI = classPreviousResults.at(0).getRollingClassPIBeforeRace();
-        const classPreviousResultsPI = classPreviousResults
-            .filter((result) => Number.isInteger(result.getPI()))
-            .map((result) => result.getPI());
-
-        const classPI = this.getRollingPI([initialClassPI, ...classPreviousResultsPI]);
-        if (debug) {
-            console.log([initialClassPI, ...classPreviousResultsPI])
-            console.log(classPI)
-            console.log("-----");
-        }
-
-        return [Math.round(overallPI), Math.round(classPI)];
+        return this.getRollingMetric(transformPersonalHandicapToPI(allPreviousResults, boatClass));
     }
 
-    getRollingPI(allResultsPI) {
-        const resultsPI = allResultsPI.slice(-PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP);
-        const worstPI = resultsPI.reduce((max, PI) => Math.max(max, PI), -Infinity);
-        const sumOfPI = resultsPI.reduce((sum, PI) => sum + PI, 0);
-        if (resultsPI.length < PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP) {
-            return Math.round(sumOfPI / resultsPI.length);
+    getRollingPersonalHandicapFromResults(previousResults, boatClass) {
+        assertType(boatClass, BoatClass);
+        previousResults.forEach((result) => assertType(result, Result));
+
+        const classPreviousResults = previousResults
+            .filter((result) => result.getPersonalHandicapFromRace() !== undefined)
+            .filter((result) => result.getBoatClass().getClassName() === boatClass.getClassName());
+
+        if (!classPreviousResults.length) {
+            const overallRollingPI = this.getRollingPIFromResults(previousResults, boatClass);
+            return calculatePersonalHandicapFromPI(boatClass.getPY(), overallRollingPI);
         }
-        return Math.round(sumOfPI - worstPI) / (resultsPI.length - 1);
+
+        const initialClassPH = classPreviousResults.at(0).getRollingPersonalHandicapBeforeRace();
+        const classPreviousResultsPH = classPreviousResults
+            .map((result) => result.getPersonalHandicapFromRace())
+
+        return this.getRollingMetric([initialClassPH, ...classPreviousResultsPH]);
+    }
+
+    getRollingMetric(allMetrics) {
+        const metricsToCount = allMetrics.slice(-PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP);
+        const worst = metricsToCount.reduce((prevMax, current) => Math.max(prevMax, current), -Infinity);
+        const sum = metricsToCount.reduce((sum, current) => sum + current, 0);
+        if (metricsToCount.length < PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP) {
+            return sum / metricsToCount.length;
+        }
+        return (sum - worst) / (metricsToCount.length - 1);
     }
 
     getGender() {

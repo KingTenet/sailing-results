@@ -3,6 +3,7 @@ import StoreObject from "./StoreObject.js";
 import Helm from "./Helm.js";
 import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
+import FinishCode from "./FinishCode.js";
 
 
 function calculateClassCorrectedTime(PY, finishTime, lapsCompleted, lapsToUse) {
@@ -14,22 +15,8 @@ function calculatePersonalCorrectedTime(classCorrectedTime, PI) {
 }
 
 function calculatePersonalInterval(classCorrectedTime, standardCorrectedTime) {
+    console.log(`Getting personal interval from ${classCorrectedTime} and ${standardCorrectedTime}`);
     return (classCorrectedTime / standardCorrectedTime - 1) * 100;
-}
-
-class FinishCode {
-    constructor(code) {
-        assert(!code || ["DNF", "DNS", "OCS"].includes(code), `${code} is an invalid finish code`);
-        this.code = code || undefined;
-    }
-
-    getCode() {
-        return this.code;
-    }
-
-    validFinish() {
-        return !this.code;
-    }
 }
 
 export default class Result extends StoreObject {
@@ -104,7 +91,11 @@ export default class Result extends StoreObject {
         if (!this.finishCode.validFinish()) {
             throw new Error("Cannot calculate a class corrected time for a non-finisher");
         }
-        return calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
+
+        const classCorrectedTime = calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
+        // console.log(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
+        // console.log(classCorrectedTime);
+        return classCorrectedTime;
     }
 
     sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {
@@ -113,12 +104,12 @@ export default class Result extends StoreObject {
     }
 
     getPersonalInterval(raceMaxLaps, standardCorrectedTime) {
-        return Math.round(calculatePersonalInterval(this.getClassCorrectedTime(raceMaxLaps), standardCorrectedTime));
+        return calculatePersonalInterval(this.getClassCorrectedTime(raceMaxLaps), standardCorrectedTime);
     }
 
-    getCorrectedTimes(helmPI, raceMaxLaps) {
+    getCorrectedTimes(totalPersonalHandicap, raceMaxLaps) {
         const classCorrectedTime = this.getClassCorrectedTime(raceMaxLaps);
-        const personalCorrectedTime = calculatePersonalCorrectedTime(classCorrectedTime, helmPI);
+        const personalCorrectedTime = calculateClassCorrectedTime(totalPersonalHandicap, this.getFinishTime(), this.getLaps(), raceMaxLaps);
         return [personalCorrectedTime, classCorrectedTime];
     }
 
