@@ -3,150 +3,44 @@ import Helm from "./Helm.js";
 import Race from "./Race.js";
 import Result from "./Result.js";
 import StoreObject from "./StoreObject.js";
-import { getRollingHandicaps } from "../../../scripts/personalHandicapHelpers.js";
-
-
-
-
+import { getRollingHandicaps, calculatePersonalInterval } from "../../../scripts/personalHandicapHelpers.js";
 
 export default class CorrectedResult extends Result {
-    constructor(
-        result,
-        gender,
-        novice,
-        cadet,
-        junior,
-        PY,
-        totalPersonalHandicapFromRace,
-        classCorrectedTime,
-        rollingPersonalHandicapBeforeRace,
-        personalCorrectedTime,
-        rollingOverallPIBefore,
-        raceFinish,
-        metaData) {
+    constructor(result, previousResults, raceFinish) {
 
         assertType(result, Result);
+        previousResults.forEach((result) => assertType(result, CorrectedResult));
         super(result.race, result.helm, result.boatClass, result.boatSailNumber, result.laps, result.pursuitFinishPosition, result.finishTime, result.finishCode, new StoreObject(result));
         const validFinish = result.finishCode.validFinish();
 
-        this.gender = assertType(gender, "string");
-        this.novice = assertType(novice, "boolean");
-        this.cadet = assertType(cadet, "boolean");
-        this.junior = assertType(junior, "boolean");
-        this.totalPersonalHandicapFromRace = validFinish ? assertType(totalPersonalHandicapFromRace, "number") : undefined;
-        this.classCorrectedTime = validFinish ? assertType(classCorrectedTime, "number") : undefined;
-        this.personalCorrectedTime = validFinish ? assertType(personalCorrectedTime, "number") : undefined;
-        this.PY = assertType(PY, "number");
-
-        this.rollingPersonalHandicapBeforeRace = assertType(rollingPersonalHandicapBeforeRace, "number");
-        this.rollingOverallPIBeforeRace = rollingOverallPIBefore;//assertType(, "number");
-        // this.rollingClassPIAfter = assertType(rollingClassPIAfter, "number");
-        // this.rollingOverallPIAfter = assertType(rollingOverallPIAfter, "number");
         this.raceFinish = raceFinish;
+        this.previousResults = previousResults;
 
-        // this.raceMaxLaps = validFinish ? assertType(raceMaxLaps, "number") : undefined;
+        const [rollingPH, rollingPI] = getRollingHandicaps(this.previousResults, this);
+        // console.log(this.helm.name, this.boatClass.getClassName(), rollingPH, rollingPI);
+        const [personalCorrectedTime, classCorrectedTime] = validFinish ? this.getCorrectedTimes(rollingPH, this.raceFinish.getMaxLaps()) : [];
+
+        this.classCorrectedTime = Math.round(classCorrectedTime);
+        this.personalCorrectedTime = Math.round(personalCorrectedTime);
+        this.rollingPersonalHandicapBeforeRace = Math.round(rollingPH);
+        this.rollingOverallPIBeforeRace = rollingPI;
+        const [rollingPHAfter, rollingPIAfter] = getRollingHandicaps([...this.previousResults, this], this);
+        // console.log("  ", this.helm.name, this.boatClass.getClassName(), rollingPHAfter, rollingPIAfter);
+
+        this.rollingPersonalHandicapAfterRace = rollingPHAfter;
+        this.rollingOverallPIAfterRace = rollingPIAfter;
+
+        this.gender = this.helm.getGender();
+        this.novice = this.helm.wasNoviceInRace(this.previousResults, this.raceFinish);
+        this.cadet = this.helm.wasCadetInRace(this.raceFinish);
+        this.junior = this.helm.wasJuniorInRace(this.raceFinish);
+
+        this.raceMaxLaps = this.raceFinish.getMaxLaps();
     }
 
     static getId(result) {
         assertType(result, CorrectedResult);
         return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
-    }
-
-    static fromResult(result, helmResultsByRaceAsc, raceFinish) {
-        assertType(result, Result);
-
-        const helm = result.getHelm();
-        const race = result.getRace();
-        const gender = helm.getGender();
-        const novice = helm.wasNoviceInRace(helmResultsByRaceAsc, race);
-        const cadet = helm.wasCadetInRace(race);
-        const junior = helm.wasJuniorInRace(race);
-        const validFinish = result.finishCode.validFinish() || undefined;
-
-        let debug;
-        // if (helm.name === "Everitt Andy" && result.getBoatClass().className === "LASER") {
-        //     debug = true;
-        // }
-        // if (Result.getId(result).includes("Result::Gill Matt::Race::2015-01-18T00:00:00.000Z::1")) {
-        //     console.log(Result.getId(result))
-        // }
-
-
-        //standardCorrectedTime, raceMaxLaps
-        const personalInterval = validFinish ? result.getPersonalInterval(raceFinish.getMaxLaps(), raceFinish.getSCT()) : undefined; // % diff on class SCT
-        const totalPersonalHandicapForClass = validFinish ? (100 + personalInterval) * result.getBoatClass().getPY() / 100 : undefined;
-
-        const previousResults = helmResultsByRaceAsc
-            .filter((result) => result.getRace().isBefore(race));
-
-        const [rollingPH, rollingPI] = getRollingHandicaps(previousResults, result);
-
-        const [personalCorrectedTime, classCorrectedTime] = validFinish ? result.getCorrectedTimes(rollingPH, raceFinish.getMaxLaps()) : [];
-
-        try {
-            return new CorrectedResult(
-                result,
-                gender,
-                novice,
-                cadet,
-                junior,
-                result.getBoatClass().getPY(),
-                totalPersonalHandicapForClass && Math.round(totalPersonalHandicapForClass),
-                classCorrectedTime && Math.round(classCorrectedTime),
-                rollingPH,
-                personalCorrectedTime && Math.round(personalCorrectedTime),
-                rollingPI,
-                raceFinish,
-            );
-        }
-        catch (err) {
-            debugger;
-            throw err;
-        }
-
-        newResult.setPostRacePIs(previousResults);
-        // return newResult;
-    }
-
-    setPostRacePIs(previousResults) {
-        const [rollingPH, rollingPI] = getRollingHandicaps([...previousResults, this], this);
-        this.rollingPersonalHandicapAfterRace = rollingPH;
-        this.rollingOverallPIAfterRace = rollingPI;
-    }
-
-    getRollingPersonalHandicapBeforeRace() {
-        return this.rollingPersonalHandicapBeforeRace;
-    }
-
-    getPersonalHandicapFromRace() {
-        // return this.totalPersonalHandicapFromRace;
-        const personalInterval = this.finishCode.validFinish() ? this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()) : undefined; // % diff on class SCT
-        return this.finishCode.validFinish() ? (100 + personalInterval) * this.getBoatClass().getPY() / 100 : undefined;
-    }
-
-    toStore() {
-        const correctedToStore = {
-            "Gender": this.gender,
-            "Novice": this.novice,
-            "Cadet": this.cadet,
-            "Junior": this.junior,
-            // "Club Boat": ,
-            // "Crew": ,
-            // "Rig": ,
-            // "Spinnaker": spinnaker,
-            "Class Corrected Finish Time": this.classCorrectedTime,
-            "Personal Corrected Finish Time": this.personalCorrectedTime,
-            "PY": this.PY,
-            "Corrected Laps": this.raceMaxLaps,
-            "PH From Race": this.totalPersonalHandicapFromRace,
-            "NHEBSC PH (Single Class) Before Race": this.rollingPersonalHandicapBeforeRace,
-            "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
-            "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
-            "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
-            ...super.toStore(this),
-        };
-        // console.log(correctedToStore);
-        return correctedToStore;
     }
 
     static fromStore(storeResult, result) {
@@ -194,4 +88,64 @@ export default class CorrectedResult extends Result {
         // correctedResult.setPostRaceRollingPersonalHandicap(parseInt(rollingOverallPIAfter));
         return correctedResult;
     }
+
+    static fromResult(result, helmResultsByRaceAsc, raceFinish) {
+        assertType(result, Result);
+        const previousResults = helmResultsByRaceAsc
+            .filter((result) => result.getRace().isBefore(raceFinish));
+
+        try {
+            return new CorrectedResult(
+                result,
+                previousResults,
+                raceFinish,
+            );
+        }
+        catch (err) {
+            debugger;
+            throw err;
+        }
+    }
+
+    toStore() {
+        const correctedToStore = {
+            "Gender": this.helm.getGender(),
+            "Novice": this.helm.wasNoviceInRace(this.previousResults, this.raceFinish),
+            "Cadet": this.helm.wasCadetInRace(this.raceFinish),
+            "Junior": this.helm.wasJuniorInRace(this.raceFinish),
+            // "Club Boat": ,
+            // "Crew": ,
+            // "Rig": ,
+            // "Spinnaker": spinnaker,
+            "Class Corrected Finish Time": this.classCorrectedTime,
+            "Personal Corrected Finish Time": this.personalCorrectedTime,
+            "PY": this.PY,
+            "Corrected Laps": this.raceMaxLaps,
+            "PH From Race": this.totalPersonalHandicapFromRace,
+            "NHEBSC PH (Single Class) Before Race": this.rollingPersonalHandicapBeforeRace,
+            "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
+            "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
+            "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
+            ...super.toStore(this),
+        };
+        // console.log(correctedToStore);
+        return correctedToStore;
+    }
+
+    getRollingPersonalHandicapBeforeRace() {
+        return this.rollingPersonalHandicapBeforeRace;
+    }
+
+    getPersonalInterval(raceMaxLaps, standardCorrectedTime) {
+        return calculatePersonalInterval(this.getClassCorrectedTime(raceMaxLaps), standardCorrectedTime);
+    }
+
+    getPersonalHandicapFromRace() {
+        if (!this.finishCode.validFinish()) {
+            return;
+        }
+        const personalInterval = this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()); // % diff on class SCT
+        return Math.round((100 + personalInterval) * this.getBoatClass().getPY() / 100);
+    }
+
 }

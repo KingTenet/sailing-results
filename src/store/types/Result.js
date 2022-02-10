@@ -4,7 +4,7 @@ import Helm from "./Helm.js";
 import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
 import FinishCode from "./FinishCode.js";
-import { calculateClassCorrectedTime, calculatePersonalInterval } from "../../../scripts/classHandicapHelpers.js";
+import { calculateClassCorrectedTime } from "../../../scripts/classHandicapHelpers.js";
 
 export default class Result extends StoreObject {
     constructor(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, metadata) {
@@ -85,10 +85,6 @@ export default class Result extends StoreObject {
     sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {
         assertType(secondResult, Result);
         return secondResult.getClassCorrectedTime(maxLaps) - this.getClassCorrectedTime(maxLaps);
-    }
-
-    getPersonalInterval(raceMaxLaps, standardCorrectedTime) {
-        return calculatePersonalInterval(this.getClassCorrectedTime(raceMaxLaps), standardCorrectedTime);
     }
 
     getCorrectedTimes(totalPersonalHandicap, raceMaxLaps) {

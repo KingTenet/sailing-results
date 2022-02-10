@@ -168,6 +168,7 @@ function transformResult(result) {
     return {
         ...result,
         helmName: result.getHelm().name,
+        totalPersonalHandicapFromRace: result.getPersonalHandicapFromRace(),
     }
 }
 
@@ -575,16 +576,16 @@ function testNoviceTransition() {
 
 function runTests() {
     try {
-        // testCorrectedTimeSameLaps();
-        // testCorrectedTimeDifferentLaps();
-        // testCorrectedTimeForRace();
-        // testGetPH1();
-        // testGetPH2();
-        // testGetPH3();
-        // testGetPH4();
+        testCorrectedTimeSameLaps();
+        testCorrectedTimeDifferentLaps();
+        testCorrectedTimeForRace();
+        testGetPH1();
+        testGetPH2();
+        testGetPH3();
+        testGetPH4();
         testRollingPH();
-        // testRollingNoviceHelm();
-        // testNoviceTransition();
+        testRollingNoviceHelm();
+        testNoviceTransition();
     }
     catch (err) {
         console.log(err);

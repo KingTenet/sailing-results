@@ -127,3 +127,7 @@ export function getRollingHandicaps(previousResults, result) {
     const rollingPI = Math.round(getRollingPIFromResults(previousResults, result.getBoatClass(), result.getHelm().getInitialPI()));
     return [rollingPH, rollingPI];
 }
+
+export function calculatePersonalInterval(classCorrectedTime, standardCorrectedTime) {
+    return (classCorrectedTime / standardCorrectedTime - 1) * 100;
+}
