@@ -1,11 +1,12 @@
 
-import { groupBy, getSheetIdFromURL } from "../src/common.js";
+import { groupBy, getSheetIdFromURL, flatten } from "../src/common.js";
 import Stores from "../src/store/Stores.js";
 import Result from "../src/store/types/Result.js";
 import auth from "./auth.js";
 import Race from "../src/store/types/Race.js";
 import { getCorrectedResultsForRace } from "./resultCorrection.js";
 import Helm from "../src/store/types/Helm.js";
+import SeriesRace from "../src/store/types/SeriesRace.js";
 
 function getLatestProcessedRace(correctedResults) {
     const results = Race.groupResultsByRaceAsc(correctedResults);
@@ -17,6 +18,13 @@ function getLatestProcessedRace(correctedResults) {
 
 async function updateCorrectedResults(allResults, correctedResultsStore) {
     const latestProcessedRace = getLatestProcessedRace(correctedResultsStore.all());
+    if (!latestProcessedRace) {
+        console.log(`No data has yet been imported`);
+    }
+    else {
+        console.log(`Latest imported race is: ${latestProcessedRace.getDate().toISOString()}, ${latestProcessedRace.getNumber()}`)
+    }
+
     const resultsByRaceAscToProcess = Race.groupResultsByRaceAsc(allResults)
         .filter(([race]) => !latestProcessedRace || latestProcessedRace.isBefore(race));
 
@@ -30,71 +38,48 @@ async function updateCorrectedResults(allResults, correctedResultsStore) {
     console.log("Updated corrected results");
 }
 
-async function updateAllSeriesResults(sourceResultsURL, seriesResultsURL) {
+async function updateAllSeriesResults(stores) {
+    const allResults = stores.results.all();
+    await updateCorrectedResults(allResults, stores.correctedResultsStore);
+
+    const allSeriesRaces = stores.seriesRaces.all();
+    const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);
+    const allResultsByRace = new Map(
+        Race.groupResultsByRaceAsc(allResults)
+            .map(([race, results]) => [Race.getId(race), results]));
+
+    for (let [seriesId, seriesRaces] of allSeries) {
+        console.log(`Updating results for series: ${seriesId}`);
+        const seriesResults = flatten(seriesRaces.map((seriesRace) => {
+            if (!allResultsByRace.has(SeriesRace.getRaceId(seriesRace))) {
+                console.log("   No results found for race " + SeriesRace.getRaceId(seriesRace));
+                return [];
+            }
+            return allResultsByRace.get(SeriesRace.getRaceId(seriesRace));
+        }));
+        if (!seriesResults.length) {
+            console.log(`No races found for series ${seriesId}`);
+        }
+        else {
+            await updateCorrectedResults(seriesResults, stores.seriesResults.get(seriesId));
+        }
+    }
+}
+
+async function updateAll(sourceResultsURL, seriesResultsURL) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
-
     const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
 
-    await updateCorrectedResults(stores.results.all(), stores.correctedResultsStore);
+    await updateAllSeriesResults(stores);
 
     stores.correctedResultsStore.sync();
-
-
-    // const allSeriesRaces = stores.seriesRaces.all();
-    // const allSeries = new Map(groupBy(allSeriesRaces, SeriesRace.getSeriesId));
-
-    // getSeriesWithRacesLaterThanDate();
-
-    // const seriesRacesToUpdate = new Map();
-
-    // for (let seriesRace of allSeriesRaces) {
-    //     let seriesId = SeriesRace.getSeriesId(seriesRace);
-    //     let lastImportedDate = seriesRace.getLastImported();
-    //     const raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace)) || [];
-    //     if (raceResults.some((result) => result.updatedAfterDate(lastImportedDate))) {
-    //         seriesRacesToUpdate.set(seriesId, allSeries.get(seriesId));
-    //     }
-    // }
-
-    // for (let [seriesId] of [...seriesRacesToUpdate]) {
-    //     updateSeriesResults(Series.fromId(seriesId), allSeries.get(seriesId), allResults, stores.correctedResults);
-    // }
-
-    // Read source results etc.
-    // Check last updated date of source results
-    // Check last updated date of series results
-    // If any dates are later, reprocess whole series
+    [...stores.seriesResults].forEach(([, store]) => store.sync());
 }
 
 
-// function updateSeriesResults(series, seriesRaces, allResults, correctedResultsStore) {
-//     const season = series.getSeasonName();
-//     const seriesName = series.getSeriesName();
-//     const allResultsByRaceAsc = groupBy(allResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
-//     const allCorrectedResultsByRaceAsc = groupBy(allCorrectedResults, Result.getRaceId).sort(([raceIdA], [raceIdB]) => Race.fromId(raceIdA).sort(Race.fromId(raceIdB)));
-//     const allResultsByRace = new Map(allResultsByRaceAsc);
-
-//     for (let seriesRace of seriesRaces) {
-//         let raceResults = allResultsByRace.get(SeriesRace.getRaceId(seriesRace))
-//         if (!raceResults) {
-//             console.log(`WARNING: No results found for Race: ${seriesRace.getRace().prettyPrint()}`);
-//             continue;
-//         }
-//         if (!Race.isPursuitRace(raceResults)) {
-//             const correctedResults = processFleetRace(raceResults, allCorrectedResultsAsc);
-//             console.log(correctedResults);
-//         }
-//         else {
-//             processPursuitRace();
-//         }
-//         break;
-//     }
-
-//     console.log(`Updated series: '${season}/${seriesName}'`);
-// }
 
 
-updateAllSeriesResults(...process.argv.slice(2))
+updateAll(...process.argv.slice(2))
     .then(() => console.log("Finished"))
     .catch((err) => console.log(err));

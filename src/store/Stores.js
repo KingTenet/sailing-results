@@ -10,6 +10,7 @@ import CorrectedResult from "./types/CorrectedResult.js";
 import RaceFinish from "./types/RaceFinish.js";
 import Race from "./types/Race.js";
 import { getCorrectedResultsForRace } from "../../scripts/resultCorrection.js";
+import Series from "./types/Series.js";
 const localStorage = new LocalStorage('./backend');
 global.localStorage = localStorage;
 
@@ -37,6 +38,7 @@ export default class Stores {
         );
 
         this.results = await StoreWrapper.create("Fleet Race Results Writeable", this.raceResultsDocument, this, Result, getResultFromStore);
+        // this.results = await StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
         this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
 
         const batchCorrectedResults = (storeResults) => {
@@ -56,7 +58,13 @@ export default class Stores {
             return storeOrderedResults.map(Result.getId).map((id) => correctedResultsById.get(id)[0]);
         }
 
-        this.correctedResultsStore = await StoreWrapper.create("Corrected Results", this.seriesResultsDocument, this, CorrectedResult, undefined, batchCorrectedResults);
+        this.correctedResultsStore = await StoreWrapper.create("Corrected Results", this.seriesResultsDocument, this, CorrectedResult, undefined, batchCorrectedResults, true);
+
+        const allSeries = groupBy(this.seriesRaces.all(), SeriesRace.getSeriesId);
+        this.seriesResults = new Map(await Promise.all(allSeries.map(async ([seriesId]) => [
+            seriesId,
+            await StoreWrapper.create(Series.fromId(seriesId).getSheetName(), this.seriesResultsDocument, this, CorrectedResult, undefined, batchCorrectedResults, true)
+        ])));
     }
 
     static async create(auth, raceResultsSheetId, seriesResultsSheetId) {

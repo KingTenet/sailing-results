@@ -22,6 +22,16 @@ export default class Helm extends StoreObject {
         return generateId(Helm, [helm.name]);
     }
 
+    static sheetHeaders() {
+        return [
+            "Name",
+            "Year Of Birth",
+            "Gender",
+            "Was Novice In First Race",
+            ...StoreObject.sheetHeaders()
+        ];
+    }
+
     static fromStore(storeHelm) {
         let {
             "Name": name,

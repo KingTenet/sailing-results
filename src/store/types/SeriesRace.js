@@ -8,7 +8,7 @@ export default class SeriesRace extends StoreObject {
         super(metaData);
         this.series = assertType(series, Series);
         this.race = assertType(race, Race);
-        this.lastImported = assertType(lastImported, Date);
+        // this.lastImported = assertType(lastImported, Date);
     }
 
     static getId(seriesRace) {
@@ -26,8 +26,15 @@ export default class SeriesRace extends StoreObject {
         return Series.getId(seriesRace.series);
     }
 
-    getSeries() {
-        return this.series;
+    static sheetHeaders() {
+        return [
+            "Season",
+            "Series",
+            "Race Date",
+            "Race Number",
+            "Last Imported",
+            ...StoreObject.sheetHeaders(),
+        ];
     }
 
     static fromStore(storeSeriesRace) {
@@ -50,8 +57,12 @@ export default class SeriesRace extends StoreObject {
         return new SeriesRace(raceSeries, race, lastImported, StoreObject.fromStore({}))
     }
 
-    getLastImported() {
-        return this.lastImported;
+    // getLastImported() {
+    //     return this.lastImported;
+    // }
+
+    getSeries() {
+        return this.series;
     }
 
     getRace() {

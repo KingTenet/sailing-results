@@ -22,6 +22,10 @@ export default class Series {
         return new Series(season, series);
     }
 
+    getSheetName() {
+        return [this.season, this.series].join(" ");
+    }
+
     getSeasonName() {
         return this.season;
     }

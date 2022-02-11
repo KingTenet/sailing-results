@@ -55,16 +55,39 @@ export default class CorrectedResult extends Result {
         );
     }
 
+    static sheetHeaders() {
+        return [
+            "Gender",
+            "Novice",
+            "Cadet",
+            "Junior",
+            "Club Boat",
+            "Crew",
+            "Rig",
+            "Spinnaker",
+            "Class Corrected Finish Time",
+            "Personal Corrected Finish Time",
+            "PY",
+            "Corrected Laps",
+            "PH From Race",
+            "NHEBSC PH (Single Class) Before Race",
+            "NHEBSC PI (All Classes) Before Race",
+            "NHEBSC PH (Single Class) After Race",
+            "NHEBSC PI (All Classes) After Race",
+            ...Result.sheetHeaders(),
+        ];
+    }
+
     toStore() {
-        const correctedToStore = {
+        return {
             "Gender": this.helm.getGender(),
             "Novice": this.helm.wasNoviceInRace(this.previousResults, this.raceFinish),
             "Cadet": this.helm.wasCadetInRace(this.raceFinish),
             "Junior": this.helm.wasJuniorInRace(this.raceFinish),
-            // "Club Boat": ,
-            // "Crew": ,
-            // "Rig": ,
-            // "Spinnaker": spinnaker,
+            "Club Boat": "",
+            "Crew": "",
+            "Rig": "",
+            "Spinnaker": "",
             "Class Corrected Finish Time": this.classCorrectedTime,
             "Personal Corrected Finish Time": this.personalCorrectedTime,
             "PY": this.PY,
@@ -76,8 +99,6 @@ export default class CorrectedResult extends Result {
             "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
             ...super.toStore(this),
         };
-        // console.log(correctedToStore);
-        return correctedToStore;
     }
 
     getRollingPersonalHandicapBeforeRace() {

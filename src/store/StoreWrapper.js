@@ -1,4 +1,5 @@
 import Store from "./Store.js";
+import StoreObject from "./types/StoreObject.js";
 
 function debugCreationErrors(func, storeObject) {
     try {
@@ -45,7 +46,6 @@ export default class StoreWrapper {
     }
 
     get(key) {
-        debugger;
         return this.store.get(key);
     }
 
@@ -61,12 +61,21 @@ export default class StoreWrapper {
         return this.store.update(...args);
     }
 
-    async sync() {
-        return await this.store.syncRemoteStateToLocalState();
+    async sync(force = false) {
+        return await this.store.syncRemoteStateToLocalState(force);
     }
 
-    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), toStore = (obj) => obj.toStore(), getId = Type.getId) {
-        let store = new Store(storeName, raceResultsDocument, toStore, (...args) => debugCreationErrors(() => batch(...args), ...args), getId, services);
+    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), createSheetIfMissing = false, toStore = (obj) => obj.toStore(), getId = Type.getId) {
+        let store = new Store(
+            storeName,
+            raceResultsDocument,
+            (...args) => StoreObject.validateHeaders(toStore(...args), Type),
+            (...args) => debugCreationErrors(() => batch(...args), ...args),
+            getId,
+            services,
+            createSheetIfMissing,
+            Type.sheetHeaders(),
+        );
         await store.init();
         return new StoreWrapper(store);
     }

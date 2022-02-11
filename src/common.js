@@ -118,6 +118,10 @@ export function flattenMap(map) {
     return output;
 }
 
+export function flatten(arrOfArr) {
+    return arrOfArr.reduce((acc, next) => acc.concat(...next), []);
+}
+
 export async function getGoogleSheetDoc(sheetId, clientEmail, privateKey) {
     try {
         const doc = new GoogleSpreadsheet(sheetId);

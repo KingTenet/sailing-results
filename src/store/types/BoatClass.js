@@ -30,6 +30,18 @@ export default class BoatClass extends StoreObject {
         return BoatClass.generateBoatClassId(className, BoatClass.getClassYearForRaceDate(raceDate));
     }
 
+    static sheetHeaders() {
+        return [
+            "Class",
+            "Crew",
+            "Rig",
+            "Spinnaker",
+            "PY",
+            "Valid Year",
+            ...StoreObject.sheetHeaders()
+        ];
+    }
+
     static fromStore(storeClass) {
         let {
             "Class": className,

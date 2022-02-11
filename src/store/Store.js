@@ -3,7 +3,7 @@ import RemoteStore from "./RemoteStore.js";
 import { parseISOString, getISOStringFromDate } from "../common.js"
 
 export default class Store {
-    constructor(storeName, sheetsDoc, toStore, fromStore, getKeyFromObj, services) {
+    constructor(storeName, sheetsDoc, toStore, fromStore, getKeyFromObj, services, createSheetIfMissing, headers) {
         this.storeName = storeName;
         this.services = services;
         this.toStore = toStore;
@@ -11,7 +11,7 @@ export default class Store {
         this.getKeyFromObj = getKeyFromObj;
         this.metadataKey = `metadata::${this.storeName}`;
         this.localStore = new LocalStore(storeName, toStore, fromStore);
-        this.promiseRemoteStore = RemoteStore.createRemoteStore(sheetsDoc, storeName)
+        this.promiseRemoteStore = RemoteStore.createRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 
@@ -36,7 +36,7 @@ export default class Store {
         localStorage.setItem(this.metadataKey, getISOStringFromDate(this.lastSyncDate));
     }
 
-    async syncRemoteStateToLocalState() {
+    async syncRemoteStateToLocalState(force = false) {
         const syncDate = this.lastSyncDate;
         const allLocal = this.all();
         let created = allLocal
@@ -57,9 +57,9 @@ export default class Store {
             throw new Error(`Cannot sync because remote state was updated at ${objUpdatedAfterSync.lastUpdated.toISOString()} and was last pulled at ${syncDate.toISOString()}`);
         }
 
-        if (updated.length) {
+        if (updated.length && force) {
             // TODO: Implement handling of updating remote state
-            // await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
+            await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
         }
         if (created.length) {
             await this.remoteStore.append(created.map((obj) => this.toStore(obj)));

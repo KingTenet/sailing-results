@@ -56,6 +56,21 @@ export default class Result extends StoreObject {
         return firstResult.getRace().sortByRaceAsc(secondResult.getRace())
     }
 
+    static sheetHeaders() {
+        return [
+            "Date",
+            "Race Number",
+            "Helm",
+            "Sail Number",
+            "Class",
+            "Laps",
+            "Pursuit Finish Position",
+            "Finish Time",
+            "Finish Code",
+            ...StoreObject.sheetHeaders(),
+        ];
+    }
+
     static fromStore(storeResult, getHelm, getBoatClassForDate) {
         let {
             "Date": dateString,
