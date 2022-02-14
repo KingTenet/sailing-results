@@ -34,14 +34,15 @@ export default class CorrectedResult extends Result {
         this.novice = this.helm.wasNoviceInRace(this.previousResults, this.raceFinish);
         this.cadet = this.helm.wasCadetInRace(this.raceFinish);
         this.junior = this.helm.wasJuniorInRace(this.raceFinish);
+        this.validFinish = validFinish;
 
         this.raceMaxLaps = this.raceFinish.getMaxLaps();
     }
 
-    static getId(result) {
-        assertType(result, CorrectedResult);
-        return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
-    }
+    // static getId(result) {
+    //     assertType(result, CorrectedResult);
+    //     return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
+    // }
 
     static fromResult(result, helmResultsByRaceAsc, raceFinish) {
         assertType(result, Result);
@@ -74,6 +75,8 @@ export default class CorrectedResult extends Result {
             "NHEBSC PI (All Classes) Before Race",
             "NHEBSC PH (Single Class) After Race",
             "NHEBSC PI (All Classes) After Race",
+            "Class Position",
+            "PH Position",
             ...Result.sheetHeaders(),
         ];
     }
@@ -90,13 +93,15 @@ export default class CorrectedResult extends Result {
             "Spinnaker": "",
             "Class Corrected Finish Time": this.classCorrectedTime,
             "Personal Corrected Finish Time": this.personalCorrectedTime,
-            "PY": this.PY,
+            "PY": this.getBoatClass().getPY(),
             "Corrected Laps": this.raceMaxLaps,
-            "PH From Race": this.totalPersonalHandicapFromRace,
+            "PH From Race": this.getPersonalHandicapFromRace(),
             "NHEBSC PH (Single Class) Before Race": this.rollingPersonalHandicapBeforeRace,
             "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
             "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
             "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
+            "Class Position": this.classCorrectedPosition,
+            "PH Position": this.personalCorrectedPosition,
             ...super.toStore(this),
         };
     }
@@ -117,4 +122,33 @@ export default class CorrectedResult extends Result {
         return Math.round(calculatePersonalHandicapFromPI(this.getBoatClass().getPY(), PI))
     }
 
+    getPersonalCorrectedFinishTime() {
+        return this.personalCorrectedTime;
+    }
+
+    getClassCorrectedFinishTime() {
+        return this.classCorrectedTime;
+    }
+
+    isValidFinish() {
+        return this.validFinish;
+    }
+
+    sortByCorrectedFinishTimeDesc(secondResult) {
+        assertType(secondResult, CorrectedResult);
+        return secondResult.getClassCorrectedFinishTime() - this.getClassCorrectedFinishTime();
+    }
+
+    sortByPersonalCorrectedFinishTimeDesc(secondResult) {
+        assertType(secondResult, CorrectedResult);
+        return secondResult.getPersonalCorrectedFinishTime() - this.getPersonalCorrectedFinishTime();
+    }
+
+    setClassCorrectedPosition(position) {
+        this.classCorrectedPosition = position;
+    }
+
+    setPersonalCorrectedPosition(position) {
+        this.personalCorrectedPosition = position;
+    }
 }

@@ -1,5 +1,3 @@
-import { promiseSleep } from "../common.js";
-
 class RemoteStoreNoNetwork extends Error { }
 class RemoteStoreNoAccess extends Error { }
 class RemoteStoreNoSheet extends Error { }

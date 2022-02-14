@@ -5,12 +5,11 @@ import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
 import FinishCode from "./FinishCode.js";
 import { calculateClassCorrectedTime } from "../../../scripts/classHandicapHelpers.js";
+import HelmResult from "./HelmResult.js";
 
-export default class Result extends StoreObject {
+export default class Result extends HelmResult {
     constructor(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, metadata) {
-        super(metadata);
-        this.race = assertType(race, Race);
-        this.helm = assertType(helm, Helm);
+        super(race, helm, metadata);
         this.boatClass = assertType(boatClass, BoatClass);
         this.boatSailNumber = assertType(boatSailNumber, "number");
         this.laps = laps && assertType(laps, "number");
@@ -23,21 +22,6 @@ export default class Result extends StoreObject {
         else {
             assert(!this.laps && !this.finishTime && !this.pursuitFinishPosition, `Invalid race result for race ${JSON.stringify(this, null, 4)}`);
         }
-    }
-
-    static getId(result) {
-        assertType(result, Result);
-        return generateId(Result, [Helm.getId(result.helm), Race.getId(result.race)]);
-    }
-
-    static getRaceId(result) {
-        assertType(result, Result);
-        return Race.getId(result.race);
-    }
-
-    static getHelmId(result) {
-        assertType(result, Result);
-        return Helm.getId(result.helm);
     }
 
     static getBoatClassId(result) {
@@ -67,7 +51,7 @@ export default class Result extends StoreObject {
             "Pursuit Finish Position",
             "Finish Time",
             "Finish Code",
-            ...StoreObject.sheetHeaders(),
+            ...HelmResult.sheetHeaders(),
         ];
     }
 
@@ -124,12 +108,16 @@ export default class Result extends StoreObject {
         return this.laps;
     }
 
-    getRace() {
-        return this.race;
-    }
+    // getRace() {
+    //     return this.race;
+    // }
 
-    getHelm() {
-        return this.helm;
+    // getHelm() {
+    //     return this.helm;
+    // }
+
+    isValidFinish() {
+        return this.finishCode.validFinish();
     }
 
     toStore() {

@@ -65,7 +65,6 @@ export default class LocalStore {
         // console.log(`Adding key ${key} to local storage`);
         let storeKey = this.keyToStoreKey(key);
         if (this.localStorage.getItem(storeKey)) {
-            debugger;
             throw new Error(`Attempting to add object with key ${key} to local storage when it already exists`);
         }
         this.localStorage.setItem(storeKey, JSON.stringify(value));

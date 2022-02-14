@@ -1,4 +1,5 @@
 import { assertType, generateId, fromId, parseISOString, groupBy } from "../../common.js";
+import HelmResult from "./HelmResult.js";
 import Result from "./Result.js";
 
 export default class Race {
@@ -59,8 +60,8 @@ export default class Race {
     }
 
     static groupResultsByRaceAsc(results) {
-        return groupBy(results, Result.getRaceId)
-            .map(([raceId, raceResults]) => [Race.fromId(raceId), raceResults])
+        return groupBy(results, HelmResult.getRaceId)
+            .map(([raceId, raceResults]) => [raceResults.at(0).getRace(), raceResults])
             .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
     }
 }

@@ -8,12 +8,13 @@ const INITIAL_PI_FOR_NOVICE_HELM = 20; // In percent
 const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent
 
 export default class Helm extends StoreObject {
-    constructor(name, yearOfBirth, gender, noviceInFirstRace, metaData) {
+    constructor(name, yearOfBirth, gender, noviceInFirstRace, duplicates, metaData) {
         super(metaData)
         this.name = assertType(name, "string");
         this.yearOfBirth = assertType(yearOfBirth, "number");
         this.gender = assertType(gender, "string");
         this.noviceInFirstRace = assertType(noviceInFirstRace, "boolean");
+        this.duplicates = duplicates;
     }
 
     static getId(helm) {
@@ -38,8 +39,9 @@ export default class Helm extends StoreObject {
             "Year Of Birth": yearOfBirth,
             "Gender": gender,
             "Was Novice In First Race": noviceInFirstRace,
+            "Duplicates": duplicates,
         } = storeHelm;
-        return new Helm(name, parseInt(yearOfBirth || 1970), gender, parseBoolean(noviceInFirstRace), StoreObject.fromStore(storeHelm));
+        return new Helm(name, parseInt(yearOfBirth || 1970), gender, parseBoolean(noviceInFirstRace), duplicates, StoreObject.fromStore(storeHelm));
     }
 
     wasCadetInRace(race) {
@@ -86,6 +88,7 @@ export default class Helm extends StoreObject {
             "Year Of Birth": this.yearOfBirth,
             "Gender": this.gender,
             "Was Novice In First Race": this.noviceInFirstRace,
+            "Duplicates": this.duplicates,
             ...super.toStore(this),
         };
     }

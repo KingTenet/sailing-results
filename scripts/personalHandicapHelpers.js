@@ -1,4 +1,4 @@
-import { groupBy, assertType } from "../src/common.js";
+import { groupBy, assertType, average } from "../src/common.js";
 import BoatClass from "../src/store/types/BoatClass.js";
 import CorrectedResult from "../src/store/types/CorrectedResult.js";
 import Result from "../src/store/types/Result.js";
@@ -45,10 +45,6 @@ export function calculateSCTFromRaceResults(raceResults) {
     const ACT = average(finishTimes.slice(-resultsToCountForACT));
 
     return [average(finishTimes.filter((time) => time < (ACT * 1.05))), raceMaxLaps];
-}
-
-function average(arr, mapItem = (item) => item) {
-    return arr.map(mapItem).reduce((acc, value) => acc + value, 0) / arr.length;
 }
 
 function getLapsForNormalisation(results) {

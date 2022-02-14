@@ -52,6 +52,7 @@ export default class StoreObject {
     }
 
     static validateHeaders(headers, Type) {
+        return headers;
         const sheetHeaders = Type.sheetHeaders();
         const headerKeys = Object.keys(headers);
         const headerNotAllowed = headerKeys.find((header) => !sheetHeaders.includes(header));

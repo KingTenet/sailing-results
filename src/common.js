@@ -4,6 +4,10 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 const KEY_SEP = "::";
 
 
+export function average(arr, mapItem = (item) => item) {
+    return arr.map(mapItem).reduce((acc, value) => acc + value, 0) / arr.length;
+}
+
 export class AutoMap extends Map {
     constructor(getKey = JSON.stringify, getDefaultValue) {
         super();
@@ -119,7 +123,7 @@ export function flattenMap(map) {
 }
 
 export function flatten(arrOfArr) {
-    return arrOfArr.reduce((acc, next) => acc.concat(...next), []);
+    return arrOfArr.reduce((acc, next) => acc.concat(next), []);
 }
 
 export async function getGoogleSheetDoc(sheetId, clientEmail, privateKey) {
@@ -180,7 +184,6 @@ export async function getAllCellsFromSheet(sheetId, auth, sheetName, filterEmpty
         const cells = [];
         for (let rowIndex = 0; rowIndex < sheet.rowCount; rowIndex++) {
             let newRow = (new Array(sheet.columnCount)).fill(null);
-            debugger;
             let newRowEmpty = true;
             for (let columnIndex of newRow.keys()) {
                 let cellValue = sheet.getCell(rowIndex, columnIndex)?.value;

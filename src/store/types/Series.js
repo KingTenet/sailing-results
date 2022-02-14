@@ -14,7 +14,7 @@ export default class Series {
 
     static fromSeriesRace(seriesRace) {
         assertType(seriesRace, SeriesRace);
-        return new Series(seriesRace.season, seriesRace.series)
+        return new Series(seriesRace.getSeries().getSeasonName(), seriesRace.getSeries().getSeriesName())
     }
 
     static fromId(seriesId) {

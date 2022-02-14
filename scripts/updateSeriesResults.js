@@ -1,11 +1,7 @@
-
-import { groupBy, getSheetIdFromURL, flatten } from "../src/common.js";
+import { groupBy, getSheetIdFromURL } from "../src/common.js";
 import Stores from "../src/store/Stores.js";
-import Result from "../src/store/types/Result.js";
 import auth from "./auth.js";
 import Race from "../src/store/types/Race.js";
-import { getCorrectedResultsForRace } from "./resultCorrection.js";
-import Helm from "../src/store/types/Helm.js";
 import SeriesRace from "../src/store/types/SeriesRace.js";
 
 function getLatestProcessedRace(correctedResults) {
@@ -16,7 +12,7 @@ function getLatestProcessedRace(correctedResults) {
     return undefined;
 }
 
-async function updateCorrectedResults(allResults, correctedResultsStore) {
+async function updateCorrectedResults(raceFinishesByRaceAsc, correctedResultsStore) {
     const latestProcessedRace = getLatestProcessedRace(correctedResultsStore.all());
     if (!latestProcessedRace) {
         console.log(`No data has yet been imported`);
@@ -25,43 +21,44 @@ async function updateCorrectedResults(allResults, correctedResultsStore) {
         console.log(`Latest imported race is: ${latestProcessedRace.getDate().toISOString()}, ${latestProcessedRace.getNumber()}`)
     }
 
-    const resultsByRaceAscToProcess = Race.groupResultsByRaceAsc(allResults)
-        .filter(([race]) => !latestProcessedRace || latestProcessedRace.isBefore(race));
+    const finishesByRaceAscToProcess = raceFinishesByRaceAsc
+        .filter((raceFinish) => !latestProcessedRace || latestProcessedRace.isBefore(raceFinish));
 
-    for (let [, raceResults] of resultsByRaceAscToProcess) {
-        if (!Race.isPursuitRace(raceResults)) {
-            getCorrectedResultsForRace(raceResults, correctedResultsStore.all())
-                .forEach((result) => correctedResultsStore.add(result));
-        }
+    for (let raceFinish of finishesByRaceAscToProcess) {
+        raceFinish.getCorrectedResults()
+            .forEach((result) => correctedResultsStore.add(result));
     }
 
     console.log("Updated corrected results");
 }
 
 async function updateAllSeriesResults(stores) {
-    const allResults = stores.results.all();
-    await updateCorrectedResults(allResults, stores.correctedResultsStore);
+    const raceFinishes = stores.raceFinishes;
+    const raceFinishesByRaceAsc = [...raceFinishes]
+        .map(([, raceFinish]) => raceFinish)
+        .sort((a, b) => a.sortByRaceAsc(b));
+
+    await updateCorrectedResults(raceFinishesByRaceAsc, stores.correctedResultsStore);
 
     const allSeriesRaces = stores.seriesRaces.all();
     const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);
-    const allResultsByRace = new Map(
-        Race.groupResultsByRaceAsc(allResults)
-            .map(([race, results]) => [Race.getId(race), results]));
 
     for (let [seriesId, seriesRaces] of allSeries) {
         console.log(`Updating results for series: ${seriesId}`);
-        const seriesResults = flatten(seriesRaces.map((seriesRace) => {
-            if (!allResultsByRace.has(SeriesRace.getRaceId(seriesRace))) {
+        const seriesRaceFinishes = [];
+        for (let seriesRace of seriesRaces) {
+            const raceFinish = raceFinishes.get(SeriesRace.getRaceId(seriesRace));
+            if (!raceFinish) {
                 console.log("   No results found for race " + SeriesRace.getRaceId(seriesRace));
-                return [];
+                continue;
             }
-            return allResultsByRace.get(SeriesRace.getRaceId(seriesRace));
-        }));
-        if (!seriesResults.length) {
+            seriesRaceFinishes.push(raceFinish);
+        }
+        if (!seriesRaceFinishes.length) {
             console.log(`No races found for series ${seriesId}`);
         }
         else {
-            await updateCorrectedResults(seriesResults, stores.seriesResults.get(seriesId));
+            await updateCorrectedResults(seriesRaceFinishes, stores.seriesResults.get(seriesId));
         }
     }
 }
@@ -78,8 +75,13 @@ async function updateAll(sourceResultsURL, seriesResultsURL) {
 }
 
 
+async function run(sourceResultsURL, seriesResultsURL) {
+    const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
+    const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
+    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
 
+}
 
-updateAll(...process.argv.slice(2))
+run(...process.argv.slice(2))
     .then(() => console.log("Finished"))
     .catch((err) => console.log(err));
