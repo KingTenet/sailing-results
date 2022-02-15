@@ -102,7 +102,7 @@ export default class Stores {
     static async create(auth, raceResultsSheetId, seriesResultsSheetId) {
         const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
         if (!lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD) {
-            localStorage.clear();
+            // localStorage.clear();
         }
         const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
         await stores.init();

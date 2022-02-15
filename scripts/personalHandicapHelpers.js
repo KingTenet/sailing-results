@@ -29,14 +29,18 @@ export function calculateSCTFromRaceResults(raceResults) {
 
     if (finishers.length < 4) {
         compliesWithRYA = false;
+        // return undefined;
     }
 
     const classes = groupBy(finishers, Result.getBoatClassId);
     if (classes.length < 2) {
         compliesWithRYA = false;
+        // return undefined;
     }
 
+    // TODO re-enable 
     const resultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
+    // const resultsToCountForACT = Math.round(finishers.length * 2 / 3);
 
     const finishTimes = finishers
         .map((result) => result.getClassCorrectedTime(raceMaxLaps))

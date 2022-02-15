@@ -117,7 +117,7 @@ export default class CorrectedResult extends Result {
     }
 
     getPersonalHandicapFromRace() {
-        if (!this.finishCode.validFinish()) {
+        if (!this.finishCode.validFinish() || !this.raceFinish.getSCT()) {
             return;
         }
         const PI = this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()); // % diff on class SCT

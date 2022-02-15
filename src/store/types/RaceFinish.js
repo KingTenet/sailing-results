@@ -28,7 +28,7 @@ export default class RaceFinish extends Race {
         this.results = results;
 
         if (results.length) {
-            const [sct, raceMaxLaps] = calculateSCTFromRaceResults(results);
+            const [sct, raceMaxLaps] = calculateSCTFromRaceResults(results) || [];
             this.sct = sct;
             this.raceMaxLaps = raceMaxLaps;
             // console.log(`${Race.getId(this)} ${sct / this.raceMaxLaps}`);
