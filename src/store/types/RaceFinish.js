@@ -31,6 +31,7 @@ export default class RaceFinish extends Race {
             const [sct, raceMaxLaps] = calculateSCTFromRaceResults(results);
             this.sct = sct;
             this.raceMaxLaps = raceMaxLaps;
+            // console.log(`${Race.getId(this)} ${sct / this.raceMaxLaps}`);
         }
 
         this.previousResults = previousResults;
@@ -41,10 +42,7 @@ export default class RaceFinish extends Race {
             this.setCorrectedResults();
         }
 
-        this.classAdjustedPoints = new Map();
-        this.personalAdjustedPoints = new Map();
-        this.pursuitPoints = new Map();
-        this.assignPointsToRace();
+        // this.assignPointsToRace();
     }
 
     hasResults() {
@@ -60,7 +58,7 @@ export default class RaceFinish extends Race {
     }
 
     isPursuitRace() {
-        return this.results.some((result) => result.getPursuitFinishPosition());
+        return Race.isPursuitRace(this.results);
     }
 
     setCorrectedResults() {
@@ -79,7 +77,7 @@ export default class RaceFinish extends Race {
     }
 
     getSCT() {
-        return this.sct;
+        return !Number.isNaN(this.sct) ? this.sct : undefined;
     }
 
     /**
@@ -106,60 +104,80 @@ export default class RaceFinish extends Race {
             .map(([points, result]) => [result, points]);
     }
 
-    getPersonalCorrectedPointsByResult() {
-        return this.sortResultsByPointsDesc(this.personalAdjustedPoints);
+    // getPersonalCorrectedPointsByResult() {
+    //     return this.sortResultsByPointsDesc(this.personalAdjustedPoints);
+    // }
+
+    // getPursuitCorrectedPointsByResult() {
+    //     return this.sortResultsByPointsDesc(this.pursuitPoints);
+    // }
+
+    // getClassCorrectedPointsByResult() {
+    //     return this.sortResultsByPointsDesc(this.classAdjustedPoints);
+    // }
+
+    getPersonalCorrectedPointsByResult(personalHandicapAtRace) {
+        const [, personalAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
+        return this.sortResultsByPointsDesc(personalAdjustedPoints);
     }
 
-    getPursuitCorrectedPointsByResult() {
-        return this.sortResultsByPointsDesc(this.pursuitPoints);
-    }
-
-    getClassCorrectedPointsByResult() {
-        return this.sortResultsByPointsDesc(this.classAdjustedPoints);
+    getClassCorrectedPointsByResult(personalHandicapAtRace) {
+        const [classAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
+        return this.sortResultsByPointsDesc(classAdjustedPoints);
     }
 
     getOODs() {
         return this.oods;
     }
 
-    assignPointsToRace() {
-        const results = this.getCorrectedResults();
+    // assignPointsToRace() {
+    //     const [classAdjustedPoints, personalAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults());
+    //     this.classAdjustedPoints = classAdjustedPoints;
+    //     this.personalAdjustedPoints = personalAdjustedPoints;
+    // }
+
+    static getPointsForResults(results, personalHandicapAtRace) {
+        const classAdjustedPoints = new Map();
+        const personalAdjustedPoints = new Map();
+
         const pointsForDNF = results.length + 1;
 
         const allFinishers = results
             .filter((result) => result.isValidFinish())
 
-        if (this.isPursuitRace()) {
+        if (Race.isPursuitRace(results)) {
             results
                 .filter((result) => !result.isValidFinish())
-                .forEach((result) => this.pursuitPoints.set(result, pointsForDNF));
+                .forEach((result) => classAdjustedPoints.set(result, pointsForDNF));
 
             RaceFinish.assignPointsToResults(
                 allFinishers,
                 (result) => result.getPursuitFinishPosition(),
-                (result, points) => this.pursuitPoints.set(result, points),
+                (result, points) => classAdjustedPoints.set(result, points),
             );
         }
         else {
             results
                 .filter((result) => !result.isValidFinish())
                 .forEach((result) => {
-                    this.classAdjustedPoints.set(result, pointsForDNF);
-                    this.personalAdjustedPoints.set(result, pointsForDNF);
+                    classAdjustedPoints.set(result, pointsForDNF);
+                    personalAdjustedPoints.set(result, pointsForDNF);
                 });
 
             RaceFinish.assignPointsToResults(
                 allFinishers,
                 (result) => result.getClassCorrectedFinishTime(),
-                (result, points) => this.classAdjustedPoints.set(result, points),
+                (result, points) => classAdjustedPoints.set(result, points),
             );
 
             RaceFinish.assignPointsToResults(
                 allFinishers,
-                (result) => result.getPersonalCorrectedFinishTime(),
-                (result, points) => this.personalAdjustedPoints.set(result, points),
+                (result) => result.getPersonalCorrectedFinishTimeUsingPHDate(personalHandicapAtRace),
+                (result, points) => personalAdjustedPoints.set(result, points),
             );
         }
+
+        return [classAdjustedPoints, personalAdjustedPoints];
     }
 
     getMaxLaps() {

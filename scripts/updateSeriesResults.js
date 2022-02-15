@@ -79,7 +79,8 @@ async function run(sourceResultsURL, seriesResultsURL) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
     const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
-
+    stores.allCorrectedResults.forEach((result) => stores.correctedResultsStore.add(result));
+    stores.correctedResultsStore.sync();
 }
 
 run(...process.argv.slice(2))

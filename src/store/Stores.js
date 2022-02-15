@@ -56,14 +56,14 @@ export default class Stores {
         }
 
         this.results = await StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
+        // this.results = await StoreWrapper.create("Debug", this.raceResultsDocument, this, Result, getResultFromStore);
 
-        const previousResults = [];
+        const allCorrectedResults = [];
         for (let [race, raceResults] of Race.groupResultsByRaceAsc(this.results.all())) {
             try {
-
-                const raceFinish = new RaceFinish(raceResults, [...previousResults], oodsByRace.get(Race.getId(race)) || []);
+                const raceFinish = new RaceFinish(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
                 raceFinishes.upsert(raceFinish);
-                previousResults.push(...raceFinish.getCorrectedResults());
+                allCorrectedResults.push(...raceFinish.getCorrectedResults());
             }
             catch (err) {
                 throw err;
@@ -82,14 +82,13 @@ export default class Stores {
                 .filter(Boolean)
         ));
 
-
         for (let seriesFinish of allSeriesFinishes) {
             seriesFinish.summarize();
         }
 
+        this.allCorrectedResults = allCorrectedResults;
 
-
-
+        // this.correctedResultsStore = await StoreWrapper.create("Debug out", this.seriesResultsDocument, this, CorrectedResult, getResultFromStore, undefined, true);
         // this.correctedResultsStore = await StoreWrapper.create("Corrected Results", this.seriesResultsDocument, this, CorrectedResult, getResultFromStore, undefined, true);
 
         // this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
@@ -103,7 +102,7 @@ export default class Stores {
     static async create(auth, raceResultsSheetId, seriesResultsSheetId) {
         const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
         if (!lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD) {
-            // localStorage.clear();
+            localStorage.clear();
         }
         const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
         await stores.init();

@@ -1,4 +1,5 @@
-import { assertType, AutoMap, groupBy, flatten, average } from "../../common.js";
+import { assertType, AutoMap, groupBy, flatten, average, mapGroupBy } from "../../common.js";
+import CorrectedResult from "./CorrectedResult.js";
 import Helm from "./Helm.js";
 import HelmResult from "./HelmResult.js";
 import Race from "./Race.js";
@@ -8,7 +9,60 @@ import Series from "./Series.js";
 import SeriesRace from "./SeriesRace.js";
 import StoreObject from "./StoreObject.js";
 
+const USE_PH_FROM_SERIES_START = true;
 const midnightTonight = () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1, 0, 0, 0));
+
+class AsciiTable {
+    constructor(columnHeaders, rowHeaders, cells) {
+        this.cells = cells;
+        this.columnHeaders = columnHeaders;
+        this.rowHeaders = rowHeaders;
+        this.totalColumnSize = 200; // chars
+        this.rowHeadersWidth = 50;
+        this.columnSize = Math.ceil((this.totalColumnSize - (this.rowHeadersWidth * rowHeaders.length)) / this.cells[0].length);
+
+        this.columnSep = " ";
+        this.rowSep = " ";
+    }
+
+    pad(str = "", char, length) {
+        return [...str, ...(new Array(length)).fill(char)].join("").slice(0, length);
+    }
+
+    // pad(str = "", char, length) {
+    //     return str.split("\n").map((str) => this.padLine(str, char, length)).join("\n");
+    // }
+
+    getRow(rowCells, columnWidth) {
+        return `${this.columnSep} ` +
+            rowCells.map((value, key) => this.pad(value, " ", key < this.rowHeaders.length ? this.rowHeadersWidth : columnWidth)).join(` ${this.columnSep} `) +
+            ` ${this.columnSep}`
+    }
+
+    getTable() {
+        const allRows = [];
+        const padRowHeaders = (new Array(this.rowHeaders.length)).fill("");
+        let headerRowLength;
+        const rowSep = () => [...new Array(headerRowLength).fill(this.rowSep)].join("");
+
+        this.columnHeaders.forEach((columnHeader) => {
+            const headerRow = this.getRow([...padRowHeaders, ...columnHeader], this.columnSize - 3)
+            headerRowLength = headerRow.length;
+            allRows.push(headerRow);
+            allRows.push(rowSep());
+        })
+        // console.log(this.rowHeaders);
+        // console.log(this.cells);
+        const rows = this.cells.reduce((prevRows, row, key) => [
+            ...prevRows,
+            this.getRow([...this.rowHeaders.map((rowHeader) => rowHeader[key]), ...row.map((num) => num === undefined ? "" : num)], this.columnSize - 3),
+            rowSep(),
+        ], []);
+
+        return [rowSep(), ...allRows, ...rows];
+    }
+}
+
 
 class ResultPoints extends HelmResult {
     constructor(result, racePoints, oodPoints, pnsPoints, isCounted = true) {
@@ -29,8 +83,29 @@ class ResultPoints extends HelmResult {
         return this.getTotal() - secondPoints.getTotal();
     }
 
+    static getBoatClassName(points) {
+        const boatClass = ResultPoints.getBoatClass(points);
+        return boatClass
+            ? boatClass.getClassName()
+            : undefined;
+    }
+
+    static getBoatClass(points) {
+        if (!points.result || !(points.result instanceof Result)) {
+            return undefined;
+        }
+        return points.result.getBoatClass();
+    }
+
+    static getPersonalHandicapForRace(points, race) {
+        if (!points.result || !(points.result instanceof CorrectedResult)) {
+            return undefined;
+        }
+        return points.result.getRollingHandicapsAtRace(race);
+    }
+
     static fromPoints(points, isCounted) {
-        return new ResultPoints(points, points.racePoints, points.oodPoints, points.pnsPoints, isCounted);
+        return new ResultPoints(points.result, points.racePoints, points.oodPoints, points.pnsPoints, isCounted);
     }
 
     static aggregate(resultPoints, countedOnly = true) {
@@ -47,9 +122,9 @@ export default class SeriesPoints extends Series {
         raceFinishes.forEach((raceFinish) => assertType(raceFinish, RaceFinish));
         this.seriesRaces = seriesRaces;
         this.raceFinishes = raceFinishes;
-        const plannedRaces = this.seriesRaces.length;
-        const finishedRaces = this.raceFinishes.length;
-        const racesToQualify = Math.ceil(plannedRaces / 2 + 1);
+        this.plannedRaces = this.seriesRaces.length;
+        this.finishedRaces = this.raceFinishes.length;
+        this.racesToQualify = Math.ceil(this.plannedRaces / 2 + 1);
 
         this.validateSeriesRaces();
         this.validateRaceFinishes();
@@ -63,7 +138,7 @@ export default class SeriesPoints extends Series {
     }
 
     validateRaceFinishes() {
-        const seriesRacesById = new Map(groupBy(this.seriesRaces, SeriesRace.getRaceId));
+        const seriesRacesById = new Map(groupBy(this.seriesRaces, [SeriesRace.getRaceId]));
         if (!this.raceFinishes.map(Race.getId).every((id) => seriesRacesById.has(id))) {
             throw new Error("All race finishes must have an associated series race");
         }
@@ -99,26 +174,48 @@ export default class SeriesPoints extends Series {
         return Math.round(average(totalPoints) * 10) / 10; // Round to 1dp
     }
 
+    getRacesToCount(date, byClassHandicap) {
+        const finishes = this.raceFinishes
+            .filter((race) => race.isBefore(new Race(date, 1)))
+            .filter((race) => race.hasResults())
+            .filter((race) => byClassHandicap || race.getSCT());
+
+        return Math.ceil((finishes.length + 1) / 2);
+    }
+
     /**
      * Build a set of results for all helms that took raced in series.
      * If they were an OOD, create an OOD result for them (and associated points).
      * If they didn't take part in race, create a PNS result for them (and associated points).
      * Flag points that won't be counted (if the helm has sailed more than races to count)
      */
-    getPointsByAllResults(date = new Date()) {
+    getPointsByAllResults(date = new Date(), byClassHandicap = true) {
         const finishes = this.raceFinishes
-            .filter((race) => race.isBefore(new Race(date, 1)));
+            .filter((race) => race.isBefore(new Race(date, 1)))
+            .sort((raceA, raceB) => raceA.sortByRaceAsc(raceB));
 
-        const finishedRaces = finishes.filter((race) => race.hasResults());
-        const racesToCount = Math.ceil((finishedRaces.length + 1) / 2);
+        const getPointsByResult = (raceFinish) => {
+            if (byClassHandicap) {
+                return raceFinish.getClassCorrectedPointsByResult();
+            }
+            if (USE_PH_FROM_SERIES_START) {
+                // Use PH from first race in series..
+                return raceFinish.getPersonalCorrectedPointsByResult(finishes.at(0));
+            }
+            return raceFinish.getPersonalCorrectedPointsByResult();
+        };
 
-        const pointsByRaceResult = flatten(
-            finishes
-                .map((raceFinish) => raceFinish.isPursuitRace()
-                    ? raceFinish.getPursuitCorrectedPointsByResult()
-                    : raceFinish.getClassCorrectedPointsByResult()
-                ));
+        const finishedRaces = finishes
+            .filter((race) => race.hasResults())
+            .filter((race) => byClassHandicap || race.getSCT());
 
+        // console.log(finishedRaces);
+
+        // console.log(finishedRaces.length);
+
+        const racesToCount = this.getRacesToCount(date, byClassHandicap);
+
+        const pointsByRaceResult = flatten(finishedRaces.map((raceFinish) => getPointsByResult(raceFinish)));
         const pointsByHelm = new Map(groupBy(pointsByRaceResult, ([result]) => Result.getHelmId(result)));
 
         const raceResults = flatten(finishedRaces.map((raceFinish) => raceFinish.getCorrectedResults()));
@@ -132,19 +229,24 @@ export default class SeriesPoints extends Series {
 
         const pointResultsMap = new AutoMap(ResultPoints.getId);
         for (let race of finishes) {
-            if (race.hasResults()) {
+            if (race.hasResults() && (byClassHandicap || race.getSCT())) {
                 for (let [helm] of allHelms) {
                     const pnsResult = HelmResult.fromHelmRace(helm, race);
                     pointResultsMap.upsert(new ResultPoints(pnsResult, 0, 0, pointsNotScored));
                 }
-                for (let [result, finishPoints] of race.getClassCorrectedPointsByResult()) {
+                for (let [result, finishPoints] of getPointsByResult(race)) {
                     pointResultsMap.upsert(new ResultPoints(result, finishPoints, 0, 0));
                 }
             }
-            for (let result of race.getOODs()) {
-                const helmId = Result.getHelmId(result);
-                const oodPoints = this.getOODPointsFromResults(pointsByHelm.get(helmId), allOODHelms.get(helmId), racesToCount)
-                pointResultsMap.upsert(new ResultPoints(result, 0, oodPoints, 0));
+            for (let oodResult of race.getOODs()) {
+                const helmId = Result.getHelmId(oodResult);
+                if (pointsByHelm.has(helmId)) {
+                    const oodPoints = this.getOODPointsFromResults(pointsByHelm.get(helmId), allOODHelms.get(helmId), racesToCount)
+                    pointResultsMap.upsert(new ResultPoints(oodResult, 0, oodPoints, 0));
+                }
+                else {
+                    console.log(`Warning: no points found for ${helmId} for ${Race.getId(race)}`);
+                }
             }
         }
 
@@ -158,20 +260,100 @@ export default class SeriesPoints extends Series {
 
     summarize(date = new Date()) {
         console.log(`Series Summary: ${this.getSheetName()}`);
-        const allResultPoints = this.getPointsByAllResults(date);
-        groupBy(allResultPoints, HelmResult.getHelmId)
+        this.allResultPoints = this.getPointsByAllResults(date, false);
+
+        console.log(this.getRacesToCount(date, false));
+        this.summarizeHelms();
+        const seriesTable = this.seriesTable();
+
+        console.log(seriesTable.getTable().join("\n"));
+
+
+
+
+        // allResultPoints
+        //     .filter((result) => HelmResult.getHelmId(result) === "Simon Hall")
+        //     .forEach((points) => {
+        //         console.log(`${points.getRace().getDate()} ${points.getTotal()}`);
+        //     })
+
+    }
+
+    summarizeHelms() {
+        groupBy(this.allResultPoints, HelmResult.getHelmId)
             .map(([helmId, resultsPoints]) => [helmId, ResultPoints.aggregate(resultsPoints)])
             .sort(([, a], [, b]) => a - b)
             .forEach(([helmId, points]) => {
                 console.log(`           ${helmId}: ${points}`);
             })
+    }
 
-        allResultPoints
-            .filter((result) => HelmResult.getHelmId(result) === "Simon Hall")
-            .forEach((points) => {
-                console.log(`${points.getRace().getDate()} ${points.getTotal()}`);
-            })
+    seriesTable() {
+        const allResultsPointsSortedByRace = this.allResultPoints.sort(HelmResult.sortByRaceAsc);
+        const firstRacePointsOfSeries = allResultsPointsSortedByRace.at(0).getRace();
+        const allResultsByHelm = mapGroupBy(this.allResultPoints, [HelmResult.getHelmId], ResultPoints.aggregate);
+        // const allBoatsByHelm = groupBy(this.allResultPoints, [HelmResult.getHelmId, ResultPoints.getBoatClassName]);
+        const helmPointsMap = mapGroupBy(this.allResultPoints, [HelmResult.getHelmId, HelmResult.getRaceId, ResultPoints.getBoatClassName]);
 
+        const pyMap = mapGroupBy(
+            this.allResultPoints,
+            [ResultPoints.getBoatClassName],
+            (points) => points && points.length
+                ? ResultPoints.getBoatClass(points.at(0))?.getPY()
+                : undefined
+        );
+
+        const allBoatsByHelm = groupBy(
+            this.allResultPoints,
+            [HelmResult.getHelmId, ResultPoints.getBoatClassName],
+            (points) => points && points.length
+                ? [
+                    ResultPoints.getPersonalHandicapForRace(points.at(0), firstRacePointsOfSeries),
+                    ResultPoints.getBoatClass(points.at(0))?.getPY()
+                ]
+                : undefined
+        );
+
+        const sortedRaces = this.seriesRaces.map((sr) => sr.getRace()).sort((a, b) => a.sortByRaceAsc(b));
+
+        const allCells = [];
+        let columnIds = sortedRaces.map(Race.getId);
+        let columnHeaders = columnIds.map((raceId) => Race.fromId(raceId).prettyPrintTable())
+
+        let rowHeaders = allBoatsByHelm.reduce((acc, [helmId, classes]) => [
+            ...acc,
+            ...classes.map(([className, [PH, classPY]]) => [helmId, className, PH, classPY]),
+        ], [])
+            .sort(([helmA, classA], [helmB, classB]) => {
+                return allResultsByHelm.get(helmA) !== allResultsByHelm.get(helmB)
+                    ? allResultsByHelm.get(helmA) - allResultsByHelm.get(helmB)
+                    : classA - classB
+                    ;
+            });
+
+        const rowHeadersHelm = rowHeaders.reduce((acc, [helmId]) => [...acc, helmId === acc.at(-1) ? "" : helmId], []);
+        const rowHeadersBoat = rowHeaders
+            .map(([helmId, className, PHPI, classPY]) => className
+                ? [helmId, className, PHPI[0], classPY, PHPI[0] - classPY].join(", ")
+                : `${helmId}`
+            );
+
+        for (let [rowKey, [helmId, className]] of rowHeaders.entries()) {
+            allCells[rowKey] = [];
+            for (let [columnKey, raceId] of columnIds.entries()) {
+                // const helmPoints = helmPointsMap.get(helmId).get(raceId);
+                const racePoints = helmPointsMap.get(helmId).get(raceId);
+                const helmPoints = racePoints ? racePoints.get(className) : undefined;
+
+                allCells[rowKey][columnKey] = helmPoints
+                    ? helmPoints[0].isCounted
+                        ? `${helmPoints[0].getTotal()}`
+                        : `(${helmPoints[0].getTotal()})`
+                    : undefined;
+            }
+        }
+
+        return new AsciiTable([columnHeaders], [rowHeadersBoat], allCells);
     }
 
     static fromSeriesRaces(seriesRaces, raceFinishes) {

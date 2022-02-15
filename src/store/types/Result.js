@@ -34,17 +34,8 @@ export default class Result extends HelmResult {
         return result.getLaps();
     }
 
-    static sortByRaceAsc(firstResult, secondResult) {
-        assertType(firstResult, Result);
-        assertType(secondResult, Result);
-        return firstResult.getRace().sortByRaceAsc(secondResult.getRace())
-    }
-
     static sheetHeaders() {
         return [
-            "Date",
-            "Race Number",
-            "Helm",
             "Sail Number",
             "Class",
             "Laps",
@@ -122,9 +113,9 @@ export default class Result extends HelmResult {
 
     toStore() {
         return {
-            "Date": getURLDate(this.race.getDate()),
-            "Race Number": this.race.getNumber(),
-            "Helm": Helm.getId(this.helm),
+            // "Date": getURLDate(this.race.getDate()),
+            // "Race Number": this.race.getNumber(),
+            // "Helm": Helm.getId(this.helm),
             "Sail Number": this.boatSailNumber,
             "Class": this.boatClass.getClassName(),
             "Laps": this.laps,

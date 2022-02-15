@@ -26,7 +26,6 @@ export default class HelmResult extends StoreObject {
         return Helm.getId(result.helm);
     }
 
-
     // static getBoatClassId(result) {
     //     assertType(result, Result);
     //     return BoatClass.getId(result.boatClass);
@@ -37,12 +36,11 @@ export default class HelmResult extends StoreObject {
     //     return result.getLaps();
     // }
 
-    // static sortByRaceAsc(firstResult, secondResult) {
-    //     assertType(firstResult, Result);
-    //     assertType(secondResult, Result);
-    //     return firstResult.getRace().sortByRaceAsc(secondResult.getRace())
-    // }
-
+    static sortByRaceAsc(firstResult, secondResult) {
+        assertType(firstResult, HelmResult);
+        assertType(secondResult, HelmResult);
+        return firstResult.getRace().sortByRaceAsc(secondResult.getRace())
+    }
 
     static sheetHeaders() {
         return [

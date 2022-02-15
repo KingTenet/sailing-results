@@ -31,6 +31,13 @@ export default class Race {
         return `Date=${this.date.toISOString().slice(0, 10)}, Number=${this.raceNumber}`
     }
 
+    prettyPrintTable() {
+        let year = this.date.getUTCFullYear();
+        let month = this.date.getUTCMonth();
+        let date = this.date.getUTCDate();
+        return `${date}/${month + 1}, ${this.raceNumber}`
+    }
+
     getDate() {
         return this.date;
     }

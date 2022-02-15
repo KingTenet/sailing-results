@@ -5,6 +5,8 @@ import Result from "./Result.js";
 import StoreObject from "./StoreObject.js";
 import { getRollingHandicaps, calculatePersonalInterval, calculatePersonalHandicapFromPI } from "../../../scripts/personalHandicapHelpers.js";
 
+const debug = global;
+
 export default class CorrectedResult extends Result {
     constructor(result, previousResults, raceFinish) {
 
@@ -124,6 +126,34 @@ export default class CorrectedResult extends Result {
 
     getPersonalCorrectedFinishTime() {
         return this.personalCorrectedTime;
+    }
+
+    getRollingHandicapsAtRace(race) {
+        return getRollingHandicaps(this.previousResults.filter((result) => result.getRace().isBefore(race)), this);
+    }
+
+    /**
+     * Used to calculate corrected time using PH at series start 
+     */
+    getPersonalCorrectedFinishTimeUsingPHDate(race) {
+        if (!race) {
+            return this.getPersonalCorrectedFinishTime();
+        }
+        const [rollingPH, rollingPI] = this.getRollingHandicapsAtRace(race);
+        // debugger;
+        // if (!debug.ph) {
+        //     debug.ph = new Map();
+        // }
+        // debug.ph.set(`${Helm.getId(this.getHelm())}: ${this.getBoatClass().getClassName()}`, rollingPH - this.getBoatClass().getPY());
+
+        // if (Helm.getId(this.getHelm()).includes("Andy Everitt")) {
+        //     debugger;
+        // }
+
+        // console.log([...debug.ph]);
+        //console.log(`${Helm.getId(this.getHelm())}: ${this.getBoatClass().getClassName()}: ${rollingPH}`);
+        const [personalCorrectedTime] = this.getCorrectedTimes(rollingPH, this.raceFinish.getMaxLaps());
+        return Math.round(personalCorrectedTime);
     }
 
     getClassCorrectedFinishTime() {

@@ -24,12 +24,32 @@ export class AutoMap extends Map {
     }
 }
 
-export function groupBy(arr, groupFunction) {
+export function groupBySingle(arr, groupFunction, transform = (arr) => arr) {
     const map = new AutoMap(groupFunction, () => []);
     arr.forEach((item) => map.upsert(item, (prev, obj) => [...prev, obj]));
-    return [...map];
+    return [...map].map(([groupId, values]) => [groupId, transform(values)]);
 }
 
+export function groupBy(arr, allGroupFs, transform = (arr) => arr) {
+    const groupFs = typeof (allGroupFs) === "function" ? [allGroupFs] : [...allGroupFs];
+    const groupF = groupFs.reverse().pop();
+    if (!groupF) {
+        return transform(arr);
+    }
+    const groupResults = groupBySingle(arr, groupF);
+    return groupResults.map(([groupId, results]) => [groupId, groupBy(results, [...groupFs].reverse(), transform)]);
+}
+
+export function mapGroupBy(arr, allGroupFs, transform = (arr) => arr) {
+    // const groupFs = typeof (allGroupFs) === "function" ? [allGroupFs] : [...allGroupFs];
+    const groupFs = [...allGroupFs];
+    const groupF = groupFs.reverse().pop();
+    if (!groupF) {
+        return transform(arr);
+    }
+    const groupResults = groupBySingle(arr, groupF);
+    return new Map(groupResults.map(([groupId, results]) => [groupId, mapGroupBy(results, [...groupFs].reverse(), transform)]));
+}
 
 export function parseIntOrUndefined(test) {
     let int = parseInt(test);

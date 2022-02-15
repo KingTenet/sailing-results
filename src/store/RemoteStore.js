@@ -37,6 +37,8 @@ export default class RemoteStore {
             if (newSheet.gridProperties.columnCount < headers.length) {
                 await newSheet.resize({ rowCount: newSheet.gridProperties.rowCount, columnCount: headers.length });
             }
+            console.log(`Creating sheet ${this.sheetName} with headers:`);
+            console.log(headers);
             await newSheet.setHeaderRow(headers);
         }
     }
