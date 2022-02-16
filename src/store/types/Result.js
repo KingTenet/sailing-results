@@ -99,14 +99,6 @@ export default class Result extends HelmResult {
         return this.laps;
     }
 
-    // getRace() {
-    //     return this.race;
-    // }
-
-    // getHelm() {
-    //     return this.helm;
-    // }
-
     isValidFinish() {
         return this.finishCode.validFinish();
     }

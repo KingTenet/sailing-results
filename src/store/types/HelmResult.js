@@ -2,7 +2,6 @@ import { assertType, getURLDate, parseURLDate, generateId } from "../../common.j
 import StoreObject from "./StoreObject.js";
 import Helm from "./Helm.js";
 import Race from "./Race.js";
-// import Result from "./Result.js";
 
 export default class HelmResult extends StoreObject {
     constructor(race, helm, metadata) {
@@ -25,16 +24,6 @@ export default class HelmResult extends StoreObject {
         assertType(result, HelmResult);
         return Helm.getId(result.helm);
     }
-
-    // static getBoatClassId(result) {
-    //     assertType(result, Result);
-    //     return BoatClass.getId(result.boatClass);
-    // }
-
-    // static getLaps(result) {
-    //     assertType(result, Result);
-    //     return result.getLaps();
-    // }
 
     static sortByRaceAsc(firstResult, secondResult) {
         assertType(firstResult, HelmResult);
@@ -65,42 +54,6 @@ export default class HelmResult extends StoreObject {
         return new HelmResult(race, helm, StoreObject.fromStore({}));
     }
 
-    // getClassCorrectedTime(raceMaxLaps) {
-    //     let boatClass = this.getBoatClass();
-    //     if (!this.finishCode.validFinish()) {
-    //         throw new Error("Cannot calculate a class corrected time for a non-finisher");
-    //     }
-
-    //     return calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
-    // }
-
-    // sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {
-    //     assertType(secondResult, Result);
-    //     return secondResult.getClassCorrectedTime(maxLaps) - this.getClassCorrectedTime(maxLaps);
-    // }
-
-    // getCorrectedTimes(totalPersonalHandicap, raceMaxLaps) {
-    //     const classCorrectedTime = this.getClassCorrectedTime(raceMaxLaps);
-    //     const personalCorrectedTime = calculateClassCorrectedTime(totalPersonalHandicap, this.getFinishTime(), this.getLaps(), raceMaxLaps);
-    //     return [personalCorrectedTime, classCorrectedTime];
-    // }
-
-    // getPursuitFinishPosition() {
-    //     return this.pursuitFinishPosition;
-    // }
-
-    // getBoatClass() {
-    //     return this.boatClass;
-    // }
-
-    // getFinishTime() {
-    //     return this.finishTime;
-    // }
-
-    // getLaps() {
-    //     return this.laps;
-    // }
-
     getRace() {
         return this.race;
     }
@@ -108,10 +61,6 @@ export default class HelmResult extends StoreObject {
     getHelm() {
         return this.helm;
     }
-
-    // isValidFinish() {
-    //     return this.finishCode.validFinish();
-    // }
 
     toStore() {
         return {
@@ -121,6 +70,4 @@ export default class HelmResult extends StoreObject {
             ...super.toStore(this),
         };
     }
-
-
 }

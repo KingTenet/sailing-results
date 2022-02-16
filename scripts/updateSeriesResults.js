@@ -78,8 +78,7 @@ async function updateAll(sourceResultsURL, seriesResultsURL) {
 async function run(sourceResultsURL, seriesResultsURL) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
-    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
-    stores.allCorrectedResults.forEach((result) => stores.correctedResultsStore.add(result));
+    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId, true);
     stores.correctedResultsStore.sync();
 }
 

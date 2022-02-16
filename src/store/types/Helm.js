@@ -20,7 +20,6 @@ export default class Helm extends StoreObject {
     static getId(helm) {
         assertType(helm, Helm);
         return helm.name;
-        return generateId(Helm, [helm.name]);
     }
 
     static sheetHeaders() {

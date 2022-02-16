@@ -10,7 +10,6 @@ import SeriesRace from "./SeriesRace.js";
 import StoreObject from "./StoreObject.js";
 
 const USE_PH_FROM_SERIES_START = true;
-const midnightTonight = () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1, 0, 0, 0));
 
 class AsciiTable {
     constructor(columnHeaders, rowHeaders, cells) {
@@ -29,10 +28,6 @@ class AsciiTable {
         return [...str, ...(new Array(length)).fill(char)].join("").slice(0, length);
     }
 
-    // pad(str = "", char, length) {
-    //     return str.split("\n").map((str) => this.padLine(str, char, length)).join("\n");
-    // }
-
     getRow(rowCells, columnWidth) {
         return `${this.columnSep} ` +
             rowCells.map((value, key) => this.pad(value, " ", key < this.rowHeaders.length ? this.rowHeadersWidth : columnWidth)).join(` ${this.columnSep} `) +
@@ -50,9 +45,8 @@ class AsciiTable {
             headerRowLength = headerRow.length;
             allRows.push(headerRow);
             allRows.push(rowSep());
-        })
-        // console.log(this.rowHeaders);
-        // console.log(this.cells);
+        });
+
         const rows = this.cells.reduce((prevRows, row, key) => [
             ...prevRows,
             this.getRow([...this.rowHeaders.map((rowHeader) => rowHeader[key]), ...row.map((num) => num === undefined ? "" : num)], this.columnSize - 3),
@@ -67,7 +61,6 @@ class AsciiTable {
 class ResultPoints extends HelmResult {
     constructor(result, racePoints, oodPoints, pnsPoints, isCounted = true) {
         super(result.race, result.helm, StoreObject.fromStore({}));
-        // super(result.race, result.helm, result.boatClass, result.boatSailNumber, result.laps, result.pursuitFinishPosition, result.finishTime, result.finishCode, new StoreObject(result));
         this.result = result;
         this.racePoints = racePoints;
         this.oodPoints = oodPoints;
@@ -174,12 +167,26 @@ export default class SeriesPoints extends Series {
         return Math.round(average(totalPoints) * 10) / 10; // Round to 1dp
     }
 
-    getRacesToCount(date, byClassHandicap) {
-        const finishes = this.raceFinishes
+    getFinishesWithResults(date) {
+        return this.raceFinishes
             .filter((race) => race.isBefore(new Race(date, 1)))
-            .filter((race) => race.hasResults())
-            .filter((race) => byClassHandicap || race.getSCT());
+            .filter((race) => race.hasResults());
+    }
 
+    getPersonalHandicapRacesToCount(date) {
+        return SeriesPoints.getRacesToCount(
+            this.getFinishesWithResults(date)
+                .filter((race) => race.getSCT())
+        );
+    }
+
+    getClassHandicapRacesToCount(date) {
+        return SeriesPoints.getRacesToCount(
+            this.getFinishesWithResults(date)
+        );
+    }
+
+    static getRacesToCount(finishes) {
         return Math.ceil((finishes.length + 1) / 2);
     }
 
@@ -209,11 +216,9 @@ export default class SeriesPoints extends Series {
             .filter((race) => race.hasResults())
             .filter((race) => byClassHandicap || race.getSCT());
 
-        // console.log(finishedRaces);
-
-        // console.log(finishedRaces.length);
-
-        const racesToCount = this.getRacesToCount(date, byClassHandicap);
+        const racesToCount = byClassHandicap
+            ? this.getClassHandicapRacesToCount(date)
+            : this.getPersonalHandicapRacesToCount(date);
 
         const pointsByRaceResult = flatten(finishedRaces.map((raceFinish) => getPointsByResult(raceFinish)));
         const pointsByHelm = new Map(groupBy(pointsByRaceResult, ([result]) => Result.getHelmId(result)));
@@ -258,29 +263,47 @@ export default class SeriesPoints extends Series {
         )
     }
 
-    summarize(date = new Date()) {
-        console.log(`Series Summary: ${this.getSheetName()}`);
-        this.allResultPoints = this.getPointsByAllResults(date, false);
-
-        console.log(this.getRacesToCount(date, false));
-        this.summarizeHelms();
-        const seriesTable = this.seriesTable();
-
-        console.log(seriesTable.getTable().join("\n"));
-
-
-
-
-        // allResultPoints
-        //     .filter((result) => HelmResult.getHelmId(result) === "Simon Hall")
-        //     .forEach((points) => {
-        //         console.log(`${points.getRace().getDate()} ${points.getTotal()}`);
-        //     })
-
+    getPersonalHandicapPoints(date) {
+        return this.getPointsByAllResults(date, false);
     }
 
-    summarizeHelms() {
-        groupBy(this.allResultPoints, HelmResult.getHelmId)
+    getClassHandicapPoints(date) {
+        return this.getPointsByAllResults(date, true);
+    }
+
+    summarizeByClassHandicap(date = new Date()) {
+        console.log(`Series Summary: ${this.getSheetName()}`);
+        console.log(`  By class handicap`);
+        if (!this.allClassHandicapPoints) {
+            this.allClassHandicapPoints = this.getClassHandicapPoints(date);
+        }
+        const racesToCount = this.getClassHandicapRacesToCount(date);
+        console.log(`  Races to count: ${racesToCount}`);
+        this.summarizeHelms(this.allClassHandicapPoints);
+        const seriesTable = this.seriesTable(this.allClassHandicapPoints);
+        console.log(seriesTable.getTable().join("\n"));
+    }
+
+    summarizeByPersonalHandicap(date = new Date()) {
+        console.log(`Series Summary: ${this.getSheetName()}`);
+        console.log(`  By personal handicap`);
+        if (!this.allPersonalHandicapPoints) {
+            this.allPersonalHandicapPoints = this.getPersonalHandicapPoints(date);
+        }
+        const racesToCount = this.getPersonalHandicapRacesToCount(date);
+        console.log(`  Races to count: ${racesToCount}`);
+        this.summarizeHelms(this.allPersonalHandicapPoints);
+        const seriesTable = this.seriesTable(this.allPersonalHandicapPoints);
+        console.log(seriesTable.getTable().join("\n"));
+    }
+
+    summarize(date = new Date()) {
+        this.summarizeByClassHandicap(date);
+        this.summarizeByPersonalHandicap(date);
+    }
+
+    summarizeHelms(allResultPoints) {
+        groupBy(allResultPoints, HelmResult.getHelmId)
             .map(([helmId, resultsPoints]) => [helmId, ResultPoints.aggregate(resultsPoints)])
             .sort(([, a], [, b]) => a - b)
             .forEach(([helmId, points]) => {
@@ -288,15 +311,15 @@ export default class SeriesPoints extends Series {
             })
     }
 
-    seriesTable() {
-        const allResultsPointsSortedByRace = this.allResultPoints.sort(HelmResult.sortByRaceAsc);
+    seriesTable(allResultPoints) {
+        const allResultsPointsSortedByRace = allResultPoints.sort(HelmResult.sortByRaceAsc);
         const firstRacePointsOfSeries = allResultsPointsSortedByRace.at(0).getRace();
-        const allResultsByHelm = mapGroupBy(this.allResultPoints, [HelmResult.getHelmId], ResultPoints.aggregate);
+        const allResultsByHelm = mapGroupBy(allResultPoints, [HelmResult.getHelmId], ResultPoints.aggregate);
         // const allBoatsByHelm = groupBy(this.allResultPoints, [HelmResult.getHelmId, ResultPoints.getBoatClassName]);
-        const helmPointsMap = mapGroupBy(this.allResultPoints, [HelmResult.getHelmId, HelmResult.getRaceId, ResultPoints.getBoatClassName]);
+        const helmPointsMap = mapGroupBy(allResultPoints, [HelmResult.getHelmId, HelmResult.getRaceId, ResultPoints.getBoatClassName]);
 
         const pyMap = mapGroupBy(
-            this.allResultPoints,
+            allResultPoints,
             [ResultPoints.getBoatClassName],
             (points) => points && points.length
                 ? ResultPoints.getBoatClass(points.at(0))?.getPY()
@@ -304,7 +327,7 @@ export default class SeriesPoints extends Series {
         );
 
         const allBoatsByHelm = groupBy(
-            this.allResultPoints,
+            allResultPoints,
             [HelmResult.getHelmId, ResultPoints.getBoatClassName],
             (points) => points && points.length
                 ? [
@@ -333,7 +356,22 @@ export default class SeriesPoints extends Series {
 
         const rowHeadersHelm = rowHeaders.reduce((acc, [helmId]) => [...acc, helmId === acc.at(-1) ? "" : helmId], []);
         const rowHeadersBoat = rowHeaders
-            .map(([helmId, className, PHPI, classPY]) => className
+            // .map((blah) => {
+            //     let [helmId, className, PHPI, classPY] = blah;
+            //     try {
+            //         className
+            //             ? [helmId, className, PHPI[0], classPY, PHPI[0] - classPY].join(", ")
+            //             : `${helmId}`
+            //     }
+            //     catch (err) {
+            //         console.log(helmId, className, PHPI, classPY);
+            //         console.log(this);
+            //         debugger;
+            //         throw err;
+            //     }
+            //     return blah;
+            // })
+            .map(([helmId, className, PHPI = [], classPY]) => className
                 ? [helmId, className, PHPI[0], classPY, PHPI[0] - classPY].join(", ")
                 : `${helmId}`
             );

@@ -1,10 +1,11 @@
-import { groupBy, assertType, average } from "../src/common.js";
+import { groupBy, assertType, average, parseISOString } from "../src/common.js";
 import BoatClass from "../src/store/types/BoatClass.js";
 import CorrectedResult from "../src/store/types/CorrectedResult.js";
+import Race from "../src/store/types/Race.js";
 import Result from "../src/store/types/Result.js";
 
 const PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP = 10;
-
+const FIRST_RACE_FOR_ADVANCED_SCT_CALC = new Race(parseISOString("2016-11-06T00:00:00.000Z"), 1); // First Frostbite 2016 race (when advanced SCT brought in)
 /*
 Average corrected time ACT = average of Class handicap corrected times of top 2/3rd finishers, where the number of results to use is rounded up, i.e. 2/3 of 8 = 5.333 and the top 6 results are averaged.
 The Standard Corrected Time is then calculated as:
@@ -21,6 +22,10 @@ The values of PH in each race are shown on the race results, and saved in a data
 
 */
 export function calculateSCTFromRaceResults(raceResults) {
+    if (raceResults.some((result) => result.getRace().isBefore(FIRST_RACE_FOR_ADVANCED_SCT_CALC))) {
+        return calculateBasicSCTFromRaceResults(raceResults);
+    }
+
     const finishers = raceResults
         .filter((result) => result.finishCode.validFinish());
     const raceMaxLaps = getLapsForNormalisation(finishers);
@@ -39,8 +44,8 @@ export function calculateSCTFromRaceResults(raceResults) {
     }
 
     // TODO re-enable 
-    const resultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
-    // const resultsToCountForACT = Math.round(finishers.length * 2 / 3);
+    // const resultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
+    const resultsToCountForACT = Math.round(finishers.length * 2 / 3);
 
     const finishTimes = finishers
         .map((result) => result.getClassCorrectedTime(raceMaxLaps))
@@ -49,6 +54,20 @@ export function calculateSCTFromRaceResults(raceResults) {
     const ACT = average(finishTimes.slice(-resultsToCountForACT));
 
     return [average(finishTimes.filter((time) => time < (ACT * 1.05))), raceMaxLaps];
+}
+
+export function calculateBasicSCTFromRaceResults(raceResults) {
+    const finishers = raceResults
+        .filter((result) => result.finishCode.validFinish());
+    const raceMaxLaps = getLapsForNormalisation(finishers);
+
+    const resultsToCountForACT = Math.round(finishers.length * 2 / 3);
+
+    const finishTimes = finishers
+        .map((result) => result.getClassCorrectedTime(raceMaxLaps))
+        .sort((a, b) => b - a);
+
+    return [average(finishTimes.slice(-resultsToCountForACT)), raceMaxLaps];
 }
 
 function getLapsForNormalisation(results) {
@@ -88,17 +107,26 @@ export function getRollingPersonalHandicapFromResults(previousResults, boatClass
     const classPreviousResultsPH = classPreviousResults
         .map((result) => result.getPersonalHandicapFromRace())
 
-    return getRollingMetric([initialClassPH, ...classPreviousResultsPH]);
+    // TODO - changed for consistency with previous system.
+    return getRollingMetric([...classPreviousResultsPH]);
+    // return getRollingMetric([initialClassPH, ...classPreviousResultsPH]);
 }
 
 function getRollingMetric(allMetrics) {
     const metricsToCount = allMetrics.slice(-PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP);
     const worst = metricsToCount.reduce((prevMax, current) => Math.max(prevMax, current), -Infinity);
     const sum = metricsToCount.reduce((sum, current) => sum + current, 0);
-    if (metricsToCount.length < PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP) {
+
+    if (metricsToCount.length < 2) {
         return sum / metricsToCount.length;
     }
     return (sum - worst) / (metricsToCount.length - 1);
+
+    // TODO - changed for consistency with previous system.
+    // if (metricsToCount.length < PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP) {
+    //     return sum / metricsToCount.length;
+    // }
+    // return (sum - worst) / (metricsToCount.length - 1);
 }
 
 export function calculatePersonalHandicapFromPI(classPY, PI) {
@@ -112,10 +140,13 @@ function calculatePIFromPersonalHandicap(classPY, PH) {
 function transformPersonalHandicapToPI(validResults, boatClass) {
     assertType(boatClass, BoatClass);
     validResults.forEach((result) => assertType(result, CorrectedResult));
-    const firstResult = validResults.at(0);
-    const initialPersonalHandicap = firstResult.getRollingPersonalHandicapBeforeRace();
+
+    // TODO - disabled for consistency with previous system
+    // const firstResult = validResults.at(0);
+    // const initialPersonalHandicap = firstResult.getRollingPersonalHandicapBeforeRace();
+
     return [
-        calculatePIFromPersonalHandicap(firstResult.getBoatClass().getPY(), initialPersonalHandicap),
+        //calculatePIFromPersonalHandicap(firstResult.getBoatClass().getPY(), initialPersonalHandicap),
         ...validResults.map((result) => calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()))
     ];
 }

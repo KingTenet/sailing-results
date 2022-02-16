@@ -15,7 +15,7 @@ import HelmResult from "./types/HelmResult.js";
 const localStorage = new LocalStorage('./backend');
 global.localStorage = localStorage;
 
-const REFRESH_BACKEND_THRESHOLD = 2;
+const REFRESH_BACKEND_THRESHOLD = 3600 * 1000;
 
 export default class Stores {
     constructor(auth, raceResultsSheetId, seriesResultsSheetId) {
@@ -74,22 +74,24 @@ export default class Stores {
         this.raceFinishes = raceFinishes;
         this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
         const allSeries = groupBy(this.seriesRaces.all(), SeriesRace.getSeriesId);
-        const allSeriesFinishes = allSeries.map(([seriesId, seriesRaces]) => SeriesPoints.fromSeriesRaces(
-            seriesRaces,
-            seriesRaces
-                .map(SeriesRace.getRaceId)
-                .map((raceId) => raceFinishes.get(raceId))
-                .filter(Boolean)
-        ));
 
-        for (let seriesFinish of allSeriesFinishes) {
-            seriesFinish.summarize();
-        }
+        this.seriesPoints = allSeries.map(([seriesId, seriesRaces]) => [
+            seriesId,
+            SeriesPoints.fromSeriesRaces(
+                seriesRaces,
+                seriesRaces
+                    .map(SeriesRace.getRaceId)
+                    .map((raceId) => raceFinishes.get(raceId))
+                    .filter(Boolean)
+            )]);
 
         this.allCorrectedResults = allCorrectedResults;
 
         // this.correctedResultsStore = await StoreWrapper.create("Debug out", this.seriesResultsDocument, this, CorrectedResult, getResultFromStore, undefined, true);
         // this.correctedResultsStore = await StoreWrapper.create("Corrected Results", this.seriesResultsDocument, this, CorrectedResult, getResultFromStore, undefined, true);
+        // this.allCorrectedResults.forEach((result) => {
+        //     this.correctedResultsStore.add(result);
+        // });
 
         // this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
         // const allSeries = groupBy(this.seriesRaces.all(), SeriesRace.getSeriesId);
@@ -99,10 +101,10 @@ export default class Stores {
         // ])));
     }
 
-    static async create(auth, raceResultsSheetId, seriesResultsSheetId) {
+    static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
         const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
-        if (!lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD) {
-            // localStorage.clear();
+        if (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD) {
+            localStorage.clear();
         }
         const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
         await stores.init();

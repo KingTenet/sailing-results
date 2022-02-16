@@ -31,7 +31,6 @@ export default class RaceFinish extends Race {
             const [sct, raceMaxLaps] = calculateSCTFromRaceResults(results) || [];
             this.sct = sct;
             this.raceMaxLaps = raceMaxLaps;
-            // console.log(`${Race.getId(this)} ${sct / this.raceMaxLaps}`);
         }
 
         this.previousResults = previousResults;
@@ -41,8 +40,6 @@ export default class RaceFinish extends Race {
         if (!this.isPursuitRace()) {
             this.setCorrectedResults();
         }
-
-        // this.assignPointsToRace();
     }
 
     hasResults() {
@@ -104,37 +101,19 @@ export default class RaceFinish extends Race {
             .map(([points, result]) => [result, points]);
     }
 
-    // getPersonalCorrectedPointsByResult() {
-    //     return this.sortResultsByPointsDesc(this.personalAdjustedPoints);
-    // }
-
-    // getPursuitCorrectedPointsByResult() {
-    //     return this.sortResultsByPointsDesc(this.pursuitPoints);
-    // }
-
-    // getClassCorrectedPointsByResult() {
-    //     return this.sortResultsByPointsDesc(this.classAdjustedPoints);
-    // }
-
     getPersonalCorrectedPointsByResult(personalHandicapAtRace) {
         const [, personalAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
         return this.sortResultsByPointsDesc(personalAdjustedPoints);
     }
 
-    getClassCorrectedPointsByResult(personalHandicapAtRace) {
-        const [classAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
+    getClassCorrectedPointsByResult() {
+        const [classAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults());
         return this.sortResultsByPointsDesc(classAdjustedPoints);
     }
 
     getOODs() {
         return this.oods;
     }
-
-    // assignPointsToRace() {
-    //     const [classAdjustedPoints, personalAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults());
-    //     this.classAdjustedPoints = classAdjustedPoints;
-    //     this.personalAdjustedPoints = personalAdjustedPoints;
-    // }
 
     static getPointsForResults(results, personalHandicapAtRace) {
         const classAdjustedPoints = new Map();

@@ -1,11 +1,9 @@
-import { assertType, generateId, parseBoolean } from "../../common.js";
-import Helm from "./Helm.js";
-import Race from "./Race.js";
+import { assertType } from "../../common.js";
 import Result from "./Result.js";
 import StoreObject from "./StoreObject.js";
 import { getRollingHandicaps, calculatePersonalInterval, calculatePersonalHandicapFromPI } from "../../../scripts/personalHandicapHelpers.js";
-
-const debug = global;
+import Race from "./Race.js";
+import Helm from "./Helm.js";
 
 export default class CorrectedResult extends Result {
     constructor(result, previousResults, raceFinish) {
@@ -19,7 +17,6 @@ export default class CorrectedResult extends Result {
         this.previousResults = previousResults;
 
         const [rollingPH, rollingPI] = getRollingHandicaps(this.previousResults, this);
-        // console.log(this.helm.name, this.boatClass.getClassName(), rollingPH, rollingPI);
         const [personalCorrectedTime, classCorrectedTime] = validFinish ? this.getCorrectedTimes(rollingPH, this.raceFinish.getMaxLaps()) : [];
 
         this.classCorrectedTime = Math.round(classCorrectedTime);
@@ -27,7 +24,6 @@ export default class CorrectedResult extends Result {
         this.rollingPersonalHandicapBeforeRace = Math.round(rollingPH);
         this.rollingOverallPIBeforeRace = rollingPI;
         const [rollingPHAfter, rollingPIAfter] = getRollingHandicaps([...this.previousResults, this], this);
-        // console.log("  ", this.helm.name, this.boatClass.getClassName(), rollingPHAfter, rollingPIAfter);
 
         this.rollingPersonalHandicapAfterRace = rollingPHAfter;
         this.rollingOverallPIAfterRace = rollingPIAfter;
@@ -39,12 +35,8 @@ export default class CorrectedResult extends Result {
         this.validFinish = validFinish;
 
         this.raceMaxLaps = this.raceFinish.getMaxLaps();
+        this.wasEre = true;
     }
-
-    // static getId(result) {
-    //     assertType(result, CorrectedResult);
-    //     return generateId(CorrectedResult, [Helm.getId(result.helm), Race.getId(result.race)]);
-    // }
 
     static fromResult(result, helmResultsByRaceAsc, raceFinish) {
         assertType(result, Result);
@@ -139,20 +131,36 @@ export default class CorrectedResult extends Result {
         if (!race) {
             return this.getPersonalCorrectedFinishTime();
         }
+
         const [rollingPH, rollingPI] = this.getRollingHandicapsAtRace(race);
-        // debugger;
-        // if (!debug.ph) {
-        //     debug.ph = new Map();
-        // }
-        // debug.ph.set(`${Helm.getId(this.getHelm())}: ${this.getBoatClass().getClassName()}`, rollingPH - this.getBoatClass().getPY());
-
-        // if (Helm.getId(this.getHelm()).includes("Andy Everitt")) {
-        //     debugger;
-        // }
-
-        // console.log([...debug.ph]);
-        //console.log(`${Helm.getId(this.getHelm())}: ${this.getBoatClass().getClassName()}: ${rollingPH}`);
         const [personalCorrectedTime] = this.getCorrectedTimes(rollingPH, this.raceFinish.getMaxLaps());
+
+        if (global.DEBUG) {
+            if (!this.debug) {
+                this.debug = {};
+            }
+
+            this.debug.personalHandicapUsed = rollingPH;
+            this.debug.personalCorrectedTimeUsed = personalCorrectedTime;
+            this.debug.totalRacesForHelm = this.previousResults.filter((result) => result.getRace().isBefore(race)).length;
+            this.debug.totalRacesForHelmInClass = this.previousResults
+                .filter((result) => result.getRace().isBefore(race))
+                .filter((result) => result.getBoatClass().getClassName() === this.getBoatClass().getClassName()).length
+
+            this.debug.classRollingHandicaps = this.previousResults
+                .filter((result) => result.getRace().isBefore(race))
+                .filter((result) => result.getBoatClass().getClassName() === this.getBoatClass().getClassName())
+                .filter((result) => result.getPersonalHandicapFromRace())
+                .slice(-10)
+                .map((result) => [Race.getId(result.getRace()), result.getPersonalHandicapFromRace(), result.getBoatClass().getPY(), ...this.getRollingHandicapsAtRace(result.getRace())])
+
+            this.debug.allRollingHandicaps = this.previousResults
+                .filter((result) => result.getRace().isBefore(race))
+                .filter((result) => result.getPersonalHandicapFromRace())
+                .slice(-10)
+                .map((result) => [Race.getId(result.getRace()), result.getPersonalHandicapFromRace(), result.getBoatClass().getPY(), ...this.getRollingHandicapsAtRace(result.getRace())])
+        }
+
         return Math.round(personalCorrectedTime);
     }
 
@@ -180,5 +188,38 @@ export default class CorrectedResult extends Result {
 
     setPersonalCorrectedPosition(position) {
         this.personalCorrectedPosition = position;
+    }
+
+    toJSON() {
+        // debugger;
+        if (!this.previousResults) {
+            return this;
+        }
+
+        return {
+            "Gender": this.helm.getGender(),
+            "Novice": this.helm.wasNoviceInRace(this.previousResults, this.raceFinish),
+            "Cadet": this.helm.wasCadetInRace(this.raceFinish),
+            "Junior": this.helm.wasJuniorInRace(this.raceFinish),
+            "Club Boat": "",
+            "Crew": "",
+            "Rig": "",
+            "Spinnaker": "",
+            "Class Corrected Finish Time": this.classCorrectedTime,
+            "Personal Corrected Finish Time": this.personalCorrectedTime,
+            "PY": this.getBoatClass().getPY(),
+            "Corrected Laps": this.raceMaxLaps,
+            "PH From Race": this.getPersonalHandicapFromRace(),
+            "NHEBSC PH (Single Class) Before Race": this.rollingPersonalHandicapBeforeRace,
+            "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
+            "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
+            "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
+            "Class Position": this.classCorrectedPosition,
+            "PH Position": this.personalCorrectedPosition,
+            "Debug": this.debug,
+            // "Used PH": this.personalHandicapUsed,
+            // "Used PCT": this.personalCorrectedTimeUsed,
+            ...super.toStore(this),
+        };
     }
 }
