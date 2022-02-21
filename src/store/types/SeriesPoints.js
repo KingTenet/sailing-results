@@ -3,7 +3,7 @@ import CorrectedResult from "./CorrectedResult.js";
 import Helm from "./Helm.js";
 import HelmResult from "./HelmResult.js";
 import Race from "./Race.js";
-import RaceFinish from "./RaceFinish.js";
+import MutableRaceFinish from "./MutableRaceFinish.js";
 import Result from "./Result.js";
 import Series from "./Series.js";
 import SeriesRace from "./SeriesRace.js";
@@ -112,7 +112,7 @@ export default class SeriesPoints extends Series {
         assertType(series, Series);
         super(series.getSeasonName(), series.getSeriesName());
         seriesRaces.forEach((seriesRace) => assertType(seriesRace, SeriesRace));
-        raceFinishes.forEach((raceFinish) => assertType(raceFinish, RaceFinish));
+        raceFinishes.forEach((raceFinish) => assertType(raceFinish, MutableRaceFinish));
         this.seriesRaces = seriesRaces;
         this.raceFinishes = raceFinishes;
         this.plannedRaces = this.seriesRaces.length;

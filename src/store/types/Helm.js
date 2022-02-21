@@ -71,6 +71,10 @@ export default class Helm extends StoreObject {
         // return race.getDate().getTime() < lastNoviceResultDateThreshold;
     }
 
+    getName() {
+        return this.name;
+    }
+
     getGender() {
         return this.gender;
     }

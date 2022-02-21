@@ -1,9 +1,8 @@
 import { assertType } from "../../common.js";
 import Result from "./Result.js";
 import StoreObject from "./StoreObject.js";
-import { getRollingHandicaps, calculatePersonalInterval, calculatePersonalHandicapFromPI } from "../../../scripts/personalHandicapHelpers.js";
+import { getRollingHandicaps, calculatePersonalInterval, calculatePersonalHandicapFromPI } from "../../common/personalHandicapHelpers.js";
 import Race from "./Race.js";
-import Helm from "./Helm.js";
 
 export default class CorrectedResult extends Result {
     constructor(result, previousResults, raceFinish) {
@@ -191,7 +190,6 @@ export default class CorrectedResult extends Result {
     }
 
     toJSON() {
-        // debugger;
         if (!this.previousResults) {
             return this;
         }

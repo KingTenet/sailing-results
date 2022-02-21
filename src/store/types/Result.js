@@ -4,7 +4,7 @@ import Helm from "./Helm.js";
 import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
 import FinishCode from "./FinishCode.js";
-import { calculateClassCorrectedTime } from "../../../scripts/classHandicapHelpers.js";
+import { calculateClassCorrectedTime } from "../../common/classHandicapHelpers.js";
 import HelmResult from "./HelmResult.js";
 
 export default class Result extends HelmResult {
@@ -61,6 +61,10 @@ export default class Result extends HelmResult {
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
         const finishCode = new FinishCode(finishCodeString);
         return new Result(race, getHelm(helmId), getBoatClassForDate(boatClassName, race.getDate()), parseInt(boatSailNumber), parseIntOrUndefined(laps), parseIntOrUndefined(pursuitFinishPosition), parseIntOrUndefined(finishTime), finishCode, StoreObject.fromStore(storeResult));
+    }
+
+    static fromUser(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode = new FinishCode("")) {
+        return new Result(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, StoreObject.fromStore({}));
     }
 
     getClassCorrectedTime(raceMaxLaps) {

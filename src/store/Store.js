@@ -10,7 +10,8 @@ export default class Store {
         this.fromStore = fromStore;
         this.getKeyFromObj = getKeyFromObj;
         this.metadataKey = `metadata::${this.storeName}`;
-        this.localStore = new LocalStore(storeName, toStore, fromStore);
+        this.getLastSyncDate();
+        this.localStore = new LocalStore(storeName, toStore, fromStore, this);
         this.promiseRemoteStore = RemoteStore.createRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
@@ -25,19 +26,27 @@ export default class Store {
         }
     }
 
-    dump() {
-        this.localStore.dump();
-        console.log(localStorage.getItem(this.metadataKey));
+    syncLocalStateToRemoteState(storeObjects) {
+        this.localStore.bootstrap(
+            storeObjects.map((storeObject) => [this.getKeyFromObj(storeObject), storeObject])
+        );
+        this.setLastSyncDate();
     }
 
-    syncLocalStateToRemoteState(storeObjects) {
-        storeObjects.forEach((storeObject) => this.localStore.bootstrap(this.getKeyFromObj(storeObject), storeObject));
+    setLastSyncDate() {
         this.lastSyncDate = new Date();
         localStorage.setItem(this.metadataKey, getISOStringFromDate(this.lastSyncDate));
     }
 
+    getLastSyncDate() {
+        if (!this.lastSyncDate) {
+            this.lastSyncDate = parseISOString(localStorage.getItem(this.metadataKey), new Date(0));
+        }
+        return this.lastSyncDate;
+    }
+
     async syncRemoteStateToLocalState(force = false) {
-        const syncDate = this.lastSyncDate;
+        const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
         let created = allLocal
             .filter((obj) => obj.createdAfterDate(syncDate));
@@ -59,18 +68,17 @@ export default class Store {
 
         if (updated.length && force) {
             // TODO: Implement handling of updating remote state
-            await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
+            // await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
         }
         if (created.length) {
             await this.remoteStore.append(created.map((obj) => this.toStore(obj)));
         }
-        this.lastSyncDate = new Date();
-        localStorage.setItem(this.metadataKey, getISOStringFromDate(this.lastSyncDate));
+        this.setLastSyncDate();
         console.log("Successfully updated remote state");
     }
 
     pullLocalState() {
-        this.lastSyncDate = parseISOString(localStorage.getItem(this.metadataKey), new Date(0));
+        this.getLastSyncDate();
         return this.localStore.getAll();
     }
 
@@ -97,5 +105,10 @@ export default class Store {
 
     all() {
         return this.localStore.getAll();
+    }
+
+    dump() {
+        this.localStore.dump();
+        console.log(this.lastSyncDate);
     }
 }

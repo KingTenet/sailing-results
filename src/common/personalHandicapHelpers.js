@@ -1,8 +1,8 @@
-import { groupBy, assertType, average, parseISOString } from "../src/common.js";
-import BoatClass from "../src/store/types/BoatClass.js";
-import CorrectedResult from "../src/store/types/CorrectedResult.js";
-import Race from "../src/store/types/Race.js";
-import Result from "../src/store/types/Result.js";
+import { groupBy, assertType, average, parseISOString } from "../common.js";
+import BoatClass from "../store/types/BoatClass.js";
+import CorrectedResult from "../store/types/CorrectedResult.js";
+import Race from "../store/types/Race.js";
+import Result from "../store/types/Result.js";
 
 const PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP = 10;
 const FIRST_RACE_FOR_ADVANCED_SCT_CALC = new Race(parseISOString("2016-11-06T00:00:00.000Z"), 1); // First Frostbite 2016 race (when advanced SCT brought in)

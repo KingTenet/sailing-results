@@ -1,17 +1,18 @@
 import StoreObject from "./types/StoreObject.js"
+import inBrowser from "../inBrowser.js";
 const KEY_SEP = "##"
 
 export default class LocalStore {
-    constructor(storeName, toStore, fromStore) {
+    constructor(storeName, toStore, fromStore, store) {
         this.storeName = storeName;
         this.localStorage = localStorage;
         this.toStore = toStore;
         this.fromStore = fromStore;
+        this.store = store;
         this.cache = new Map();
         this.modifiedKeys = [];
         this.newKeys = [];
-        this.cacheFilled = false;
-        this.init();
+        this.fillCache();
     }
 
     dump() {
@@ -27,8 +28,11 @@ export default class LocalStore {
         return components[1];
     }
 
-    bootstrap(key, value) {
-        this.add(key, value, true);
+    bootstrap(keyValues) {
+        for (let [key, value] of keyValues) {
+            this.addToLocalStorage(key, this.toStore(value));
+        }
+        this.fillCache();
     }
 
     add(key, value, bootstrap = false) {
@@ -39,7 +43,7 @@ export default class LocalStore {
         let storeValue = this.toStore(newValue);
         this.cache.set(key, newValue);
         this.addToLocalStorage(key, storeValue);
-        // .catch((err) => console.log(err));
+        return key;
     }
 
     update(key, newValue) {
@@ -62,7 +66,6 @@ export default class LocalStore {
     }
 
     addToLocalStorage(key, value) {
-        // console.log(`Adding key ${key} to local storage`);
         let storeKey = this.keyToStoreKey(key);
         if (this.localStorage.getItem(storeKey)) {
             throw new Error(`Attempting to add object with key ${key} to local storage when it already exists`);
@@ -86,14 +89,11 @@ export default class LocalStore {
         return [...this.cache.values()];
     }
 
-    init() {
-        this.fillCache();
-        this.cacheFilled = true;
-    }
-
     fillCache() {
-        // const keys = Object.keys(this.localStorage);
-        const keys = this.localStorage._keys;
+        const keys = inBrowser
+            ? Object.keys(this.localStorage)
+            : this.localStorage._keys
+
         let i = keys.length;
         const keyValues = [];
 
@@ -107,6 +107,11 @@ export default class LocalStore {
         }
 
         let mappedValues = this.fromStore(keyValues.map(([, values]) => values));
-        mappedValues.forEach((mappedValue, i) => this.cache.set(keyValues[i][0], mappedValue));
+
+        mappedValues
+            .forEach((mappedValue, i) => {
+                mappedValue.setStore(this.store);
+                this.cache.set(keyValues[i][0], mappedValue);
+            });
     }
 }

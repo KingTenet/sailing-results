@@ -12,7 +12,7 @@ function intOrUndefined(intString) {
 
 
 
-function mapRaceResultToRow(date, raceNumber, { helm, boat, finishTime, finishCode, finishPosition, laps, PN }) {
+function mapRaceResultToRow(date, raceNumber, { helm, boat, finishTime, finishCode, pursuitFinishPosition, laps, PN }) {
     return {
         "Date": getURLDate(date),
         "Race Number": raceNumber,
@@ -131,16 +131,6 @@ export const getHelmId = ({ name }) => name;
 export const getSeriesId = ({ season, series }) => `${season}::${series}`;
 
 export const getRaceId = ({ date, raceNumber }) => `${date}::${raceNumber}`;
-
-function jsDateToSheetsDate(date) {
-    var sheetsEpoch = new Date(Date.UTC(1899, 11, 30, 0, 0, 0, 0));
-    return (date.getTime() - sheetsEpoch.getTime()) / 86400000;
-}
-
-function sheetsDateToJSDate(sheetsDateNumber) {
-    var sheetsEpoch = new Date(Date.UTC(1899, 11, 30, 0, 0, 0, 0));
-    return new Date(sheetsDateNumber * 86400000 + sheetsEpoch.getTime());
-}
 
 function transformSheetsDateToDate(s) {
     const b = s.split(/\D+/);

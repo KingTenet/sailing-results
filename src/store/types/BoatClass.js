@@ -1,6 +1,7 @@
 import StoreObject from "./StoreObject.js";
-import { assertType, generateId, assert, parseIntOrUndefined } from "../../common.js";
+import { assertType, generateId, parseIntOrUndefined } from "../../common.js";
 import BoatConfiguration from "./BoatConfiguration.js";
+import Race from "./Race.js";
 
 // Changeover date is 29th March (at least for 2020)
 // Might need to modify this each year (or pull from database)
@@ -75,6 +76,11 @@ export default class BoatClass extends StoreObject {
 
     getPY() {
         return this.PY;
+    }
+
+    filterForRace(race) {
+        assertType(race, Race);
+        return this.validYear === BoatClass.getClassYearForRaceDate(race.getDate());
     }
 
     toStore() {

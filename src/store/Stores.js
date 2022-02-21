@@ -4,18 +4,18 @@ import SeriesRace from "./types/SeriesRace.js";
 import Helm from "./types/Helm.js";
 import Result from "./types/Result.js";
 import { parseISOString } from "../common.js"
-import { LocalStorage } from "node-localstorage";
 import BoatClass from "./types/BoatClass.js";
 import CorrectedResult from "./types/CorrectedResult.js";
 import Series from "./types/Series.js";
 import Race from "./types/Race.js";
-import RaceFinish from "./types/RaceFinish.js";
+// import RaceFinish from "./types/RaceFinish.js";
 import SeriesPoints from "./types/SeriesPoints.js";
 import HelmResult from "./types/HelmResult.js";
-const localStorage = new LocalStorage('./backend');
-global.localStorage = localStorage;
+import bootstrapLocalStorage from "../bootstrapLocalStorage.js";
+import MutableRaceFinish from "./types/MutableRaceFinish.js";
 
 const REFRESH_BACKEND_THRESHOLD = 3600 * 1000;
+// const REFRESH_BACKEND_THRESHOLD = 0;
 
 export default class Stores {
     constructor(auth, raceResultsSheetId, seriesResultsSheetId) {
@@ -35,11 +35,6 @@ export default class Stores {
         );
 
         this.oods = await StoreWrapper.create("OODs", this.raceResultsDocument, this, HelmResult, getOODsFromStore);
-        const oodsByRace = new Map(groupBy(this.oods.all(), HelmResult.getRaceId));
-        const raceFinishes = new AutoMap(Race.getId);
-        for (let [, oods] of [...oodsByRace]) {
-            raceFinishes.upsert(new RaceFinish([], [], oods));
-        }
 
         const getResultFromStore = (result) => Result.fromStore(
             result,
@@ -51,17 +46,34 @@ export default class Stores {
         );
 
         this.purusitResults = await StoreWrapper.create("Pursuit Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
-        for (let [, raceResults] of Race.groupResultsByRaceAsc(this.purusitResults.all())) {
-            raceFinishes.upsert(new RaceFinish(raceResults, [], []));
+        this.results = await StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
+        this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
+        await this.processResults();
+    }
+
+    async processResults() {
+        const oodsByRace = new Map(groupBy(this.oods.all(), HelmResult.getRaceId));
+        const raceFinishes = new AutoMap(Race.getId);
+        for (let [, oods] of [...oodsByRace]) {
+            raceFinishes.upsert(MutableRaceFinish.fromOODs(oods));
         }
 
-        this.results = await StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
-        // this.results = await StoreWrapper.create("Debug", this.raceResultsDocument, this, Result, getResultFromStore);
+        for (let [, raceResults] of Race.groupResultsByRaceAsc(this.purusitResults.all())) {
+            raceFinishes.upsert(MutableRaceFinish.fromResults(raceResults));
+        }
+
+        this.results.all()
+            .filter((result) => result.hasStaleRemote())
+            .forEach((result) => console.log(result));
 
         const allCorrectedResults = [];
         for (let [race, raceResults] of Race.groupResultsByRaceAsc(this.results.all())) {
             try {
-                const raceFinish = new RaceFinish(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
+                if (raceResults.some((result) => result.hasStaleRemote())) {
+                    console.log(`${Race.getId(race)} has stale results`);
+                }
+                const raceFinish = MutableRaceFinish.fromResults(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
+
                 raceFinishes.upsert(raceFinish);
                 allCorrectedResults.push(...raceFinish.getCorrectedResults());
             }
@@ -72,7 +84,6 @@ export default class Stores {
         }
 
         this.raceFinishes = raceFinishes;
-        this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
         const allSeries = groupBy(this.seriesRaces.all(), SeriesRace.getSeriesId);
 
         this.seriesPoints = allSeries.map(([seriesId, seriesRaces]) => [
@@ -102,6 +113,7 @@ export default class Stores {
     }
 
     static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
+        await bootstrapLocalStorage();
         const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
         if (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD) {
             localStorage.clear();

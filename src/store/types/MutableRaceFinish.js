@@ -1,49 +1,81 @@
-import { assertType, groupBy, assert, AutoMap } from "../../common.js";
+import { assertType, groupBy, assert } from "../../common.js";
 import Result from "./Result.js";
 import { calculateSCTFromRaceResults } from "../../common/personalHandicapHelpers.js";
 import Race from "./Race.js";
 import CorrectedResult from "./CorrectedResult.js";
 import HelmResult from "./HelmResult.js";
+import { transform } from "@chakra-ui/react";
 
-export default class RaceFinish extends Race {
-    constructor(results, previousResults, oods) {
-        results.forEach((result) => assertType(result, Result));
-        previousResults.forEach((result) => assertType(result, CorrectedResult));
-        oods.forEach((ood) => assertType(ood, HelmResult));
-
-        const uniqueRaces = groupBy(results, Result.getRaceId);
-        const uniqueOODRaces = groupBy(oods, HelmResult.getRaceId);
-        assert(uniqueRaces.length < 2, "RaceFinish requires results are from a single race only.");
-        assert(uniqueOODRaces.length < 2, "RaceFinish requires oods are from a single race only.");
-
-        const race = (results.at(0) || oods.at(0)).getRace();
-        if (uniqueOODRaces.length && results.length) {
-            assert(uniqueOODRaces.at(0) !== Race.getId(race), "RaceFinish requires that OODs and results are from same race.");
-        }
-
-        const raceDate = race.getDate();
-        const raceNumber = race.getNumber();
+export default class MutableRaceFinish extends Race {
+    constructor(raceDate, raceNumber, results = [], previousResults, oods) {
         super(raceDate, raceNumber);
+        results.forEach((result) => assertType(result, Result));
+        (previousResults || []).forEach((result) => assertType(result, CorrectedResult));
+        (oods || []).forEach((ood) => assertType(ood, HelmResult));
+        (results || []).forEach((result) => assert(HelmResult.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race."));
+        (oods || []).forEach((ood) => assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race."));
 
         this.results = results;
-
-        if (results.length) {
-            const [sct, raceMaxLaps] = calculateSCTFromRaceResults(results) || [];
-            this.sct = sct;
-            this.raceMaxLaps = raceMaxLaps;
-        }
-
         this.previousResults = previousResults;
         this.oods = oods;
+        this.processResults();
+    }
 
-        this.validateRaceType();
-        if (!this.isPursuitRace()) {
-            this.setCorrectedResults();
+    processResults() {
+        if (this.hasResults()) {
+            this.calculateSCT();
+            this.validateRaceType();
+            if (!this.isPursuitRace()) {
+                if (!this.previousResults) {
+                    throw new Error("Cannot process race results without previous results");
+                }
+                this.setCorrectedResults();
+            }
+            this.processed = true;
         }
     }
 
+    calculateSCT() {
+        const [sct, raceMaxLaps] = calculateSCTFromRaceResults(this.results) || [];
+        this.sct = sct;
+        this.raceMaxLaps = raceMaxLaps;
+    }
+
     hasResults() {
-        return this.results.length;
+        return Boolean(this.results && this.results.length);
+    }
+
+    isPursuitRace() {
+        if (!this.hasResults()) {
+            throw new Error("Cannot determine race type without race results");
+        }
+        return Race.isPursuitRace(this.results);
+    }
+
+    hasImmutableResults() {
+        return Boolean(this.hasResults() && this.results.some((result) => !result.hasStaleRemote()));
+    }
+
+    getCorrectedResults() {
+        return this.isPursuitRace()
+            ? this.results
+            : this.correctedResults;
+    }
+
+    addResult(result) {
+        debugger;
+        assertType(result, Result);
+        assert(Result.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
+        assert(!this.hasImmutableResults(), "Cannot add results to an immutable race finish");
+        this.results.push(result);
+        this.processResults();
+    }
+
+    addOOD(ood) {
+        assertType(ood, HelmResult);
+        assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
+        assert(!this.hasImmutableResults(), "Cannot add oods to an immutable race finish");
+        this.oods = [...this.oods, ood];
     }
 
     validateRaceType() {
@@ -52,10 +84,6 @@ export default class RaceFinish extends Race {
         ) {
             throw new Error(`RaceFinish date:${this.raceDate} number:${this.raceNumber} must contain only one type of race`);
         }
-    }
-
-    isPursuitRace() {
-        return Race.isPursuitRace(this.results);
     }
 
     setCorrectedResults() {
@@ -67,14 +95,12 @@ export default class RaceFinish extends Race {
             .map((result) => CorrectedResult.fromResult(result, getHelmResults(Result.getHelmId(result)), this));
     }
 
-    getCorrectedResults() {
-        return this.isPursuitRace()
-            ? this.results
-            : this.correctedResults;
-    }
-
     getSCT() {
         return !Number.isNaN(this.sct) ? this.sct : undefined;
+    }
+
+    getMaxLaps() {
+        return this.raceMaxLaps;
     }
 
     /**
@@ -102,12 +128,12 @@ export default class RaceFinish extends Race {
     }
 
     getPersonalCorrectedPointsByResult(personalHandicapAtRace) {
-        const [, personalAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
+        const [, personalAdjustedPoints] = MutableRaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
         return this.sortResultsByPointsDesc(personalAdjustedPoints);
     }
 
     getClassCorrectedPointsByResult() {
-        const [classAdjustedPoints] = RaceFinish.getPointsForResults(this.getCorrectedResults());
+        const [classAdjustedPoints] = MutableRaceFinish.getPointsForResults(this.getCorrectedResults());
         return this.sortResultsByPointsDesc(classAdjustedPoints);
     }
 
@@ -129,7 +155,7 @@ export default class RaceFinish extends Race {
                 .filter((result) => !result.isValidFinish())
                 .forEach((result) => classAdjustedPoints.set(result, pointsForDNF));
 
-            RaceFinish.assignPointsToResults(
+            MutableRaceFinish.assignPointsToResults(
                 allFinishers,
                 (result) => result.getPursuitFinishPosition(),
                 (result, points) => classAdjustedPoints.set(result, points),
@@ -143,13 +169,13 @@ export default class RaceFinish extends Race {
                     personalAdjustedPoints.set(result, pointsForDNF);
                 });
 
-            RaceFinish.assignPointsToResults(
+            MutableRaceFinish.assignPointsToResults(
                 allFinishers,
                 (result) => result.getClassCorrectedFinishTime(),
                 (result, points) => classAdjustedPoints.set(result, points),
             );
 
-            RaceFinish.assignPointsToResults(
+            MutableRaceFinish.assignPointsToResults(
                 allFinishers,
                 (result) => result.getPersonalCorrectedFinishTimeUsingPHDate(personalHandicapAtRace),
                 (result, points) => personalAdjustedPoints.set(result, points),
@@ -159,7 +185,17 @@ export default class RaceFinish extends Race {
         return [classAdjustedPoints, personalAdjustedPoints];
     }
 
-    getMaxLaps() {
-        return this.raceMaxLaps;
+    static fromResults(results, previousResults, oods) {
+        assert(results.length, "Minimum number of results to create a race finish is 1");
+        assertType(results.at(0), Result);
+        const race = results.at(0).getRace();
+        return new MutableRaceFinish(race.getDate(), race.getNumber(), results, previousResults, oods);
+    }
+
+    static fromOODs(oods) {
+        assert(oods.length, "Minimum number of oods to create a race finish is 1");
+        assertType(oods.at(0), HelmResult);
+        const race = oods.at(0).getRace();
+        return new MutableRaceFinish(race.getDate(), race.getNumber(), undefined, undefined, oods);
     }
 }

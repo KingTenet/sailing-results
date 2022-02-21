@@ -1,15 +1,15 @@
 import React from "react";
 import { useState } from "react";
-import './App.css';
+// import './App.css';
 import Autocomplete from "./AutocompleteSimple";
 import FinishTimeSelector from "./FinishTimeSelector2";
-import { search } from "./search";
 import LapsSelector from "./LapsSelector";
-import { useAppState } from "./useAppState";
-import { useBack } from "./common"
-
+import { useAppState } from "../useAppState";
+import { useBack } from "../common"
+import Result from "../store/types/Result";
 import { Center, Text, Button, Flex } from '@chakra-ui/react'
 import { useParams } from "react-router-dom";
+import Race from "../store/types/Race";
 
 function AddHelmResult() {
     const navigateBack = useBack();
@@ -23,9 +23,14 @@ function AddHelmResult() {
     const raceDate = appState?.store?.raceDate;
     const races = appState?.store?.activeRaces;
     const helmsIndex = appState?.services?.helmsIndex;
-    const raceNumber = params["raceNumber"];
+    const boatsIndex = appState?.services?.boatsIndex;
 
-    const activeRace = appState?.store?.activeRaces.find(({ raceNumber: activeRaceNumber }) => activeRaceNumber === raceNumber);
+    const raceNumber = parseInt(params["raceNumber"]);
+    // const raceDate = parseURLDate(params["raceDate"]);
+
+
+
+    const activeRace = appState?.store?.otherActiveRaces.find(({ raceNumber: activeRaceNumber }) => activeRaceNumber === raceNumber);
 
     if (!races || !raceDate || !raceNumber || !activeRace) {
         return (
@@ -34,47 +39,69 @@ function AddHelmResult() {
         )
     }
 
+    console.log(activeRace);
+
     const processHelmResult = (event) => {
         event.preventDefault();
+        // const raceId = Race.getId();
 
-        const result = {
-            helm: selectedHelm,
-            boat: selectedBoat,
-            finishTime: finishTimeSeconds,
-            finishLaps: finishedLaps,
-            finishCode: undefined,
-            finishPosition: undefined
-        };
+        const result = appState.addFleetResult(new Race(raceDate, raceNumber), selectedHelm, selectedBoat, 1, finishedLaps, finishTimeSeconds, "");
 
-        const updateActiveRaceState = (raceTransform) => updateAppState(({ store: { activeRaces, ...rest }, ...state }) => ({
-            ...state,
-            store: {
-                ...rest,
-                activeRaces: activeRaces.map((activeRace) => raceNumber === activeRace.raceNumber
-                    ? raceTransform(activeRace)
-                    : activeRace
-                )
-            }
-        }));
+        // const result = {
+        //     helm: Helm.getId(selectedHelm),
+        //     boat: BoatClass.getId(selectedBoat),
+        //     finishTime: finishTimeSeconds,
+        //     finishLaps: finishedLaps,
+        //     finishCode: undefined,
+        //     finishPosition: undefined
+        // };
 
-        if (activeRace.results.find(({ helm }) => helm.name === selectedHelm.name)) {
-            updateActiveRaceState((race) => ({
-                ...race,
-                results: race.results.map((oldResult) => result.helm.name === oldResult.helm.name
-                    ? result
-                    : oldResult
-                ),
-            }));
-        }
-        else {
-            updateActiveRaceState((race) => ({
-                ...race,
-                results: [
-                    ...race.results,
-                    result,
-                ],
-            }));
-        }
+        // const updateActiveRaceState = (raceTransform) => updateAppState(({ store: { activeRaces, ...rest }, ...state }) => ({
+        //     ...state,
+        //     store: {
+        //         ...rest,
+        //         activeRaces: activeRaces.map((activeRace) => raceNumber === activeRace.raceNumber
+        //             ? raceTransform(activeRace)
+        //             : activeRace
+        //         )
+        //     }
+        // }));
+
+        // if (activeRace.results.find((prev) => prev.getHelm() === result.getHelm())) {
+        //     // TODO: Allow result to be updated..
+        //     updateActiveRaceState((race) => ({
+        //         ...race,
+        //         results: race.results.map((oldResult) => Result.getId(oldResult) === Result.getId(result)
+        //             ? result
+        //             : oldResult
+        //         ),
+        //     }));
+        // }
+        // else {
+        //     updateActiveRaceState((race) => ({
+        //         ...race,
+        //         results: [
+        //             ...race.results,
+        //             result,
+        //         ],
+        //     }));
+        // }
+
+        console.log("In process helm result");
+        updateAppState(({ store: { otherActiveRaces, ...rest }, ...state }) => {
+            console.log("In update appstate");
+            return ({
+                ...state,
+                store: {
+                    ...rest,
+                    otherActiveRaces: otherActiveRaces
+                        .map((activeRace) => Race.getId(activeRace) === Result.getRaceId(result)
+                            ? activeRace.addResult(result)
+                            : activeRace
+                        ),
+                }
+            })
+        });
 
         navigateBack();
     };
@@ -87,7 +114,7 @@ function AddHelmResult() {
                         <Autocomplete
                             heading={"Helm"}
                             data={helmsIndex.data}
-                            itemToString={(helm) => (helm ? helm.name : "")}
+                            itemToString={(helm) => (helm ? helm.getName() : "")}
                             filterData={(inputValue) => helmsIndex.search(inputValue)}
                             handleSelectedItemChange={setSelectedHelm}
                             getInvalidItemString={(partialMatch) => `${partialMatch} has not raced before, create a new helm record`}
@@ -97,9 +124,9 @@ function AddHelmResult() {
                         {selectedHelm &&
                             <Autocomplete
                                 heading={"Boat"}
-                                data={search.boatsIndex.data}
-                                itemToString={(boat) => (boat ? boat.class : "")}
-                                filterData={(inputValue) => search.boatsIndex.search(inputValue)}
+                                data={boatsIndex.data}
+                                itemToString={(boat) => (boat ? boat.getClassName() : "")}
+                                filterData={(inputValue) => boatsIndex.search(inputValue)}
                                 handleSelectedItemChange={setSelectedBoat}
                                 getInvalidItemString={(partialMatch) => `${partialMatch} has not raced before, create a new boat record`}
                                 createNewMessage={"Create a new boat record"}

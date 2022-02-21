@@ -37,6 +37,14 @@ export default class StoreObject {
         return this.dateCreated > date;
     }
 
+    setStore(store) {
+        this.store = store;
+    }
+
+    hasStaleRemote() {
+        return !this?.store || this.lastUpdated > this.store.getLastSyncDate();
+    }
+
     static sheetHeaders() {
         return [
             "Last Updated",
@@ -64,6 +72,14 @@ export default class StoreObject {
             throw new Error(`Mismatch of store headers for type:${Type.name}, missing header:${headerMissing}`);
         }
         return headers;
+    }
+
+    toJSON() {
+        let {
+            store,
+            ...rest
+        } = this;
+        return rest;
     }
 
     toStore() {

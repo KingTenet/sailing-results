@@ -1,71 +1,14 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { BrowserRouter as Router, Link, useRoutes, Navigate, useParams } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Link, useRoutes, Navigate } from "react-router-dom";
+import React, { useState } from "react";
 
-import AddHelmResult from "./AddHelmResult";
 import { useAppState, AppContext } from "./useAppState";
+
 import StateWrapper from "./StateWrapper";
-import { getURLDate } from "./common"
-
-function Race() {
-    const [appState] = useAppState();
-    const params = useParams();
-
-    const raceDate = appState?.store?.raceDate;
-    const races = appState?.store?.activeRaces;
-    const raceNumber = params["raceNumber"]
-
-    if (!races || !raceDate || !raceNumber) {
-        return (
-            <>
-            </>
-        )
-    }
-
-    return (
-        <>
-            <Flex direction="row" width="100vh" justify={"space-between"}>
-                <Text>Home</Text>
-                <Text>Race</Text>
-            </Flex>
-            <Text>{`Update ${getURLDate(raceDate)}, race ${raceNumber}`}</Text>
-            <Flex direction="column">
-                <Link to="register">Register helm</Link>
-                <Link to="finish">Finish helm</Link>
-            </Flex>
-        </>
-    )
-}
-
-function RaceDate() {
-    const [appState] = useAppState();
-    const params = useParams();
-
-    const raceDate = appState?.store?.raceDate;
-    const races = appState?.store?.activeRaces;
-    const raceNumber = params["raceNumber"]
-
-    if (!races || !raceDate || !raceNumber) {
-        return (
-            <>
-            </>
-        )
-    }
-
-    return (
-        <>
-            <Flex direction="row" width="100vh" justify={"space-between"}>
-                <Text>Home</Text>
-                <Text>Race</Text>
-            </Flex>
-            <Text>{`Update ${getURLDate(raceDate)}, race ${raceNumber}`}</Text>
-            <Flex direction="column">
-                <Link to="register">Register helm</Link>
-                <Link to="finish">Finish helm</Link>
-            </Flex>
-        </>
-    )
-}
+import Races from "./components/Races";
+import RaceDate from "./components/RaceDate";
+import Race from "./components/Race";
+import AddHelmResult from "./components/AddHelmResult";
 
 function Home() {
     const [appState] = useAppState();
@@ -89,33 +32,6 @@ function Home() {
     )
 }
 
-function Races() {
-    console.log("Rendering Races");
-    const [appState] = useAppState();
-
-    const raceDate = appState?.store?.raceDate;
-    const races = appState?.store?.activeRaces;
-
-    if (!races || !raceDate) {
-        return (
-            <>
-            </>
-        )
-    }
-
-    return (
-        <>
-            <Flex direction="row" width="100vh" justify={"space-between"}>
-                <Text>{`Races for ${getURLDate(raceDate)}`}</Text>
-            </Flex>
-            <Box>
-                {races && races.map(({ raceNumber }) => (
-                    <Link to={`${getURLDate(raceDate)}/${raceNumber}`}>{`Update Race ${raceNumber}`}</Link>
-                ))}
-            </Box>
-        </>
-    )
-}
 
 /*
 In the backend, series need to be preconfigured line items.
