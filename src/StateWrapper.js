@@ -4,7 +4,7 @@ import { tokenParser } from "./token.js";
 // import { SheetsAPI } from "./SheetsAPI";
 import React, { useEffect, useState } from "react";
 import { parseISOString, getSheetIdFromURL, assertType } from "./common";
-import { Index } from "./search";
+import SearchIndex from "./SearchIndex";
 import Stores from "./store/Stores";
 import BoatClass from "./store/types/BoatClass";
 import Helm from "./store/types/Helm";
@@ -70,8 +70,8 @@ async function initialiseStateFromToken(store, token) {
 
     const services = {
         // sheetsAPI,
-        helmsIndex: new Index(helms, "name"), //, (score, obj) => score - obj.daysSinceRaced > DAYS_IN_YEAR ? -0.1 : 0),
-        boatsIndex: new Index(boats, "className"),
+        helmsIndex: new SearchIndex(helms, "name"), //, (score, obj) => score - obj.daysSinceRaced > DAYS_IN_YEAR ? -0.1 : 0),
+        boatsIndex: new SearchIndex(boats, "className"),
     };
 
     function addFleetResult(race, helm, boatClass, boatSailNumber, laps, finishTime, finishCode) {
