@@ -297,6 +297,16 @@ export default class SeriesPoints extends Series {
         console.log(seriesTable.getTable().join("\n"));
     }
 
+    getPoints(date = new Date()) {
+        if (!this.allClassHandicapPoints) {
+            this.allClassHandicapPoints = this.getClassHandicapPoints(date);
+        }
+
+        if (!this.allPersonalHandicapPoints) {
+            this.allPersonalHandicapPoints = this.getPersonalHandicapPoints(date);
+        }
+    }
+
     summarize(date = new Date()) {
         this.summarizeByClassHandicap(date);
         this.summarizeByPersonalHandicap(date);

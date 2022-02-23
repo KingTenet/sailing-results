@@ -8,7 +8,6 @@ export function useAppState(redirect = true) {
     const [appState, updateAppState] = useContext(AppContext);
     let navigate = useNavigate();
     useEffect(() => {
-        console.log("In useAppState.useEffect");
         if (appState) {
             return;
         }

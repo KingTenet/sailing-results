@@ -4,7 +4,6 @@ import { calculateSCTFromRaceResults } from "../../common/personalHandicapHelper
 import Race from "./Race.js";
 import CorrectedResult from "./CorrectedResult.js";
 import HelmResult from "./HelmResult.js";
-import { transform } from "@chakra-ui/react";
 
 export default class MutableRaceFinish extends Race {
     constructor(raceDate, raceNumber, results = [], previousResults, oods) {
@@ -135,6 +134,11 @@ export default class MutableRaceFinish extends Race {
     getClassCorrectedPointsByResult() {
         const [classAdjustedPoints] = MutableRaceFinish.getPointsForResults(this.getCorrectedResults());
         return this.sortResultsByPointsDesc(classAdjustedPoints);
+    }
+
+    getFinishersByFinishTime() {
+        return this.getCorrectedResults()
+            .sort((a, b) => b.sortByFinishTimeDesc(a));
     }
 
     getOODs() {

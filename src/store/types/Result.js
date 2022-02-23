@@ -6,6 +6,7 @@ import BoatClass from "./BoatClass.js";
 import FinishCode from "./FinishCode.js";
 import { calculateClassCorrectedTime } from "../../common/classHandicapHelpers.js";
 import HelmResult from "./HelmResult.js";
+import MutableRaceResult from "./MutableRaceResult.js";
 
 export default class Result extends HelmResult {
     constructor(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, metadata) {
@@ -67,6 +68,11 @@ export default class Result extends HelmResult {
         return new Result(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, StoreObject.fromStore({}));
     }
 
+    static fromMutableRaceResult(mutableResult, laps, pursuitFinishPosition, finishTime, finishCode = new FinishCode("")) {
+        assertType(mutableResult, MutableRaceResult);
+        return new Result(mutableResult.getRace(), mutableResult.getHelm(), mutableResult.getBoatClass(), mutableResult.boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, StoreObject.fromStore({}));
+    }
+
     getClassCorrectedTime(raceMaxLaps) {
         let boatClass = this.getBoatClass();
         if (!this.finishCode.validFinish()) {
@@ -74,6 +80,11 @@ export default class Result extends HelmResult {
         }
 
         return calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
+    }
+
+    sortByFinishTimeDesc(secondResult) {
+        assertType(secondResult, Result);
+        return secondResult.getFinishTime() - this.getFinishTime();
     }
 
     sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {

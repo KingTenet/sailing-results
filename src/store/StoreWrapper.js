@@ -61,6 +61,10 @@ export default class StoreWrapper {
         return this.store.update(...args);
     }
 
+    delete(...args) {
+        return this.store.delete(...args);
+    }
+
     async sync(force = false) {
         return await this.store.syncRemoteStateToLocalState(force);
     }

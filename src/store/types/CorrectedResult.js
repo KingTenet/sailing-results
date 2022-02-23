@@ -34,7 +34,6 @@ export default class CorrectedResult extends Result {
         this.validFinish = validFinish;
 
         this.raceMaxLaps = this.raceFinish.getMaxLaps();
-        this.wasEre = true;
     }
 
     static fromResult(result, helmResultsByRaceAsc, raceFinish) {
@@ -68,8 +67,6 @@ export default class CorrectedResult extends Result {
             "NHEBSC PI (All Classes) Before Race",
             "NHEBSC PH (Single Class) After Race",
             "NHEBSC PI (All Classes) After Race",
-            "Class Position",
-            "PH Position",
             ...Result.sheetHeaders(),
         ];
     }
@@ -93,8 +90,6 @@ export default class CorrectedResult extends Result {
             "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
             "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
             "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
-            "Class Position": this.classCorrectedPosition,
-            "PH Position": this.personalCorrectedPosition,
             ...super.toStore(this),
         };
     }
@@ -103,15 +98,19 @@ export default class CorrectedResult extends Result {
         return this.rollingPersonalHandicapBeforeRace;
     }
 
-    getPersonalInterval(raceMaxLaps, standardCorrectedTime) {
-        return calculatePersonalInterval(this.getClassCorrectedTime(raceMaxLaps), standardCorrectedTime);
+    getPersonalInterval(standardCorrectedTime) {
+        return calculatePersonalInterval(this.getClassCorrectedTime(), standardCorrectedTime);
+    }
+
+    getClassCorrectedTime() {
+        return super.getClassCorrectedTime(this.raceFinish.getMaxLaps());
     }
 
     getPersonalHandicapFromRace() {
         if (!this.finishCode.validFinish() || !this.raceFinish.getSCT()) {
             return;
         }
-        const PI = this.getPersonalInterval(this.raceFinish.getMaxLaps(), this.raceFinish.getSCT()); // % diff on class SCT
+        const PI = this.getPersonalInterval(this.raceFinish.getSCT()); // % diff on class SCT
         return Math.round(calculatePersonalHandicapFromPI(this.getBoatClass().getPY(), PI))
     }
 
@@ -181,14 +180,6 @@ export default class CorrectedResult extends Result {
         return secondResult.getPersonalCorrectedFinishTime() - this.getPersonalCorrectedFinishTime();
     }
 
-    setClassCorrectedPosition(position) {
-        this.classCorrectedPosition = position;
-    }
-
-    setPersonalCorrectedPosition(position) {
-        this.personalCorrectedPosition = position;
-    }
-
     toJSON() {
         if (!this.previousResults) {
             return this;
@@ -212,11 +203,7 @@ export default class CorrectedResult extends Result {
             "NHEBSC PI (All Classes) Before Race": this.rollingOverallPIBeforeRace,
             "NHEBSC PH (Single Class) After Race": this.rollingPersonalHandicapAfterRace,
             "NHEBSC PI (All Classes) After Race": this.rollingOverallPIAfterRace,
-            "Class Position": this.classCorrectedPosition,
-            "PH Position": this.personalCorrectedPosition,
-            "Debug": this.debug,
-            // "Used PH": this.personalHandicapUsed,
-            // "Used PCT": this.personalCorrectedTimeUsed,
+            // "Debug": this.debug,
             ...super.toStore(this),
         };
     }

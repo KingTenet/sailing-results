@@ -6,7 +6,6 @@ import { useAppState, AppContext } from "./useAppState";
 
 import StateWrapper from "./StateWrapper";
 import Races from "./components/Races";
-import RaceDate from "./components/RaceDate";
 import Race from "./components/Race";
 import AddHelmResult from "./components/AddHelmResult";
 
@@ -31,6 +30,7 @@ function Home() {
         </>
     )
 }
+
 
 
 /*
@@ -86,9 +86,9 @@ function MyRoutes() {
             path: '/', element: <StateWrapper />, children: [
                 { path: '/', element: <Home />, index: true },
                 { path: '/races/', element: <Races /> },
-                { path: '/races/:raceDate', element: <RaceDate /> },
                 { path: '/races/:raceDate/:raceNumber', element: <Race /> },
                 { path: '/races/:raceDate/:raceNumber/register', element: <AddHelmResult /> },
+                { path: '/races/:raceDate/:raceNumber/register/:registered', element: <AddHelmResult /> },
             ]
         },
         { path: '/*', element: <Navigate to="/races" /> },

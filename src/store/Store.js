@@ -12,14 +12,15 @@ export default class Store {
         this.metadataKey = `metadata::${this.storeName}`;
         this.getLastSyncDate();
         this.localStore = new LocalStore(storeName, toStore, fromStore, this);
-        this.promiseRemoteStore = RemoteStore.createRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
+        this.hasRemoteStore = Boolean(sheetsDoc !== undefined);
+        this.promiseRemoteStore = this.hasRemoteStore && RemoteStore.createRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 
     async init() {
         let localStoreObjects = this.pullLocalState();
         let localStateEmpty = !localStoreObjects.length;
-        if (localStateEmpty) {
+        if (localStateEmpty && this.hasRemoteStore) {
             await this.promiseRemoteStore;
             let remoteStoreObjects = await this.pullRemoteState();
             this.syncLocalStateToRemoteState(remoteStoreObjects);
@@ -46,6 +47,9 @@ export default class Store {
     }
 
     async syncRemoteStateToLocalState(force = false) {
+        if (!this.hasRemoteStore) {
+            throw new Error(`Cannot sync local store as no remote store exists for ${this.storeName}`);
+        }
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
         let created = allLocal
@@ -105,6 +109,10 @@ export default class Store {
 
     all() {
         return this.localStore.getAll();
+    }
+
+    delete(obj) {
+        return this.localStore.delete(this.getKeyFromObj(obj));
     }
 
     dump() {

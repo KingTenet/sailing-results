@@ -1,32 +1,45 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import React from "react";
+import React, { useState } from "react";
 
 import { useAppState } from "../useAppState";
 import { getURLDate } from "../common"
+import RaceStore from "../store/types/Race";
 
 export default function Races() {
     console.log("Rendering Races");
     const [appState] = useAppState();
+    const [raceState, updateRaceState] = useState();
 
-    const raceDate = appState?.store?.raceDate;
-    const races = appState?.store?.activeRaces;
-
-    if (!races || !raceDate) {
+    if (!appState) {
         return (
             <>
             </>
         )
     }
+    const existingRaces = appState.services.stores.seriesRaces
+        .map((seriesRace) => seriesRace.getRace());
+
+    const editableRaceDate = appState.editableRaceDate;
+
+    const editableRaces = existingRaces.filter((race) => race.getDate().getTime() === editableRaceDate.getTime());
+
+    const resultsByRace = new Map(
+        RaceStore.groupResultsByRaceAsc(appState.services.stores.results.all())
+            .map(([race, results]) => [RaceStore.getId(race), results])
+    );
+    const raceIsImmutable = (race) => (resultsByRace.get(RaceStore.getId(race)) || []).some((result) => !result.hasStaleRemote());
 
     return (
         <>
             <Flex direction="row" width="100vh" justify={"space-between"}>
-                <Text>{`Races for ${getURLDate(raceDate)}`}</Text>
+                <Text>{`All Races`}</Text>
             </Flex>
             <Box>
-                {races && races.map((race) => (
-                    <Link to={`${getURLDate(raceDate)}/${race.raceNumber}`}>{`Update Race ${race.raceNumber}`}</Link>
+                {editableRaces && editableRaces.map((race) => (
+                    <Box key={`${getURLDate(race.getDate())}/${race.getNumber()}`}>
+                        <Link to={`${getURLDate(race.getDate())}/${race.getNumber()}`}>{`${raceIsImmutable(race) ? "View" : "Update"} Race ${getURLDate(race.getDate())}, ${race.getNumber()}`}</Link>
+                    </Box>
                 ))}
             </Box>
         </>

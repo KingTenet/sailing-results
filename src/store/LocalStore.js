@@ -65,6 +65,15 @@ export default class LocalStore {
         this.localStorage.setItem(storeKey, JSON.stringify(newValue));
     }
 
+    deleteLocalStorage(key) {
+        let storeKey = this.keyToStoreKey(key);
+        if (!this.localStorage.getItem(storeKey)) {
+            throw new Error(`Attempting to delete object with key ${key} from local storage when it doesn't exist`);
+        }
+
+        this.localStorage.removeItem(storeKey);
+    }
+
     addToLocalStorage(key, value) {
         let storeKey = this.keyToStoreKey(key);
         if (this.localStorage.getItem(storeKey)) {
@@ -83,6 +92,14 @@ export default class LocalStore {
             throw new Error(`Cannot get object with key ${key} from store as it doesn't exist`);
         }
         return this.cache.get(key);
+    }
+
+    delete(key) {
+        if (!this.cache.has(key)) {
+            throw new Error(`Cannot delete object with key ${key} to store as it doesn't exist`);
+        }
+        this.cache.delete(key);
+        this.deleteLocalStorage(key);
     }
 
     getAll() {

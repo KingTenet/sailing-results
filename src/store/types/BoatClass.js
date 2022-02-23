@@ -70,6 +70,11 @@ export default class BoatClass extends StoreObject {
         return raceYear;
     }
 
+    static getClassYear(boatClass) {
+        assertType(boatClass, BoatClass);
+        return boatClass.validYear;
+    }
+
     getClassName() {
         return this.className;
     }

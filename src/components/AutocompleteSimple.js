@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useCombobox } from 'downshift'
 
 import {
@@ -38,10 +38,32 @@ function CollapseEx({ children, isOpen }) {
     )
 }
 
-export default function ({ data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, createNewMessage, getInvalidItemString }) {
+export default function ({ bootstrapValue, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, createNewMessage, getInvalidItemString }) {
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
-    const exactMatch = partialMatch === undefined ? undefined : partialMatch === false;
+    const exactMatch = partialMatch === undefined
+        ? undefined
+        : partialMatch === false
+
+    const setExactMatch = (value) => {
+        setPartialMatch(false);
+        setInputItems([]);
+        handleSelectedItemChange(value);
+    };
+
+    const setPartiaValue = (value) => {
+        setPartialMatch(value);
+        setInputItems(filterData(value));
+        handleSelectedItemChange();
+    };
+
+    useEffect(() => {
+        console.log("In useeffect");
+        if (bootstrapValue) {
+            console.log(bootstrapValue);
+            setExactMatch(bootstrapValue);
+        }
+    }, [bootstrapValue]);
 
     const addToIndex = () => console.log("blah");
 
@@ -59,21 +81,16 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
         itemToString,
         onSelectedItemChange: ({ selectedItem }) => {
             console.log(`In onSelectedItemChange with ${itemToString(selectedItem)}`)
-            setPartialMatch(false);
-            handleSelectedItemChange(selectedItem);
+            setExactMatch(selectedItem);
         },
         onInputValueChange: ({ inputValue }) => {
             console.log(`In onInputValueChange with ${inputValue}`)
             let exactMatch = data.find((item) => itemToString(item).toLowerCase() === inputValue.toLowerCase());
             if (exactMatch) {
-                setPartialMatch(false);
-                setInputItems([]);
-                handleSelectedItemChange(exactMatch);
+                setExactMatch(exactMatch);
             }
             else {
-                setPartialMatch(inputValue);
-                setInputItems(filterData(inputValue));
-                handleSelectedItemChange();
+                setPartiaValue(inputValue);
             }
         }
     });
@@ -93,7 +110,7 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
                                 }
                                 {exactMatch &&
                                     <>
-                                        <Input {...getInputProps()} placeholder={placeholder} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
+                                        <Input {...getInputProps()} placeholder={itemToString(bootstrapValue)} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
                                         <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                                     </>
                                 }

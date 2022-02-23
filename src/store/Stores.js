@@ -13,6 +13,7 @@ import SeriesPoints from "./types/SeriesPoints.js";
 import HelmResult from "./types/HelmResult.js";
 import bootstrapLocalStorage from "../bootstrapLocalStorage.js";
 import MutableRaceFinish from "./types/MutableRaceFinish.js";
+import MutableRaceResult from "./types/MutableRaceResult.js";
 
 const REFRESH_BACKEND_THRESHOLD = 3600 * 1000;
 // const REFRESH_BACKEND_THRESHOLD = 0;
@@ -45,13 +46,23 @@ export default class Stores {
                     : this.ryaClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
         );
 
+        const getMutableResultFromStore = (result) => MutableRaceResult.fromStore(
+            result,
+            (helmId) => this.helms.get(helmId),
+            (boatClass, date) =>
+                this.clubClasses.has(BoatClass.getIdFromClassRaceDate(boatClass, date))
+                    ? this.clubClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
+                    : this.ryaClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
+        );
+
         this.purusitResults = await StoreWrapper.create("Pursuit Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
         this.results = await StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, getResultFromStore);
+        this.registered = await StoreWrapper.create("Registered", undefined, this, MutableRaceResult, getMutableResultFromStore);
         this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
-        await this.processResults();
+        this.processResults();
     }
 
-    async processResults() {
+    processResults() {
         const oodsByRace = new Map(groupBy(this.oods.all(), HelmResult.getRaceId));
         const raceFinishes = new AutoMap(Race.getId);
         for (let [, oods] of [...oodsByRace]) {
@@ -95,6 +106,8 @@ export default class Stores {
                     .map((raceId) => raceFinishes.get(raceId))
                     .filter(Boolean)
             )]);
+
+        // this.seriesPoints.forEach((seriesPoints) => seriesPoints.getPoints());
 
         this.allCorrectedResults = allCorrectedResults;
 
