@@ -98,8 +98,8 @@ export default class CorrectedResult extends Result {
         return this.rollingPersonalHandicapBeforeRace;
     }
 
-    getPersonalInterval(standardCorrectedTime) {
-        return calculatePersonalInterval(this.getClassCorrectedTime(), standardCorrectedTime);
+    getPersonalInterval() {
+        return calculatePersonalInterval(this.getClassCorrectedTime(), this.raceFinish.getSCT());
     }
 
     getClassCorrectedTime() {
@@ -110,7 +110,7 @@ export default class CorrectedResult extends Result {
         if (!this.finishCode.validFinish() || !this.raceFinish.getSCT()) {
             return;
         }
-        const PI = this.getPersonalInterval(this.raceFinish.getSCT()); // % diff on class SCT
+        const PI = this.getPersonalInterval(); // % diff on class SCT
         return Math.round(calculatePersonalHandicapFromPI(this.getBoatClass().getPY(), PI))
     }
 

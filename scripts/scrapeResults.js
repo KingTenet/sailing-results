@@ -109,15 +109,6 @@ function processRig(rig) {
     }
 }
 
-function handle(row) {
-    try {
-        return mapRowToResult(row);
-    }
-    catch (err) {
-        debugger;
-    }
-}
-
 function getRaceDateFromString(str) {
     if (str.includes("15/919")) {
         return ["15", "09", "19"];
@@ -159,7 +150,6 @@ function mapRowToResult(row) {
     const DNFCode = (DNF && row[10]) || undefined;
 
     // if (!finishTime && !DNF) {
-    //     debugger;
     //     throw new Error("Failed to process row");
     // }
     const finishTimeMinutes = finishTime && parseInt(finishTime[1]);
@@ -225,7 +215,6 @@ async function scrapePage(page) {
 
     getAllRowsValues(dom, 5).forEach((row) => {
         totalRows++;
-        debugger;
         if (personalResults || row.find((value) => value.toLowerCase().includes("personal"))) {
             personalResults = true;
             totalIgnoredRows++;
@@ -254,7 +243,6 @@ async function scrapePage(page) {
 
     let mappedResults = results.map((result) => ({ ...result, seriesName, raceDate, raceNumber, pursuit }))
     if (!mappedResults.length && (totalRows - OODs.length - 3 > 0)) {
-        debugger;
         throw new Error("No results");
     }
     let mappedOODs = OODs.map((ood) => ({ name: ood, seriesName, raceDate, raceNumber }))

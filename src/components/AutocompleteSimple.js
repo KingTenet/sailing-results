@@ -38,7 +38,7 @@ function CollapseEx({ children, isOpen }) {
     )
 }
 
-export default function ({ bootstrapValue, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, createNewMessage, getInvalidItemString }) {
+export default function ({ data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, createNewMessage, getInvalidItemString }) {
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
     const exactMatch = partialMatch === undefined
@@ -57,14 +57,6 @@ export default function ({ bootstrapValue, data, itemToString, filterData, headi
         handleSelectedItemChange();
     };
 
-    useEffect(() => {
-        console.log("In useeffect");
-        if (bootstrapValue) {
-            console.log(bootstrapValue);
-            setExactMatch(bootstrapValue);
-        }
-    }, [bootstrapValue]);
-
     const addToIndex = () => console.log("blah");
 
     const {
@@ -80,11 +72,11 @@ export default function ({ bootstrapValue, data, itemToString, filterData, headi
         items: inputItems,
         itemToString,
         onSelectedItemChange: ({ selectedItem }) => {
-            console.log(`In onSelectedItemChange with ${itemToString(selectedItem)}`)
+            // console.log(`In onSelectedItemChange with ${itemToString(selectedItem)}`);
             setExactMatch(selectedItem);
         },
         onInputValueChange: ({ inputValue }) => {
-            console.log(`In onInputValueChange with ${inputValue}`)
+            // console.log(`In onInputValueChange with ${inputValue}`);
             let exactMatch = data.find((item) => itemToString(item).toLowerCase() === inputValue.toLowerCase());
             if (exactMatch) {
                 setExactMatch(exactMatch);
@@ -95,7 +87,7 @@ export default function ({ bootstrapValue, data, itemToString, filterData, headi
         }
     });
 
-    console.log(`Rendering with isOpen:${isOpen} partialMatch:${partialMatch}`)
+    // console.log(`Rendering with isOpen:${isOpen} partialMatch:${partialMatch}`)
     return (
         <>
             <Box borderRadius={"12px"} borderWidth="1px" padding="20px">
@@ -110,7 +102,7 @@ export default function ({ bootstrapValue, data, itemToString, filterData, headi
                                 }
                                 {exactMatch &&
                                     <>
-                                        <Input {...getInputProps()} placeholder={itemToString(bootstrapValue)} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
+                                        <Input {...getInputProps()} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
                                         <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                                     </>
                                 }
@@ -136,7 +128,7 @@ export default function ({ bootstrapValue, data, itemToString, filterData, headi
                             )}
                         </ul>
                     </CollapseEx>
-                    {exactMatch === false && partialMatch &&
+                    {/* {exactMatch === false && partialMatch &&
                         <>
                             <Spacer />
                             <Button
@@ -145,7 +137,7 @@ export default function ({ bootstrapValue, data, itemToString, filterData, headi
                                 width="100%">
                                 <Text fontSize={"lg"}>{createNewMessage}</Text></Button>
                         </>
-                    }
+                    } */}
                     {exactMatch === false && !isOpen &&
                         <>
                             <Spacer />

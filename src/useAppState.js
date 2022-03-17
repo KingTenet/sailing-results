@@ -1,20 +1,60 @@
-import React, { useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useContext, useState } from "react";
 
+export const LOCAL_STATE_STORAGE_KEY = "state";
+export const ServicesContext = React.createContext("AppContext");
+export const CachedContext = React.createContext("CachedContext");
 
-export const AppContext = React.createContext("AppContext");
-
-export function useAppState(redirect = true) {
-    const [appState, updateAppState] = useContext(AppContext);
-    let navigate = useNavigate();
+export function useAppState(defaultValue) {
+    const [cachedState, updateCachedState] = useContext(CachedContext);
     useEffect(() => {
-        if (appState) {
+        if (cachedState) {
             return;
         }
-        else if (redirect) {
-            console.log("Redirecting");
-            navigate("/", { replace: true });
+
+        if (defaultValue) {
+            updateCachedState(defaultValue);
         }
-    }, []);
-    return [appState, updateAppState];
+    }, [cachedState]);
+
+    return [cachedState, updateCachedState];
+}
+
+export function useServices(initialiseServices) {
+    const [appServices, updateAppServices] = useContext(ServicesContext);
+    // const [cachedState] = useAppState();
+
+    useEffect(() => {
+        if (!appServices?.ready && initialiseServices) {
+            initialiseServices()
+                .then((services) => updateAppServices({
+                    ...services,
+                    ready: true,
+                }))
+                .catch((err) => console.log(err));
+        }
+    });
+
+    return appServices;
+}
+
+export function useCachedState(defaultValue, deserialiser, key = LOCAL_STATE_STORAGE_KEY) {
+    const [value, setValue] = useState(() => {
+        const serialisedValue = localStorage.getItem(key);
+        if (serialisedValue === null) {
+            return defaultValue;
+        }
+
+        const storedValue = JSON.parse(serialisedValue);
+        return deserialiser
+            ? deserialiser(storedValue)
+            : storedValue;
+    });
+
+    useEffect(() => {
+        if (value !== undefined) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+    }, [key, value]);
+
+    return [value, setValue];
 }

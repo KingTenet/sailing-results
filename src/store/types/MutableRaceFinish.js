@@ -62,7 +62,6 @@ export default class MutableRaceFinish extends Race {
     }
 
     addResult(result) {
-        debugger;
         assertType(result, Result);
         assert(Result.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
         assert(!this.hasImmutableResults(), "Cannot add results to an immutable race finish");

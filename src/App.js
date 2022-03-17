@@ -1,13 +1,14 @@
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, Center } from "@chakra-ui/react";
 import { BrowserRouter as Router, Link, useRoutes, Navigate } from "react-router-dom";
-import React, { useState } from "react";
+import React from "react";
 
-import { useAppState, AppContext } from "./useAppState";
+import { useAppState } from "./useAppState";
 
 import StateWrapper from "./StateWrapper";
 import Races from "./components/Races";
 import Race from "./components/Race";
-import AddHelmResult from "./components/AddHelmResult";
+import RegisterHelm from "./components/RegisterHelm";
+import FinishHelm from "./components/FinishHelm";
 
 function Home() {
     const [appState] = useAppState();
@@ -30,8 +31,6 @@ function Home() {
         </>
     )
 }
-
-
 
 /*
 In the backend, series need to be preconfigured line items.
@@ -87,8 +86,8 @@ function MyRoutes() {
                 { path: '/', element: <Home />, index: true },
                 { path: '/races/', element: <Races /> },
                 { path: '/races/:raceDate/:raceNumber', element: <Race /> },
-                { path: '/races/:raceDate/:raceNumber/register', element: <AddHelmResult /> },
-                { path: '/races/:raceDate/:raceNumber/register/:registered', element: <AddHelmResult /> },
+                { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm /> },
+                { path: '/races/:raceDate/:raceNumber/register/:registered', element: <FinishHelm /> },
             ]
         },
         { path: '/*', element: <Navigate to="/races" /> },
@@ -98,14 +97,10 @@ function MyRoutes() {
 }
 
 function App() {
-    const appStateManager = useState();
-
     return (
-        <AppContext.Provider value={appStateManager}>
-            <Router>
-                <MyRoutes />
-            </Router>
-        </AppContext.Provider>
+        <Router>
+            <MyRoutes />
+        </Router>
     )
 }
 

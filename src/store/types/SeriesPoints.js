@@ -328,13 +328,13 @@ export default class SeriesPoints extends Series {
         // const allBoatsByHelm = groupBy(this.allResultPoints, [HelmResult.getHelmId, ResultPoints.getBoatClassName]);
         const helmPointsMap = mapGroupBy(allResultPoints, [HelmResult.getHelmId, HelmResult.getRaceId, ResultPoints.getBoatClassName]);
 
-        const pyMap = mapGroupBy(
-            allResultPoints,
-            [ResultPoints.getBoatClassName],
-            (points) => points && points.length
-                ? ResultPoints.getBoatClass(points.at(0))?.getPY()
-                : undefined
-        );
+        // const pyMap = mapGroupBy(
+        //     allResultPoints,
+        //     [ResultPoints.getBoatClassName],
+        //     (points) => points && points.length
+        //         ? ResultPoints.getBoatClass(points.at(0))?.getPY()
+        //         : undefined
+        // );
 
         const allBoatsByHelm = groupBy(
             allResultPoints,

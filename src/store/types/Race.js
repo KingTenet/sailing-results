@@ -28,6 +28,9 @@ export default class Race {
     }
 
     prettyPrint() {
+        // const prettyNumber = ["1st", "2nd", "3rd"];
+        // const prettyDate = this.date.toISOString().slice(0, 10)
+        // return `${prettyDate}, ${prettyNumber[this.raceNumber]} race`;
         return `Date=${this.date.toISOString().slice(0, 10)}, Number=${this.raceNumber}`
     }
 
@@ -70,5 +73,14 @@ export default class Race {
         return groupBy(results, HelmResult.getRaceId)
             .map(([raceId, raceResults]) => [raceResults.at(0).getRace(), raceResults])
             .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
+    }
+
+    static toReactRace(race) {
+        assertType(race, Race);
+        return race;
+        return {
+            raceDate: race.getDate(),
+            raceNumber: race.getNumber(),
+        };
     }
 }

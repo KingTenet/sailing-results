@@ -1,5 +1,5 @@
 import { getSheetIdFromURL } from "../src/common.js";
-import Stores from "../src/store/Stores.js";
+import { Stores } from "../src/store/Stores.js";
 import Race from "../src/store/types/Race.js";
 import auth from "./auth.js";
 
@@ -14,6 +14,7 @@ async function run(seriesSearchStr, raceSearchStr, personalHandicapStr = false, 
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
     const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId, parseBoolean(forceRefresh));
+    stores.processResults();
     const personalHandicap = parseBoolean(personalHandicapStr);
 
     const seriesSearch = parseBoolean(seriesSearchStr);

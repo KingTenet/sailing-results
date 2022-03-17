@@ -40,6 +40,10 @@ export default class MutableRaceResult extends HelmResult {
         return new MutableRaceResult(race, helm, boatClass, boatSailNumber, StoreObject.fromStore({}));
     }
 
+    getSailNumber() {
+        return this.boatSailNumber;
+    }
+
     getBoatClass() {
         return this.boatClass;
     }

@@ -1,140 +1,495 @@
-import { Box, Button, Flex, List, ListItem, Text } from "@chakra-ui/react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { Box, Button, Flex, Heading, List, ListItem, Text, Spacer, Grid, GridItem, useDisclosure } from "@chakra-ui/react";
+import { AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter } from "@chakra-ui/react";
 
-import { useAppState } from "../useAppState";
-import { getURLDate, parseURLDate } from "../common"
+import { useNavigate, useParams } from "react-router-dom";
+import React, { useState } from "react";
+
+import { useAppState, useServices } from "../useAppState";
+import { getURLDate, parseURLDate, useBack } from "../common"
 import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
-import Helm from "../store/types/Helm";
-
-function initialiseRaceState(services, editableRaceDate, raceDate, raceNumber) {
-    const race = new StoreRace(raceDate, raceNumber);
-    const userAllowedToEdit = !editableRaceDate || editableRaceDate.getTime() === raceDate.getTime();
-    const raceResults = services.stores.results.all()
-        .filter((result) => StoreRace.getId(result.getRace()) === StoreRace.getId(race));
-
-    const registered = services.stores.registered.all()
-        .filter((result) => StoreRace.getId(result.getRace()) === StoreRace.getId(race));
-
-    if (!raceResults.length) {
-        return {
-            immutable: !userAllowedToEdit,
-            registered: registered,
-            results: [],
-        };
-    }
-
-    return {
-        immutable: !userAllowedToEdit || raceResults.some((result) => !result.hasStaleRemote()),
-        registered: registered,
-        results: raceResults,
-        raceFinish: services.stores.raceFinishes.get(StoreRace.getId(race)),
-    }
-}
+import Result from "../store/types/Result";
+import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpers.js";
 
 const RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
 
-export default function Race() {
-    const navigateTo = useNavigate();
-    const [appState] = useAppState();
-    const [raceState, updateRaceState] = useState();
-    const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
-    const params = useParams();
-    const raceDateStr = params["raceDate"];
-    const raceNumberStr = params["raceNumber"];
-    const raceDate = parseURLDate(raceDateStr);
-    const raceNumber = parseInt(raceNumberStr);
+const COLUMN_1_DIMENSIONS = {
+    "PERSONAL_HANDICAP": [
+        "NAME",
+        "SAIL_NUMBER",
+    ],
+    "CLASS_HANDICAP": [
+        "NAME",
+        "SAIL_NUMBER",
+    ],
+    "FINISH_TIME": [
+        "NAME",
+        "SAIL_NUMBER",
+    ],
+};
 
-    useEffect(() => {
-        if (!raceState && appState) {
-            const initialState = initialiseRaceState(appState.services, appState.editableRaceDate, raceDate, raceNumber);
-            console.log(initialState);
-            updateRaceState(initialState);
-        }
-    });
+const COLUMN_2_DIMENSIONS = {
+    "PERSONAL_HANDICAP": [
+        "CLASS_NAME",
+        "PERSONAL_HANDICAP",
+        "CLASS_HANDICAP"
+    ],
+    "CLASS_HANDICAP": [
+        "CLASS_NAME",
+        "CLASS_HANDICAP"
+    ],
+    "FINISH_TIME": [
+        "CLASS_NAME",
+        "CLASS_HANDICAP"
+    ],
+};
 
-    if (!raceState) {
-        return (
+const COLUMN_3_DIMENSIONS = {
+    "PERSONAL_HANDICAP": [
+        "PERSONAL_CORRECTED_TIME",
+        "PERSONAL_HANDICAP_RESULT",
+        "PERSONAL_INTERVAL",
+        // "PERSONAL_INTERVAL_FROM_PH",
+    ],
+    "CLASS_HANDICAP": [
+        "CLASS_CORRECTED_TIME",
+    ],
+    "FINISH_TIME": [
+        "FINISH_TIME",
+        "LAPS",
+    ],
+};
+
+const DIMENSION_LABELS = {
+    "NAME": "Name",
+    "SAIL_NUMBER": "Sail Number",
+    "CLASS_NAME": "Class",
+    "PERSONAL_HANDICAP": "Personal PY",
+    "CLASS_HANDICAP": "Class PY",
+    "PERSONAL_CORRECTED_TIME": "Time",
+    "PERSONAL_HANDICAP_RESULT": "PH",
+    "PERSONAL_INTERVAL": "PI (%)",
+    "PERSONAL_INTERVAL_FROM_PH": "PY/PH (%)",
+    "CLASS_CORRECTED_TIME": "Time",
+    "FINISH_TIME": "Time",
+    "LAPS": "Laps",
+};
+
+function secondsToMinutesSeconds(totalSeconds) {
+    const SECONDS_IN_MINUTE = 60;
+    var minutes = Math.floor(totalSeconds / SECONDS_IN_MINUTE);
+    var seconds = totalSeconds % SECONDS_IN_MINUTE;
+    return [minutes, seconds];
+}
+
+function formatMinutesSeconds([minutes, seconds]) {
+    const pad = (v) => `0${Math.round(v)}`.slice(-2);
+    return [pad(minutes), pad(seconds)].join(":");
+}
+
+function formatBoatClass(className) {
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    return className.split(" ").map((word) => capitalize(word.toLowerCase())).join(" ");
+}
+
+function formatPI(personalInterval) {
+    return Math.round((personalInterval + Number.EPSILON) * 100) / 100;
+}
+
+function ResultDimension({ children, ...props }) {
+    return (
+        <GridItem
+            height='20px'
+            {...props}>
+            <Text isTruncated>{children}</Text>
+        </GridItem>
+    );
+}
+
+function HeadingRow({ toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3 }) {
+    const dimension1Label = DIMENSION_LABELS[dimension1];
+    const dimension2Label = DIMENSION_LABELS[dimension2];
+    const dimension3Label = DIMENSION_LABELS[dimension3];
+
+    return <>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+            <Flex>
+                <Grid
+                    templateColumns='repeat(16, 1fr)'
+                    gap={3}
+                    width={"100%"}>
+                    <ResultDimension colSpan={1}></ResultDimension>
+                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{dimension1Label}</ResultDimension>
+                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{dimension2Label}</ResultDimension>
+                    <ResultDimension colSpan={3} onClick={toggleDimension3}>{dimension3Label}</ResultDimension>
+                </Grid>
+            </Flex>
+        </Box>
+    </>
+}
+
+function getDimensionValue(dimension, result) {
+    switch (dimension) {
+        case "NAME":
+            return Result.getHelmId(result);
+        case "SAIL_NUMBER":
+            return result.getSailNumber();
+        case "CLASS_NAME":
+            return formatBoatClass(result.getBoatClass().getClassName());
+        case "PERSONAL_HANDICAP":
+            return result.getRollingPersonalHandicapBeforeRace();
+        case "CLASS_HANDICAP":
+            return result.getBoatClass().getPY();
+        case "PERSONAL_CORRECTED_TIME":
+            return formatMinutesSeconds(secondsToMinutesSeconds(result.getPersonalCorrectedFinishTime()));
+        case "PERSONAL_HANDICAP_RESULT":
+            return result.getPersonalHandicapFromRace();
+        case "PERSONAL_INTERVAL":
+            return formatPI(calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()));
+        case "PERSONAL_INTERVAL_FROM_PH":
+            return formatPI(calculatePIFromPersonalHandicap(result.getRollingPersonalHandicapBeforeRace(), result.getPersonalHandicapFromRace()));
+        case "CLASS_CORRECTED_TIME":
+            return formatMinutesSeconds(secondsToMinutesSeconds(result.getClassCorrectedTime()));
+        case "FINISH_TIME":
+            return formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()));
+        case "LAPS":
+            return result.getLaps();
+        default:
+            return dimension;
+    }
+}
+
+function ResultListItem({ result, position, toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3 }) {
+    return <>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+            <Flex>
+                <Grid
+                    templateColumns='repeat(16, 1fr)'
+                    gap={3}
+                    width={"100%"}>
+                    <ResultDimension colSpan={1}>{position}</ResultDimension>
+                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{getDimensionValue(dimension1, result)}</ResultDimension>
+                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{getDimensionValue(dimension2, result)}</ResultDimension>
+                    <ResultDimension colSpan={3} onClick={toggleDimension3}>{getDimensionValue(dimension3, result)}</ResultDimension>
+                </Grid>
+            </Flex>
+        </Box>
+    </>
+}
+
+function RegisteredListItem({ registered, onClick }) {
+    const helmName = Result.getHelmId(registered);
+    const boatClass = formatBoatClass(registered.getBoatClass().getClassName());
+    const sailNumber = registered.getSailNumber();
+
+    return <>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} onClick={onClick}>
+            <Flex>
+                <Grid
+                    templateColumns='repeat(3, 1fr)'
+                    gap={5}
+                    width={"100%"}>
+                    <ResultDimension colSpan={1}>{helmName}</ResultDimension>
+                    <ResultDimension colSpan={1}>{boatClass}</ResultDimension>
+                    <ResultDimension colSpan={1}>{sailNumber}</ResultDimension>
+                </Grid>
+            </Flex>
+        </Box>
+    </>
+}
+
+function AlertDialogExample({ children, deleteHeading, deleteBody, onConfirm }) {
+    const cancelRef = React.useRef();
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    const onDelete = () => {
+        onClose();
+        onConfirm();
+    }
+
+    return (
+        <>
+            <Box onClick={onOpen}>
+                {children}
+            </Box>
             <>
-            </>
-        )
-    }
+                <AlertDialog
+                    isOpen={isOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={onClose}
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+                                {deleteHeading}
+                            </AlertDialogHeader>
 
-    const persistResults = (event) => {
-        event.preventDefault();
-        appState.finishRace();
-        updateRaceState(undefined);
-    }
+                            <AlertDialogBody>
+                                Are you sure? This action cannot be undone.
+                            </AlertDialogBody>
+
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={onClose}>
+                                    Cancel
+                                </Button>
+                                <Button colorScheme='red' onClick={onDelete} ml={3}>
+                                    Delete
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
+            </>
+        </>
+    )
+}
+
+function DeleteFinisher({ finisher, children }) {
+    const [updateAppState] = useAppState();
+
+    const deleteFinisher = () => {
+        updateAppState(({ results, ...state }) => ({
+            ...state,
+            results: results.filter((result) => HelmResult.getId(result) !== HelmResult.getId(finisher)),
+        }));
+    };
+
+    return (
+        <AlertDialogExample onConfirm={() => deleteFinisher()} deleteHeading={`Delete result for ${HelmResult.getHelmId(finisher)}.`}>
+            {children}
+        </AlertDialogExample >
+    )
+}
+
+function FinisherListItem({ result }) {
+    const helmName = Result.getHelmId(result);
+    const boatClass = formatBoatClass(result.getBoatClass().getClassName());
+    const sailNumber = result.getSailNumber();
+    const finishTime = formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()));
+    const laps = result.getLaps();
+
+    return <>
+        <DeleteFinisher finisher={result} >
+            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+                <Flex>
+                    <Grid
+                        templateColumns='repeat(3, 1fr)'
+                        gap={3}
+                        width={"100%"}>
+                        <ResultDimension colSpan={1}>{helmName}</ResultDimension>
+                        <ResultDimension colSpan={1}>{`${boatClass}, ${sailNumber}`}</ResultDimension>
+                        <ResultDimension colSpan={1}>{`${laps} lap${laps > 1 ? "s" : ""} in ${finishTime}`}</ResultDimension>
+                    </Grid>
+                </Flex>
+            </Box>
+        </DeleteFinisher>
+    </>
+}
+
+
+function useSortedResults(results, race) {
+    const services = useServices();
+    const [raceFinish] = useState(
+        () => services.getRaceFinishForResults(race, results),
+        [],
+    );
+
+    return [
+        raceFinish.getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a)),
+        raceFinish.getClassCorrectedPointsByResult(),
+        raceFinish.getPersonalCorrectedPointsByResult(),
+        raceFinish.getMaxLaps(),
+        raceFinish.getSCT(),
+    ];
+}
+
+function useDimensionsToggle(dimensions) {
+    const [dimensionCounter, updateDimensionCounter] = useState(0);
+    console.log(`DC: ${dimensionCounter}`)
+    return [dimensions[dimensionCounter % dimensions.length], () => updateDimensionCounter(dimensionCounter + 1)];
+}
+
+function RaceResultsView({ results, race, ...props }) {
+    const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
+    const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
+    const [dimension2, toggleDimension2] = useDimensionsToggle(COLUMN_2_DIMENSIONS[raceView]);
+    const [dimension3, toggleDimension3] = useDimensionsToggle(COLUMN_3_DIMENSIONS[raceView]);
+
+    const [byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT] = useSortedResults(results, race);
+    const sortedResults =
+        raceView === "FINISH_TIME" ? byFinishTime.map((result, key) => [result, key + 1])
+            : raceView === "CLASS_HANDICAP" ? byClassFinishTime
+                : byPersonalFinishTime;
+
+    const heading =
+        raceView === "FINISH_TIME" ? "Finish times"
+            : raceView === "CLASS_HANDICAP" ? `Corrected to ${correctedLaps} laps by class PY`
+                : `Corrected to ${correctedLaps} laps by personal PY`;
+
+    const buttonMsg =
+        raceView === "FINISH_TIME" ? "Show results by personal handicap"
+            : raceView === "CLASS_HANDICAP" ? "Show results by finish time"
+                : "Show results by class handicap";
 
     const toggleResultsView = (event) => {
         event.preventDefault();
         updateRaceView(RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length]);
     }
 
+    return (
+        <>
+            <Heading marginBottom="20px" marginLeft="20px" size={"md"}>{`${heading}`}</Heading>
+            <ResultsList {...props} marginBottom="20px" >
+                <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+                {sortedResults.map(([result, position]) =>
+                    <ListItem key={HelmResult.getId(result)}>
+                        <ResultListItem result={result} raceView={raceView} position={position} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+                    </ListItem>
+                )}
+            </ResultsList>
+            <Button marginBottom="20px" backgroundColor="green.500" onClick={toggleResultsView} autoFocus><Text fontSize={"lg"}>{buttonMsg}</Text></Button>
+        </>
+    );
+}
+
+function RegisteredView({ registered, ...props }) {
+    const navigateTo = useNavigate();
+    return (
+        <ResultsList {...props}>
+            {registered.map((registeredHelm) =>
+                <ListItem key={HelmResult.getId(registeredHelm)}>
+                    <RegisteredListItem registered={registeredHelm} onClick={() => navigateTo(`register/${HelmResult.getHelmId(registeredHelm)}`)} />
+                </ListItem>
+            )}
+        </ResultsList>
+    );
+}
+
+function FinisherView({ results, ...props }) {
+    const navigateTo = useNavigate();
+    return (
+        <ResultsList {...props}>
+            {results.map((result) =>
+                <ListItem key={HelmResult.getId(result)}>
+                    <FinisherListItem result={result} />
+                </ListItem>
+            )}
+        </ResultsList>
+    );
+}
+
+function ResultsList({ children, ...props }) {
+    return (
+        <Box {...props}>
+            <List spacing="5px">
+                {children}
+            </List>
+        </Box>
+    )
+}
+
+function BackButton({ children, ...props }) {
+    const navigateBack = useBack();
+    return (
+        <RedButton
+            onClick={() => navigateBack()}
+            {...props}
+        >
+            {children}
+        </RedButton>
+
+    );
+}
+
+function RedButton({ children, ...props }) {
+    return (
+        <Button
+            backgroundColor="red.500"
+            marginBottom="20px"
+            {...props}
+        >
+            <Text fontSize={"lg"}>{children}</Text>
+        </Button>
+    );
+}
+
+function GreenButton({ children, ...props }) {
+    return (
+        <Button
+            backgroundColor="green.500"
+            marginBottom="20px"
+            {...props}
+        >
+            <Text fontSize={"lg"}>{children}</Text>
+        </Button>
+    );
+}
+
+
+export default function Race() {
+    const navigateTo = useNavigate();
+    const [appState] = useAppState();
+    const params = useParams();
+    const raceDateStr = params["raceDate"];
+    const raceNumberStr = params["raceNumber"];
+    const raceDate = parseURLDate(raceDateStr);
+    const raceNumber = parseInt(raceNumberStr);
+    const race = new StoreRace(raceDate, raceNumber);
+    const services = useServices();
+    const [raceIsMutable] = useState(() => services.isRaceMutable(raceDate, raceNumber));
+    const [editingRace, updateEditingRace] = useState(() => raceIsMutable)
+
+    const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
+    const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
+
+    console.log(raceIsMutable);
+
+    const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber];
 
     return (
         <>
-            <Flex direction="row" width="100vh" justify={"space-between"}>
-                <Text>Home</Text>
-                <Text>Race</Text>
+            <Flex direction="column" margin="5px">
+                <Box marginTop="20px" />
+                {/* <Center width="100%"> */}
+                <Flex direction="row" marginBottom="20px">
+                    <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
+                    <Spacer width="50px" />
+                    <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} race`}</Heading>
+                </Flex>
+                {/* </Center> */}
+                {editingRace &&
+                    <>
+                        <BackButton>Back to races</BackButton>
+                        <Flex direction="column" marginBottom="20px">
+                            <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
+                        </Flex>
+                        {Boolean(raceRegistered.length) &&
+                            <>
+                                <Heading size={"lg"} marginBottom="10px">Registered</Heading>
+                                <RegisteredView marginBottom="20px" registered={raceRegistered} />
+                            </>
+                        }
+                        {Boolean(raceResults.length) &&
+                            <>
+                                <Heading size={"lg"} marginBottom="10px">Finishers</Heading>
+                                <FinisherView marginBottom="20px" results={raceResults} />
+                            </>
+                        }
+                    </>
+                }
+                {!editingRace && Boolean(raceResults.length) &&
+                    <>
+                        < RedButton marginBottom="20px" onClick={() => updateEditingRace(true)} >Edit results</RedButton>
+                        <RaceResultsView results={raceResults} race={race} />
+                    </>
+                }
+                {!raceIsMutable &&
+                    <RaceResultsView race={race} />
+                }
+                {editingRace && !raceRegistered.length && raceResults.length > 2 &&
+                    <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>
+                }
             </Flex>
-            <Text>{`${raceState.immutable ? "View" : "Update"} ${getURLDate(raceDate)}, race ${raceNumber}`}</Text>
-            <Flex direction="column">
-                <Button onClick={() => navigateTo("register")}>Register helm</Button>
-            </Flex>
-            <Box><Text>Registered</Text></Box>
-            <List>
-                {raceState.registered.map((registered) =>
-                    <ListItem key={HelmResult.getId(registered)}>
-                        <Link to={`register/${HelmResult.getHelmId(registered)}`}>{HelmResult.getId(registered)}</Link>
-                    </ListItem>
-                )}
-            </List>
-            <Box><Text>Finishers</Text></Box>
-            <List>
-                {raceState.results.map((result) =>
-                    <ListItem key={HelmResult.getId(result)}>
-                        {HelmResult.getId(result)}
-                    </ListItem>
-                )}
-            </List>
-            {!raceState.registered.length && raceState.results.length > 2 &&
-                <Button backgroundColor="green.500" onClick={persistResults} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Persist results</Text></Button>
-            }
-            {raceState.raceFinish &&
-                <>
-                    <Box><Text>{`Results By ${raceView}`}</Text></Box>
-                    {raceView === "PERSONAL_HANDICAP" &&
-                        <List>
-                            {raceState.raceFinish.getPersonalCorrectedPointsByResult().map(([result, points]) =>
-                                <ListItem key={HelmResult.getId(result)}>
-                                    {`${Helm.getId(result.getHelm())} PH:${result.getRollingPersonalHandicapBeforeRace()} PCT:${result.getPersonalCorrectedFinishTime()} Points:${points}`}
-                                </ListItem>
-                            )}
-                        </List>
-                    }
-                    {raceView === "CLASS_HANDICAP" &&
-                        <List>
-                            {raceState.raceFinish.getClassCorrectedPointsByResult().map(([result, points]) =>
-                                <ListItem key={HelmResult.getId(result)}>
-                                    {`${Helm.getId(result.getHelm())} PY:${result.getBoatClass().getPY()} CCT:${result.getClassCorrectedTime()} Points:${points}`}
-                                </ListItem>
-                            )}
-                        </List>
-                    }
-                    {raceView === "FINISH_TIME" &&
-                        <List>
-                            {raceState.raceFinish.getFinishersByFinishTime().map((result) =>
-                                <ListItem key={HelmResult.getId(result)}>
-                                    {`${Helm.getId(result.getHelm())} Laps:${result.getLaps()} FT:${result.getFinishTime()}`}
-                                </ListItem>
-                            )}
-                        </List>
-                    }
-                    <Button backgroundColor="green.500" onClick={toggleResultsView} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Toggle View</Text></Button>
-                </>
-            }
         </>
     )
 }

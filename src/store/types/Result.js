@@ -84,6 +84,7 @@ export default class Result extends HelmResult {
 
     sortByFinishTimeDesc(secondResult) {
         assertType(secondResult, Result);
+        debugger;
         return secondResult.getFinishTime() - this.getFinishTime();
     }
 
@@ -110,6 +111,10 @@ export default class Result extends HelmResult {
         return this.finishTime;
     }
 
+    getSailNumber() {
+        return this.boatSailNumber;
+    }
+
     getLaps() {
         return this.laps;
     }
@@ -131,5 +136,9 @@ export default class Result extends HelmResult {
             "Finish Code": this.finishCode.getCode(),
             ...super.toStore(this),
         };
+    }
+
+    toJSON() {
+        return this.toStore();
     }
 }

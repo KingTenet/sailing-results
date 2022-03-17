@@ -62,6 +62,10 @@ export default class HelmResult extends StoreObject {
         return this.helm;
     }
 
+    toJSON() {
+        return this.toStore();
+    }
+
     toStore() {
         return {
             "Date": getURLDate(this.race.getDate()),

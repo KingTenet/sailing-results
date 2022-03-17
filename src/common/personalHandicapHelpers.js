@@ -133,7 +133,7 @@ export function calculatePersonalHandicapFromPI(classPY, PI) {
     return classPY * (100 + PI) / 100;
 }
 
-function calculatePIFromPersonalHandicap(classPY, PH) {
+export function calculatePIFromPersonalHandicap(classPY, PH) {
     return (PH / classPY) * 100 - 100;
 }
 
