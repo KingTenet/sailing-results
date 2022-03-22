@@ -9,11 +9,11 @@ const rootElement = document.getElementById("root");
 /**
  * Supress tab behaviour
  */
-document.addEventListener('keydown', function (event) {
-    if (event.keyCode === 9 && event.target.nodeName === 'INPUT') {
-        event.preventDefault();
-    }
-});
+// document.addEventListener('keydown', function (event) {
+//     if (event.keyCode === 9 && event.target.nodeName === 'INPUT') {
+//         event.preventDefault();
+//     }
+// });
 
 const colors = {
     brand: {
@@ -38,7 +38,7 @@ const theme = extendTheme({ colors, config });
 ReactDOM.render(
     <ChakraProvider theme={theme}>
         {/* <React.StrictMode> */}
-            <App />
+        <App />
         {/* </React.StrictMode> */}
     </ChakraProvider>,
     rootElement

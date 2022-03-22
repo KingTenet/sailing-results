@@ -74,13 +74,4 @@ export default class Race {
             .map(([raceId, raceResults]) => [raceResults.at(0).getRace(), raceResults])
             .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
     }
-
-    static toReactRace(race) {
-        assertType(race, Race);
-        return race;
-        return {
-            raceDate: race.getDate(),
-            raceNumber: race.getNumber(),
-        };
-    }
 }

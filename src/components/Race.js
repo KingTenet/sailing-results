@@ -5,11 +5,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import React, { useState } from "react";
 
 import { useAppState, useServices } from "../useAppState";
-import { getURLDate, parseURLDate, useBack } from "../common"
+import { getURLDate, parseURLDate, useBack } from "../common";
 import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
 import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpers.js";
+
+import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
 
 const RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
 
@@ -245,7 +247,7 @@ function AlertDialogExample({ children, deleteHeading, deleteBody, onConfirm }) 
 }
 
 function DeleteFinisher({ finisher, children }) {
-    const [updateAppState] = useAppState();
+    const [, updateAppState] = useAppState();
 
     const deleteFinisher = () => {
         updateAppState(({ results, ...state }) => ({
@@ -305,7 +307,6 @@ function useSortedResults(results, race) {
 
 function useDimensionsToggle(dimensions) {
     const [dimensionCounter, updateDimensionCounter] = useState(0);
-    console.log(`DC: ${dimensionCounter}`)
     return [dimensions[dimensionCounter % dimensions.length], () => updateDimensionCounter(dimensionCounter + 1)];
 }
 
@@ -347,7 +348,7 @@ function RaceResultsView({ results, race, ...props }) {
                     </ListItem>
                 )}
             </ResultsList>
-            <Button marginBottom="20px" backgroundColor="green.500" onClick={toggleResultsView} autoFocus><Text fontSize={"lg"}>{buttonMsg}</Text></Button>
+            <GreenButton onClick={toggleResultsView} autoFocus>{buttonMsg}</GreenButton>
         </>
     );
 }
@@ -388,44 +389,6 @@ function ResultsList({ children, ...props }) {
     )
 }
 
-function BackButton({ children, ...props }) {
-    const navigateBack = useBack();
-    return (
-        <RedButton
-            onClick={() => navigateBack()}
-            {...props}
-        >
-            {children}
-        </RedButton>
-
-    );
-}
-
-function RedButton({ children, ...props }) {
-    return (
-        <Button
-            backgroundColor="red.500"
-            marginBottom="20px"
-            {...props}
-        >
-            <Text fontSize={"lg"}>{children}</Text>
-        </Button>
-    );
-}
-
-function GreenButton({ children, ...props }) {
-    return (
-        <Button
-            backgroundColor="green.500"
-            marginBottom="20px"
-            {...props}
-        >
-            <Text fontSize={"lg"}>{children}</Text>
-        </Button>
-    );
-}
-
-
 export default function Race() {
     const navigateTo = useNavigate();
     const [appState] = useAppState();
@@ -442,9 +405,8 @@ export default function Race() {
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
 
-    console.log(raceIsMutable);
-
-    const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber];
+    const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
+    const commitResults = () => console.log("Commit results");
 
     return (
         <>
@@ -479,7 +441,8 @@ export default function Race() {
                 }
                 {!editingRace && Boolean(raceResults.length) &&
                     <>
-                        < RedButton marginBottom="20px" onClick={() => updateEditingRace(true)} >Edit results</RedButton>
+                        <RedButton marginBottom="20px" onClick={() => updateEditingRace(true)} >Edit results</RedButton>
+                        <BlueButton marginBottom="20px" onClick={() => commitResults()} >Commit results</BlueButton>
                         <RaceResultsView results={raceResults} race={race} />
                     </>
                 }

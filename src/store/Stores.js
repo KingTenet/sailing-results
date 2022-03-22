@@ -1,4 +1,4 @@
-import { assertType, AutoMap, getGoogleSheetDoc, groupBy } from "../common.js"
+import { assertType, AutoMap, getGoogleSheetDoc, groupBy, parseURLDate } from "../common.js"
 import StoreWrapper from "./StoreWrapper.js";
 import SeriesRace from "./types/SeriesRace.js";
 import Helm from "./types/Helm.js";
@@ -16,8 +16,8 @@ import MutableRaceFinish from "./types/MutableRaceFinish.js";
 import MutableRaceResult from "./types/MutableRaceResult.js";
 import SearchIndex from "../SearchIndex.js";
 
-const REFRESH_BACKEND_THRESHOLD = 3600 * 1000;
-// const REFRESH_BACKEND_THRESHOLD = 0;
+const REFRESH_BACKEND_THRESHOLD = 86400 * 1000; // 1 DAY
+// const REFRESH_BACKEND_THRESHOLD = 10 * 1000; // 10 SECONDS
 
 export class Stores {
     constructor(auth, raceResultsSheetId, seriesResultsSheetId) {
@@ -122,9 +122,9 @@ export class Stores {
 }
 
 export class StoreFunctions {
-    constructor(stores) {
+    constructor(stores, superUser, editableRaceDate) {
         this.stores = stores;
-        this.mapRaces = this.mapRaces;
+        this.getRaces = this.getRaces;
         this.getHelmsIndex = this.getHelmsIndex;
         this.getBoatIndexForRace = this.getBoatIndexForRace;
         this.createRegisteredHelm = this.createRegisteredHelm;
@@ -135,11 +135,34 @@ export class StoreFunctions {
         this.getRaceFinishForResults = this.getRaceFinishForResults;
         this.getRaceFinishForRace = this.getRaceFinishForRace;
         this.isRaceMutable = this.isRaceMutable;
+        this.isRaceEditableByUser = this.isRaceEditableByUser;
+        this.getSailNumberIndexForHelmBoat = this.getSailNumberIndexForHelmBoat;
+        this.setSailNumberCounts = this.setSailNumberCounts;
+        this.superUser = superUser;
+        this.editableRaceDate = editableRaceDate;
+
+        // this.setSailNumberCounts();
     }
 
-    static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
-        const stores = await Stores.create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh);
-        return new StoreFunctions(stores);
+    static async create(auth, raceResultsSheetId, seriesResultsSheetId, editableRaceDateStr, superUser, forceRefresh) {
+        const stores = await Stores.create(
+            auth,
+            raceResultsSheetId,
+            seriesResultsSheetId,
+            forceRefresh
+        );
+        return new StoreFunctions(
+            stores,
+            superUser,
+            editableRaceDateStr && parseURLDate(editableRaceDateStr)
+        );
+    }
+
+    isRaceEditableByUser(race) {
+        if (this.superUser) {
+            return true;
+        }
+        return this.editableRaceDate && race.getDate().getTime() === this.editableRaceDate.getTime();
     }
 
     isRaceMutable(raceDate, raceNumber) {
@@ -147,18 +170,24 @@ export class StoreFunctions {
         assertType(raceNumber, "number");
         const raceToCheck = new Race(raceDate, raceNumber);
 
-        debugger;
         return Race.groupResultsByRaceAsc(this.stores.results.all())
             .filter(([race]) => Race.getId(race) === Race.getId(raceToCheck))
+            .filter(([race]) => this.isRaceEditableByUser(race))
             .reduce((_, [, results]) => !results.length, true);
     }
 
-    mapRaces(func = (race) => race) {
+    getRaces() {
         const storedPursuitResults = this.stores.purusitResults.all();
         const storedFleetResults = this.stores.results.all();
-        return Race.groupResultsByRaceAsc([...storedPursuitResults, ...storedFleetResults])
-            .map(([race]) => race)
-            .map(func);
+        const immutableRaces = Race.groupResultsByRaceAsc([...storedPursuitResults, ...storedFleetResults])
+            .map(([race]) => race);
+
+        debugger;
+        const mutableRaces = this.stores.seriesRaces.all()
+            .map((seriesRace) => seriesRace.getRace())
+            .filter((race) => !immutableRaces.find((immutable) => Race.getId(race) === Race.getId(immutable)))
+            .sort((a, b) => a.sortByRaceAsc(b));
+        return [mutableRaces, immutableRaces];
     }
 
     getHelmsIndex(helms = []) {
@@ -169,6 +198,85 @@ export class StoreFunctions {
         const boatsByYear = groupBy([...this.stores.ryaClasses.all(), ...boats], BoatClass.getClassYear);
         const boatIndexesByYear = new Map(boatsByYear.map(([classYear, boats]) => [classYear, new SearchIndex(boats, "className")]));
         return boatIndexesByYear.get(BoatClass.getClassYearForRaceDate(race.getDate()));
+    }
+
+    setSailNumberCounts(results = []) {
+        // const timer = () => {
+        //     let now = Date.now();
+        //     return () => {
+        //         return `${Date.now() - now}ms elapsed`;
+        //     }
+        // }
+        // const fin = timer();
+        // console.log("Setting sail number counts");
+        const sailNumbersByHelmBoat = StoreFunctions.getSailNumbersForHelmBoat([...this.stores.results.all(), ...results]);
+        const sailNumbersByBoat = StoreFunctions.getSailNumbersForHelmBoat([...this.stores.results.all(), ...results]);
+        this.sailNumbersByHelmBoat = new Map(sailNumbersByHelmBoat.map(([helmId, countsByBoatClassName]) => [helmId, new Map(countsByBoatClassName)]));
+        this.sailNumbersByBoat = new Map(sailNumbersByBoat);
+        // console.log(fin());
+    }
+
+    static getSailNumberCounts(boatResults) {
+        const sailNumberCounts = new AutoMap((num) => num, () => [0, 0]);
+        for (let result of boatResults) {
+            sailNumberCounts.upsert(result.getSailNumber(), ([count, last]) => [count + 1, Math.max(last, result.getRace().getDate().getTime())]);
+        }
+
+        return [...sailNumberCounts];
+    }
+
+    static getSailNumbersForBoat(results) {
+        return groupBy(results, [(result) => result.boatClass.getClassName()])
+            .map(([boatClass, results]) => [
+                boatClass,
+                StoreFunctions.getSailNumberCounts(results),
+            ]);
+    }
+
+    static getSailNumbersForHelmBoat(results) {
+        return groupBy(results, [Result.getHelmId, (result) => result.boatClass.getClassName()])
+            .map(([helmId, resultsByBoatClassName]) => [
+                helmId,
+                resultsByBoatClassName.map(([boatClass, results]) => [
+                    boatClass,
+                    StoreFunctions.getSailNumberCounts(results),
+                ])
+            ]);
+    }
+
+
+
+    getSailNumberIndexForHelmBoat(helm, boat) {
+        const getScore = (count, time) => {
+            if (count > 2) {
+                return time;
+            }
+            return count;
+        }
+
+        const getSailNumbersByBoat = (helm, boat) => {
+            const sailNumbersByBoat = this.sailNumbersByHelmBoat.get(Helm.getId(helm))
+                || this.sailNumbersByBoat;
+
+            if (sailNumbersByBoat.has(boat.getClassName())) {
+                return sailNumbersByBoat.get(boat.getClassName());
+            }
+
+            return [];
+        };
+
+        // Sorted by score desc
+        const sailNumbers = getSailNumbersByBoat(helm, boat)
+            .map(([sailNumber, [count, time]]) => [sailNumber, [count, new Date(time), getScore(count, time)]])
+            .sort(([, [, , scoreA]], [, [, , scoreB]]) => scoreB - scoreA);
+
+        const index = new SearchIndex(
+            sailNumbers.map(([sailNumber, [count, date, score]], key) => ({ sailNumber: `${sailNumber}`, date, count, rank: (sailNumbers.length - key) / sailNumbers.length, score })),
+            "sailNumber",
+            (searchScore, { rank }) => Math.min(searchScore + rank, 0),
+        );
+
+        return [index, sailNumbers];
     }
 
     createRegisteredHelm(race, helm, boatClass, boatSailNumber) {

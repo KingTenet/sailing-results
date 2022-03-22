@@ -99,7 +99,7 @@ import fuzzysort from "fuzzysort";
 export default class SearchIndex {
     /*
     * data:
-    * scoreFn: (score, obj) => score, where score in range [-1, 0] with zero perfect match
+    * scoreFn: (score, obj) => score, where score in range [-1, 0] with zero perfect match.
     */
     constructor(data, name = "name", scoreFn = (score) => score) {
         this.data = data;
