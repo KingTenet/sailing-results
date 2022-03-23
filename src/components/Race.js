@@ -263,6 +263,37 @@ function DeleteFinisher({ finisher, children }) {
     )
 }
 
+
+function DeleteOOD({ ood, children }) {
+    const [, updateAppState] = useAppState();
+
+    const deleteOOD = () => {
+        updateAppState(({ oods, ...state }) => ({
+            ...state,
+            oods: oods.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(ood)),
+        }));
+    };
+
+    return (
+        <AlertDialogExample onConfirm={() => deleteOOD()} deleteHeading={`Delete OOD: ${HelmResult.getHelmId(ood)}.`}>
+            {children}
+        </AlertDialogExample >
+    )
+}
+
+function OODListItem({ ood }) {
+    const helmName = Result.getHelmId(ood);
+
+    return <>
+        <DeleteOOD ood={ood} >
+            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+                <ResultDimension colSpan={1}>{helmName}</ResultDimension>
+            </Box>
+        </DeleteOOD>
+    </>
+}
+
+
 function FinisherListItem({ result }) {
     const helmName = Result.getHelmId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
@@ -340,7 +371,7 @@ function RaceResultsView({ results, race, ...props }) {
     return (
         <>
             <Heading marginBottom="20px" marginLeft="20px" size={"md"}>{`${heading}`}</Heading>
-            <ResultsList {...props} marginBottom="20px" >
+            <ResultsList marginBottom="20px" >
                 <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
                 {sortedResults.map(([result, position]) =>
                     <ListItem key={HelmResult.getId(result)}>
@@ -348,7 +379,7 @@ function RaceResultsView({ results, race, ...props }) {
                     </ListItem>
                 )}
             </ResultsList>
-            <GreenButton onClick={toggleResultsView} autoFocus>{buttonMsg}</GreenButton>
+            <GreenButton onClick={toggleResultsView} autoFocus {...props}>{buttonMsg}</GreenButton>
         </>
     );
 }
@@ -367,12 +398,23 @@ function RegisteredView({ registered, ...props }) {
 }
 
 function FinisherView({ results, ...props }) {
-    const navigateTo = useNavigate();
     return (
         <ResultsList {...props}>
             {results.map((result) =>
                 <ListItem key={HelmResult.getId(result)}>
                     <FinisherListItem result={result} />
+                </ListItem>
+            )}
+        </ResultsList>
+    );
+}
+
+function OODView({ oods, ...props }) {
+    return (
+        <ResultsList {...props}>
+            {oods.map((ood) =>
+                <ListItem key={HelmResult.getId(ood)}>
+                    <OODListItem ood={ood} />
                 </ListItem>
             )}
         </ResultsList>
@@ -391,7 +433,8 @@ function ResultsList({ children, ...props }) {
 
 export default function Race() {
     const navigateTo = useNavigate();
-    const [appState] = useAppState();
+    const navigateBack = useBack();
+    const [appState, updateAppState] = useAppState();
     const params = useParams();
     const raceDateStr = params["raceDate"];
     const raceNumberStr = params["raceNumber"];
@@ -399,14 +442,31 @@ export default function Race() {
     const raceNumber = parseInt(raceNumberStr);
     const race = new StoreRace(raceDate, raceNumber);
     const services = useServices();
-    const [raceIsMutable] = useState(() => services.isRaceMutable(raceDate, raceNumber));
+    const [raceIsMutable, setRaceIsMutable] = useState(() => services.isRaceMutable(raceDate, raceNumber));
     const [editingRace, updateEditingRace] = useState(() => raceIsMutable)
+    const [committingResults, setCommittingResults] = useState(false);
 
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
+    const oods = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
 
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
-    const commitResults = () => console.log("Commit results");
+    const commitResults = () => {
+        setCommittingResults(true);
+        services
+            .commitFleetResultsForRace(race, raceResults, oods)
+            .catch((err) => console.log(err))
+            .then(() =>
+                updateAppState(({ results, ...state }) => ({
+                    ...state,
+                    results: results.filter((result) => !raceResults.includes(result)),
+                }))
+            )
+            .then(() => updateEditingRace(false))
+            .then(() => setRaceIsMutable(services.isRaceMutable(raceDate, raceNumber)))
+            .then(() => setCommittingResults(false));
+        console.log("Commit results");
+    };
 
     return (
         <>
@@ -419,9 +479,10 @@ export default function Race() {
                     <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} race`}</Heading>
                 </Flex>
                 {/* </Center> */}
-                {editingRace &&
+                {raceIsMutable && editingRace &&
                     <>
                         <BackButton>Back to races</BackButton>
+                        <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
                         <Flex direction="column" marginBottom="20px">
                             <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
                         </Flex>
@@ -437,17 +498,40 @@ export default function Race() {
                                 <FinisherView marginBottom="20px" results={raceResults} />
                             </>
                         }
+                        {Boolean(oods.length) &&
+                            <>
+                                <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+                                <OODView marginBottom="20px" oods={oods} isDisabled={committingResults} />
+                            </>
+                        }
                     </>
                 }
-                {!editingRace && Boolean(raceResults.length) &&
+                {raceIsMutable && !editingRace && Boolean(raceResults.length) &&
                     <>
-                        <RedButton marginBottom="20px" onClick={() => updateEditingRace(true)} >Edit results</RedButton>
-                        <BlueButton marginBottom="20px" onClick={() => commitResults()} >Commit results</BlueButton>
-                        <RaceResultsView results={raceResults} race={race} />
+                        <RedButton
+                            onClick={() => updateEditingRace(true)}
+                            isDisabled={committingResults}
+                        >Edit results</RedButton>
+                        <BlueButton
+                            onClick={() => commitResults()}
+                            isLoading={committingResults}
+                            loadingText='Committing Results'
+                        >Commit results</BlueButton>
+                        <RaceResultsView results={raceResults} race={race} isDisabled={committingResults} />
+
+                        {Boolean(oods.length) &&
+                            <>
+                                <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+                                <OODView marginBottom="20px" oods={oods} isDisabled={committingResults} />
+                            </>
+                        }
                     </>
                 }
                 {!raceIsMutable &&
-                    <RaceResultsView race={race} />
+                    <>
+                        <BackButton>Back to races</BackButton>
+                        <RaceResultsView race={race} />
+                    </>
                 }
                 {editingRace && !raceRegistered.length && raceResults.length > 2 &&
                     <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>

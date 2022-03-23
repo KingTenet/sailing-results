@@ -9,6 +9,7 @@ import Races from "./components/Races";
 import Race from "./components/Race";
 import RegisterHelm from "./components/RegisterHelm";
 import FinishHelm from "./components/FinishHelm";
+import RegisterOOD from "./components/RegisterOOD";
 
 function Home() {
     const [appState] = useAppState();
@@ -87,6 +88,7 @@ function MyRoutes() {
                 { path: '/races/', element: <Races /> },
                 { path: '/races/:raceDate/:raceNumber', element: <Race /> },
                 { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm /> },
+                { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },
                 { path: '/races/:raceDate/:raceNumber/register/:registered', element: <FinishHelm /> },
             ]
         },

@@ -43,16 +43,18 @@ async function initialiseServices(token, urlToken) {
     };
 }
 
-const STATE_DESERIALISER = ({ registered, results }, services) => {
+const STATE_DESERIALISER = ({ registered, results, oods }, services) => {
     return {
         registered: registered.map((registeredResult) => services.deserialiseRegistered(registeredResult)),
         results: results.map((result) => services.deserialiseResult(result)),
+        oods: oods.map((ood) => services.deserialiseOOD(ood)),
     };
 };
 
 const DEFAULT_STATE = {
     results: [],
     registered: [],
+    oods: [],
 };
 
 const DEFAULT_SERVICE_STATE = {
@@ -145,6 +147,7 @@ function StateOutlet() {
     const [state, updateAppState] = useAppState(DEFAULT_STATE);
     const services = useServices();
 
+    console.log(state);
     return (
         <>
             {/* <Box>

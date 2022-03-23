@@ -47,14 +47,16 @@ function FinishHelm() {
     const finishHelm = (event) => {
         event.preventDefault();
 
-        updateAppState(({ results, registered, ...state }) => {
-            if (appState.results.find((prev) => HelmResult.getId(prev) === HelmResult.getId(registeredResult))) {
-                // TODO: Allow result to be updated..
+        updateAppState(({ results, registered, oods, ...state }) => {
+            if (results.find((prev) => HelmResult.getId(prev) === HelmResult.getId(registeredResult))
+                || oods.find((prev) => HelmResult.getId(prev) === HelmResult.getId(registeredResult))
+            ) {
                 throw new Error("Cannot update helms");
             }
             else {
                 return {
                     ...state,
+                    oods: oods,
                     registered: [
                         ...registered.filter((prev) => prev !== registeredResult),
                     ],
@@ -83,43 +85,76 @@ function FinishHelm() {
 
     return (
         <>
+
+
+            {/* <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+                <Flex direction={"row"}>
+                    <Box minWidth="110px" paddingTop="5px">
+                        <Text fontSize={"lg"}>{heading}</Text>
+                    </Box>
+                    <Box {...getComboboxProps()}>
+                        <InputGroup>
+                            <Input {...getInputProps()} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
+                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                        </InputGroup>
+                    </Box>
+                </Flex>
+            </Box> */}
             <form onSubmit={(evt) => evt.preventDefault()}>
-                <Center height="80vh" width="100%">
-                    <Flex direction={"column"} height="100%" width="100vh">
-                        <Box borderRadius={"12px"} borderWidth="1px" padding="20px">
-                            <Flex direction={"column"}>
-                                <Text fontSize={"lg"}>{"Helm"}</Text>
-                                <Spacer />
-                                <Box>
-                                    <InputGroup>
-                                        <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? HelmResult.getHelmId(registeredResult) : ""} />
-                                        <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                    </InputGroup>
-                                </Box>
-                            </Flex>
-                        </Box>
-                        <Box borderRadius={"12px"} borderWidth="1px" padding="20px">
-                            <Flex direction={"column"}>
-                                <Text fontSize={"lg"}>{"Boat"}</Text>
-                                <Spacer />
-                                <Box>
-                                    <InputGroup>
-                                        <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getBoatClass().getClassName() : ""} />
-                                        <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                    </InputGroup>
-                                </Box>
-                            </Flex>
-                        </Box>
-                        <FinishTimeSelector
-                            setFinishTimeSeconds={setFinishTimeSeconds}
-                        />
-                        {finishTimeSeconds &&
-                            <LapsSelector onLapsUpdated={setFinishedLaps} />
-                        }
-                        {finishedLaps &&
-                            <Button tabIndex="-1" backgroundColor="green.500" onClick={finishHelm} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
-                        }
-                        <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
+                <Center height="80vh">
+                    <Flex direction={"column"} height="80vh" width="100%">
+                        <Flex direction={"column"} height="100%" >
+                            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+                                <Flex direction={"row"}>
+                                    <Box minWidth="110px" paddingTop="5px">
+                                        <Text fontSize={"lg"}>{"Helm"}</Text>
+                                    </Box>
+                                    <Box>
+                                        <InputGroup>
+                                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? HelmResult.getHelmId(registeredResult) : ""} />
+                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                        </InputGroup>
+                                    </Box>
+                                </Flex>
+                            </Box>
+                            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+                                <Flex direction={"row"}>
+                                    <Box minWidth="110px" paddingTop="5px">
+                                        <Text fontSize={"lg"}>{"Boat"}</Text>
+                                    </Box>
+                                    <Box>
+                                        <InputGroup>
+                                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getBoatClass().getClassName() : ""} />
+                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                        </InputGroup>
+                                    </Box>
+                                </Flex>
+                            </Box>
+                            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+                                <Flex direction={"row"}>
+                                    <Box minWidth="110px" paddingTop="5px">
+                                        <Text fontSize={"lg"}>{"Sail Number"}</Text>
+                                    </Box>
+                                    <Box>
+                                        <InputGroup>
+                                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getSailNumber() : ""} />
+                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                        </InputGroup>
+                                    </Box>
+                                </Flex>
+                            </Box>
+                            <FinishTimeSelector
+                                setFinishTimeSeconds={setFinishTimeSeconds}
+                            />
+                            {finishTimeSeconds &&
+                                <LapsSelector onLapsUpdated={setFinishedLaps} />
+                            }
+                            <Spacer />
+                            {finishedLaps &&
+                                <Button tabIndex="-1" backgroundColor="green.500" onClick={finishHelm} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
+                            }
+                            <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
+                        </Flex>
                     </Flex>
                 </Center>
             </form>

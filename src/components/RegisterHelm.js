@@ -4,23 +4,19 @@ import { useState } from "react";
 import Autocomplete from "./AutocompleteSimple";
 import { useAppState, useServices } from "../useAppState";
 import { parseURLDate, useBack } from "../common"
-import { Center, Text, Button, Flex, Input, Box, Spacer } from '@chakra-ui/react'
+import { Center, Text, Button, Flex, Spacer } from '@chakra-ui/react'
 import { useParams } from "react-router-dom";
 import Race from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
-import Helm from "../store/types/Helm";
-import BoatClass from "../store/types/BoatClass";
-import SearchIndex from "../SearchIndex";
 
 function RegisterHelm() {
     const navigateBack = useBack();
     const [selectedHelm, setSelectedHelm] = useState(null);
     const [selectedBoat, setSelectedBoat] = useState(null);
-    const [sailNumberIndex, setSailNumberIndex] = useState(null);
     const [sailNumber, setSailNumber] = useState();
+
     const [appState, updateAppState] = useAppState();
     const services = useServices();
-    const helmsIndex = services.getHelmsIndex();
 
     const params = useParams();
     const raceDateStr = params["raceDate"];
@@ -29,15 +25,24 @@ function RegisterHelm() {
     const raceNumber = parseInt(raceNumberStr);
     const race = new Race(raceDate, raceNumber);
 
-    const boatsIndex = services.getBoatIndexForRace(race);
+    const [excludedHelmIds] = useState(() => [
+        ...appState.results.filter((result) => HelmResult.getRaceId(result) === Race.getId(race)),
+        ...appState.registered.filter((result) => HelmResult.getRaceId(result) === Race.getId(race)),
+        ...appState.oods.filter((result) => HelmResult.getRaceId(result) === Race.getId(race))
+    ].map((result) => result.getHelm()));
+
+    const [helmsIndex] = useState(() => services.indexes.getHelmsIndex(excludedHelmIds));
+    const [boatsIndex, setBoatsIndex] = useState(null);
+    const [sailNumberIndex, setSailNumberIndex] = useState(null);
 
     const processHelmResult = (event) => {
         event.preventDefault();
         const newRegisteration = services.createRegisteredHelm(race, selectedHelm, selectedBoat, parseInt(sailNumber));
 
-        updateAppState(({ registered, results, ...state }) => {
+        updateAppState(({ registered, results, oods, ...state }) => {
             if (registered.find((prev) => HelmResult.getId(prev) === HelmResult.getId(newRegisteration))
                 || results.find((prev) => HelmResult.getId(prev) === HelmResult.getId(newRegisteration))
+                || oods.find((prev) => HelmResult.getId(prev) === HelmResult.getId(newRegisteration))
             ) {
                 throw new Error("Cannot update helms");
             }
@@ -45,6 +50,7 @@ function RegisterHelm() {
                 return {
                     ...state,
                     results: results,
+                    oods: oods,
                     registered: [
                         ...registered,
                         newRegisteration,
@@ -57,12 +63,12 @@ function RegisterHelm() {
     };
 
     useEffect(() => {
-        services.setSailNumberCounts(appState.results);
+        services.indexes.updateFromResults(appState.results);
     }, [appState.results]);
 
     useEffect(() => {
         if (selectedHelm && selectedBoat) {
-            const [index, sailNumbers] = services.getSailNumberIndexForHelmBoat(
+            const index = services.indexes.getSailNumberIndexForHelmBoat(
                 selectedHelm,
                 selectedBoat,
             );
@@ -73,6 +79,12 @@ function RegisterHelm() {
     },
         [selectedBoat]
     );
+
+    useEffect(() => {
+        if (selectedHelm) {
+            setBoatsIndex(services.indexes.getBoatIndexForHelmRace(selectedHelm, race));
+        }
+    }, [selectedHelm])
 
     console.log(sailNumber);
     console.log(selectedHelm);
@@ -93,8 +105,9 @@ function RegisterHelm() {
                                 getInvalidItemString={(partialMatch) => `${partialMatch} has not raced before, create a new helm record`}
                                 createNewMessage={"Create a new helm record"}
                                 placeholder={"Enter helm name here..."}
+                                openOnFocus={true}
                             />
-                            {selectedHelm &&
+                            {selectedHelm && boatsIndex &&
                                 <Autocomplete
                                     heading={"Boat"}
                                     data={boatsIndex.data}
@@ -104,6 +117,7 @@ function RegisterHelm() {
                                     getInvalidItemString={(partialMatch) => `${partialMatch} has not raced before, create a new boat record`}
                                     createNewMessage={"Create a new boat record"}
                                     placeholder={"Enter boat..."}
+                                    openOnFocus={true}
                                 />
                             }
                             {selectedBoat && sailNumberIndex &&
