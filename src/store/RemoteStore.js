@@ -1,3 +1,5 @@
+import { isOnline, promiseSleep } from "../common";
+
 class RemoteStoreNoNetwork extends Error { }
 class RemoteStoreNoAccess extends Error { }
 class RemoteStoreNoSheet extends Error { }
@@ -6,6 +8,7 @@ export default class RemoteStore {
     constructor(sheetsDoc, sheetName) {
         this.sheetsDoc = sheetsDoc;
         this.sheetName = sheetName;
+
     }
 
     async getAllRows() {
@@ -43,15 +46,29 @@ export default class RemoteStore {
         }
     }
 
-    static async remoteStoreExists(promiseSheetsDoc, sheetName) {
-        const remoteStore = await RemoteStore.createRemoteStore(promiseSheetsDoc, sheetName);
-        await remoteStore.getSheet();
-        return remoteStore;
+    async isReady() {
+        return isOnline();
+    }
+
+    static async retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers) {
+        try {
+            return await this.createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
+        }
+        catch (err) {
+            if (err instanceof RemoteStoreNoNetwork) {
+                console.log("Network error in store creation.. will sleep a bit and retry.")
+                do {
+                    await promiseSleep(20000);
+                } while (!isOnline());
+                return await this.retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
+            }
+            throw err;
+        }
     }
 
     static async createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers) {
         try {
-            let sheetsDoc = await promiseSheetsDoc;
+            let sheetsDoc = await promiseSheetsDoc();
             const remoteStore = new RemoteStore(sheetsDoc, sheetName);
             if (createSheetIfMissing) {
                 await remoteStore.createSheetIfMissing(headers);
@@ -60,10 +77,9 @@ export default class RemoteStore {
             return remoteStore;
         }
         catch (err) {
-            if (err?.code !== "ENOTFOUND") {
+            if (err?.code === "ENOTFOUND" || (err.request && err.response)) {
                 throw err;
             }
-            console.log(err);
             throw new RemoteStoreNoNetwork("No network connection so couldn't create remote store");
         }
     }

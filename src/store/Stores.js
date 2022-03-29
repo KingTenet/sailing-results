@@ -1,4 +1,4 @@
-import { assertType, AutoMap, getGoogleSheetDoc, groupBy, parseURLDate, promiseSleep, mapGroupBy } from "../common.js"
+import { assertType, AutoMap, getGoogleSheetDoc, groupBy, parseURLDate, promiseSleep, mapGroupBy, isOnline } from "../common.js"
 import StoreWrapper from "./StoreWrapper.js";
 import SeriesRace from "./types/SeriesRace.js";
 import Helm from "./types/Helm.js";
@@ -23,8 +23,8 @@ const REFRESH_BACKEND_THRESHOLD = 86400 * 1000; // 1 DAY
 
 export class Stores {
     constructor(auth, raceResultsSheetId, seriesResultsSheetId) {
-        this.raceResultsDocument = getGoogleSheetDoc(raceResultsSheetId, auth.clientEmail, auth.privateKey);
-        this.seriesResultsDocument = getGoogleSheetDoc(seriesResultsSheetId, auth.clientEmail, auth.privateKey);
+        this.raceResultsDocument = () => getGoogleSheetDoc(raceResultsSheetId, auth.clientEmail, auth.privateKey);
+        this.seriesResultsDocument = () => getGoogleSheetDoc(seriesResultsSheetId, auth.clientEmail, auth.privateKey);
         this.auth = auth;
     }
 
@@ -159,7 +159,7 @@ export class Stores {
     static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
         await bootstrapLocalStorage();
         const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
-        if (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD) {
+        if (isOnline() && (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD)) {
             console.log("Clearing app state");
             localStorage.clear();
         }

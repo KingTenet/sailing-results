@@ -1,8 +1,10 @@
-import { Box, Flex, Text, Center } from "@chakra-ui/react";
-import { BrowserRouter as Router, Link, useRoutes, Navigate } from "react-router-dom";
-import React, { useEffect } from "react";
+import { Box, Flex, Text } from "@chakra-ui/react";
+import { Link, useRoutes, Navigate } from "react-router-dom";
+// import { BrowserRouter as Router } from "react-router-dom";
+import { HashRouter as Router } from "react-router-dom";
+import React from "react";
 
-import { useAppState, useServices } from "./useAppState";
+import { useAppState } from "./useAppState";
 
 import StateWrapper from "./StateWrapper";
 import Races from "./components/Races";
@@ -13,7 +15,6 @@ import RegisterOOD from "./components/RegisterOOD";
 
 function Home() {
     const [appState] = useAppState();
-    const services = useServices();
 
     if (!appState) {
         return (

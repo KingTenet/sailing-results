@@ -13,7 +13,7 @@ export default class Store {
         this.getLastSyncDate();
         this.localStore = new LocalStore(storeName, toStore, fromStore, this);
         this.hasRemoteStore = Boolean(sheetsDoc !== undefined);
-        this.promiseRemoteStore = this.hasRemoteStore && RemoteStore.createRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
+        this.promiseRemoteStore = this.hasRemoteStore && RemoteStore.retryCreateRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 

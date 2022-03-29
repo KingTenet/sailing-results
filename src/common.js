@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { GoogleSpreadsheet } from "google-spreadsheet";
+import inBrowser from "./inBrowser";
 
 const KEY_SEP = "::";
 
@@ -146,6 +147,13 @@ export function flatten(arrOfArr) {
     return arrOfArr.reduce((acc, next) => acc.concat(next), []);
 }
 
+export function isOnline() {
+    if (!inBrowser) {
+        return true;
+    }
+    return window.navigator.onLine;
+}
+
 export async function getGoogleSheetDoc(sheetId, clientEmail, privateKey) {
     try {
         const doc = new GoogleSpreadsheet(sheetId);
@@ -187,12 +195,6 @@ export function getSheetIdFromURL(url) {
         throw new Error("Invalid URL format, google sheet ID should match regex https://docs.google.com/spreadsheets/d/([^/]+)/.*$");
     }
     return matches[1];
-}
-
-export async function getAllRowsFromSheet(sheetId, auth, sheetName) {
-    const doc = await getGoogleSheetDoc(sheetId, auth.clientEmail, auth.privateKey);
-    const sheet = sheetName ? doc.sheetsByTitle[sheetName] : doc.sheetsByIndex[0];
-    return (await limitSheetsRequest(() => sheet.getRows()));
 }
 
 export async function getAllCellsFromSheet(sheetId, auth, sheetName, filterEmptyRows = true) {
