@@ -6,15 +6,6 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
 const rootElement = document.getElementById("root");
 
-/**
- * Supress tab behaviour
- */
-// document.addEventListener('keydown', function (event) {
-//     if (event.keyCode === 9 && event.target.nodeName === 'INPUT') {
-//         event.preventDefault();
-//     }
-// });
-
 const colors = {
     brand: {
         50: "#ecefff",
@@ -29,6 +20,7 @@ const colors = {
         900: "#080819"
     }
 };
+
 const config = {
     initialColorMode: "light",
     useSystemColorMode: false
@@ -37,9 +29,7 @@ const theme = extendTheme({ colors, config });
 
 ReactDOM.render(
     <ChakraProvider theme={theme}>
-        {/* <React.StrictMode> */}
         <App />
-        {/* </React.StrictMode> */}
     </ChakraProvider>,
     rootElement
 )

@@ -72,9 +72,12 @@ function RacesList({ children, ...props }) {
 export default function Races() {
     const services = useServices();
     const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces());
+    const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
+    const filterRace = new Race(latestImmutableRaceDate, 1);
+
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
-        .filter((race) => !race.isBefore(ignoreBeforeRace));
+        .filter((race) => !race.isBefore(filterRace));
 
     return (
         <>

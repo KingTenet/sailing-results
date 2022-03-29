@@ -1,8 +1,8 @@
 import { Box, Flex, Text, Center } from "@chakra-ui/react";
 import { BrowserRouter as Router, Link, useRoutes, Navigate } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
 
-import { useAppState } from "./useAppState";
+import { useAppState, useServices } from "./useAppState";
 
 import StateWrapper from "./StateWrapper";
 import Races from "./components/Races";
@@ -13,6 +13,7 @@ import RegisterOOD from "./components/RegisterOOD";
 
 function Home() {
     const [appState] = useAppState();
+    const services = useServices();
 
     if (!appState) {
         return (
@@ -89,7 +90,8 @@ function MyRoutes() {
                 { path: '/races/:raceDate/:raceNumber', element: <Race /> },
                 { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm /> },
                 { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },
-                { path: '/races/:raceDate/:raceNumber/register/:registered', element: <FinishHelm /> },
+                { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <FinishHelm isPursuit={false} /> },
+                { path: '/races/:raceDate/:raceNumber/pursuitFinish/:registered', element: <FinishHelm isPursuit={true} /> },
             ]
         },
         { path: '/*', element: <Navigate to="/races" /> },

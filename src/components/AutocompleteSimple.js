@@ -2,20 +2,15 @@ import React, { useEffect, useState } from 'react'
 import { useCombobox } from 'downshift'
 
 import {
-    Alert,
-    AlertIcon,
-    AlertTitle,
     Flex,
     Box,
     Text,
     Heading,
     Input,
-    Button,
     InputGroup,
     InputRightElement,
     Spacer,
     Collapse,
-    propNames,
 } from '@chakra-ui/react'
 
 import { CheckCircleIcon } from '@chakra-ui/icons'
@@ -39,13 +34,6 @@ function CollapseEx({ children, isOpen }) {
     )
 }
 
-// function getMenuItems(inputItems, initialItems) {
-//     const blah = getMenuItemsWrapped(inputItems, initialItems);
-//     console.log(blah);
-//     debugger;
-//     return blah;
-// }
-
 function getMenuItems(inputItems, initialItems) {
     if (inputItems.length) {
         return inputItems;
@@ -53,9 +41,8 @@ function getMenuItems(inputItems, initialItems) {
     return initialItems;
 }
 
-export default function ({ data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, createNewMessage, getInvalidItemString, openOnFocus = false, type = "text", triggerExactMatchOnBlur = false }) {
+export default function ({ data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false }) {
     const [inputItems, setInputItems] = useState(data);
-    const [valueOnBlur, setValueOnBlur] = useState();
     const [partialMatch, setPartialMatch] = useState();
     const exactMatch = partialMatch === undefined
         ? undefined
@@ -64,20 +51,19 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
     const setExactMatch = (value) => {
         setPartialMatch(false);
         setInputItems([]);
-        console.log("Exact match " + value);
+        console.log("In set exact match");
         handleSelectedItemChange(value);
     };
 
     const setPartiaValue = (value) => {
         setPartialMatch(value);
         setInputItems(filterData(value));
+        console.log("In set partial match");
         handleSelectedItemChange();
     };
 
     const {
         isOpen,
-        getToggleButtonProps,
-        getLabelProps,
         getMenuProps,
         getInputProps,
         getComboboxProps,
@@ -87,8 +73,6 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
         items: inputItems,
         itemToString,
         onSelectedItemChange: ({ selectedItem }) => {
-            console.log("selected item change");
-            console.log(Date.now());
             setExactMatch(selectedItem);
         },
         onInputValueChange: ({ inputValue }) => {
@@ -116,26 +100,15 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
         }
     }
 
-    const handleOnBlur = () => {
-        if (triggerExactMatchOnBlur) {
-            if (partialMatch ||
-                (type === "text" && partialMatch === "")
-                || (type === "number" && partialMatch === 0)
-            ) {
-                console.log("Setting value on blur " + partialMatch);
-                console.log(Date.now());
-                // setExactMatch(partialMatch);
-                // setTimeout(() => setValueOnBlur(partialMatch), 100);
-            }
-        }
-    }
-
     useEffect(() => {
-        if (triggerExactMatchOnBlur && partialMatch !== undefined && !isOpen) {
-            console.log("Setting exact match on blur " + partialMatch);
+        if (triggerExactMatchOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
+            console.log("From useEffect");
+            console.log(partialMatch);
             setExactMatch(partialMatch);
         }
     }, [isOpen]);
+
+    console.log("Rendering autocomplete");
 
     return (
         <>
@@ -194,15 +167,6 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
                                 ))}
                             </ul>
                         </CollapseEx>
-                        {exactMatch === false && !isOpen &&
-                            <>
-                                <Spacer />
-                                <Alert status='error'>
-                                    <AlertIcon />
-                                    <AlertTitle mr={2}>{getInvalidItemString(partialMatch)}</AlertTitle>
-                                </Alert>
-                            </>
-                        }
                         <Spacer />
                     </Flex>
                 </Box>

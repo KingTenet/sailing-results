@@ -6,6 +6,7 @@ function debugCreationErrors(func, storeObject) {
         return func();
     }
     catch (err) {
+        console.log(err);
         console.log(`Failed to create object from store`);
         console.log(storeObject);
         throw err;

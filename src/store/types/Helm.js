@@ -1,20 +1,21 @@
 import StoreObject from "./StoreObject.js";
-import { assertType, generateId, parseBoolean } from "../../common.js";
+import { assert, assertType, generateId, parseBoolean } from "../../common.js";
 import Race from "./Race.js";
+import ClubMember from "./ClubMember.js";
 
 const MAX_NOVICE_RACES = 12;
 
 const INITIAL_PI_FOR_NOVICE_HELM = 20; // In percent
 const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent
 
-export default class Helm extends StoreObject {
-    constructor(name, yearOfBirth, gender, noviceInFirstRace, duplicates, metaData) {
+class Helm extends StoreObject {
+    constructor(name, yearOfBirth, gender, noviceInFirstRace, metaData) {
         super(metaData)
         this.name = assertType(name, "string");
         this.yearOfBirth = assertType(yearOfBirth, "number");
+        assert(Gender.VALID_GENDERS.includes(gender), `Support for gender:${gender} has not been added to the system yet.`);
         this.gender = assertType(gender, "string");
         this.noviceInFirstRace = assertType(noviceInFirstRace, "boolean");
-        this.duplicates = duplicates;
     }
 
     static getId(helm) {
@@ -38,9 +39,13 @@ export default class Helm extends StoreObject {
             "Year Of Birth": yearOfBirth,
             "Gender": gender,
             "Was Novice In First Race": noviceInFirstRace,
-            "Duplicates": duplicates,
         } = storeHelm;
-        return new Helm(name, parseInt(yearOfBirth || 1970), gender, parseBoolean(noviceInFirstRace), duplicates, StoreObject.fromStore(storeHelm));
+        return new Helm(name, parseInt(yearOfBirth || 1970), gender, parseBoolean(noviceInFirstRace), StoreObject.fromStore(storeHelm));
+    }
+
+    static fromClubMember(clubMember, gender, noviceInFirstRace) {
+        assertType(clubMember, ClubMember);
+        return new Helm(clubMember.getName(), clubMember.getYearOfBirth(), gender, noviceInFirstRace, StoreObject.fromStore({}));
     }
 
     wasCadetInRace(race) {
@@ -91,8 +96,21 @@ export default class Helm extends StoreObject {
             "Year Of Birth": this.yearOfBirth,
             "Gender": this.gender,
             "Was Novice In First Race": this.noviceInFirstRace,
-            "Duplicates": this.duplicates,
             ...super.toStore(this),
         };
     }
+
+    toJSON() {
+        return this.toStore();
+    }
 }
+
+class Gender {
+    static MALE = "male";
+    static FEMALE = "female"
+    static VALID_GENDERS = [Gender.MALE, Gender.FEMALE];
+}
+
+Helm.Gender = Gender;
+
+export default Helm;

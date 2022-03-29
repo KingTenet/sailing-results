@@ -15,7 +15,9 @@ import bootstrapLocalStorage from "../bootstrapLocalStorage.js";
 import MutableRaceFinish from "./types/MutableRaceFinish.js";
 import MutableRaceResult from "./types/MutableRaceResult.js";
 import SearchIndex from "../SearchIndex.js";
+import ClubMember from "./types/ClubMember.js";
 
+// const REFRESH_BACKEND_THRESHOLD = 8640000 * 1000; // 100 DAY
 const REFRESH_BACKEND_THRESHOLD = 86400 * 1000; // 1 DAY
 // const REFRESH_BACKEND_THRESHOLD = 10 * 1000; // 10 SECONDS
 
@@ -27,7 +29,14 @@ export class Stores {
     }
 
     async init() {
+        this.clubMembers = await StoreWrapper.create("Active Membership", this.raceResultsDocument, this, ClubMember);
         this.helms = await StoreWrapper.create("Helms", this.raceResultsDocument, this, Helm);
+
+        const clubMembersByName = mapGroupBy(this.clubMembers.all(), [ClubMember.getId]);
+        this.helms.all()
+            .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
+            .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
+
         this.ryaClasses = await StoreWrapper.create("RYA Full List", this.raceResultsDocument, this, BoatClass);
         this.clubClasses = await StoreWrapper.create("Club Handicaps", this.raceResultsDocument, this, BoatClass);
 
@@ -43,15 +52,44 @@ export class Stores {
         this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
     }
 
-    deserialiseResult(storeResult, Type = Result) {
+    getStatus() {
+        return Object.entries(this)
+            .filter(([, store]) => store instanceof StoreWrapper)
+            .reduce((acc, [, { store }]) => ({ ...acc, [store.storeName]: store.storesInSync() }), {});
+    }
+
+    async syncroniseStore(storeName) {
+        const [, store] = Object.entries(this)
+            .filter(([, store]) => store instanceof StoreWrapper)
+            .find(([, { store }]) => store.storeName === storeName);
+
+        await store.sync();
+    }
+
+    deserialiseResult(storeResult, newHelms = [], Type = Result) {
         return Type.fromStore(
             storeResult,
-            (helmId) => this.helms.get(helmId),
+            (helmId) => this.getHelmFromHelmId(helmId, newHelms),
             (boatClass, date) =>
                 this.clubClasses.has(BoatClass.getIdFromClassRaceDate(boatClass, date))
                     ? this.clubClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
                     : this.ryaClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
         );
+    }
+
+    getHelmFromHelmId(helmId, newHelms = []) {
+        if (this.helms.has(helmId)) {
+            return this.helms.get(helmId);
+        }
+        const newHelm = newHelms.find((newHelm) => Helm.getId(newHelm) === helmId);
+        if (!newHelm) {
+            throw new Error("Helm didn't exist in store or new helms");
+        }
+        return newHelm;
+    }
+
+    deserialiseHelm(storeHelm) {
+        return Helm.fromStore(storeHelm);
     }
 
     // deserialiseOOD(oodResult) {
@@ -166,7 +204,7 @@ class Indexes {
         this.sailNumbersByBoat = Indexes.getSailNumbersForBoat(this.getAllResults(results));
     }
 
-    getHelmsIndex(excludedHelms = []) {
+    getHelmsIndex(excludedHelms = [], newHelms = []) {
         const helmIdsToExclude = excludedHelms.map(Helm.getId);
 
         const getScore = (count, time) => {
@@ -177,7 +215,7 @@ class Indexes {
         }
 
         const sortCountsByScore = (helmCounts) => {
-            return helmCounts.map(([helmId, values]) => [this.stores.helms.get(helmId), values])
+            return helmCounts.map(([helmId, values]) => [this.stores.getHelmFromHelmId(helmId, newHelms), values])
                 .map(([helm, [count, time]]) => [helm, [count, new Date(time), getScore(count, time)]])
                 .sort(([, [, , scoreA]], [, [, , scoreB]]) => scoreB - scoreA);
         }
@@ -185,17 +223,32 @@ class Indexes {
         // Sorted by score desc
         const helmsByScore = sortCountsByScore([...this.helms]);
 
+        const helmsById = helmsByScore.map(([helm]) => Helm.getId(helm));
+
+        const oldHelmsWithoutResults = this.stores.helms.all().filter((oldHelm) => !helmsById.includes(Helm.getId(oldHelm)));
+        const newHelmsWithoutResults = newHelms.filter((newHelm) => !helmsById.includes(Helm.getId(newHelm)));
+        const helmsWithoutResultsById = [...oldHelmsWithoutResults, ...newHelmsWithoutResults].map(Helm.getId);
+        const membersNotHelms = this.stores.clubMembers.all()
+            .filter((clubMember) => !helmsById.includes(ClubMember.getId(clubMember)) && !helmsWithoutResultsById.includes(ClubMember.getId(clubMember)));
+
         return new SearchIndex(
-            helmsByScore.map(([helm]) => helm)
+            [...helmsByScore.map(([helm]) => helm)
                 .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
+            ...newHelmsWithoutResults
+                .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
+            ...oldHelmsWithoutResults
+                .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
+            ...membersNotHelms
+                .filter((clubMember) => !helmIdsToExclude.includes(ClubMember.getId(clubMember)))
+            ],
             "name",
         );
     }
 
     getBoatIndexForHelmRace(helm, race) {
-        const boatsByYearById = mapGroupBy(
+        const boatsByYearByClassName = mapGroupBy(
             [...this.stores.ryaClasses.all(), ...this.stores.clubClasses.all()],
-            [BoatClass.getClassYear, BoatClass.getId],
+            [BoatClass.getClassYear, (boat) => boat.getClassName()],
             (boatClasses) => boatClasses[0]
         );
 
@@ -205,7 +258,7 @@ class Indexes {
         );
 
         const classYear = BoatClass.getClassYearForRaceDate(race.getDate());
-        const allClassesForYearById = boatsByYearById.get(classYear);
+        const allClassesForYearByClassName = boatsByYearByClassName.get(classYear);
         const allClassesForYear = boatsByYear.get(classYear);
 
         const getScore = (count, time) => {
@@ -216,7 +269,7 @@ class Indexes {
         }
 
         const sortCountsByScore = (boatCounts) => {
-            return boatCounts.map(([boatId, values]) => [allClassesForYearById.get(boatId), values])
+            return boatCounts.map(([className, values]) => [allClassesForYearByClassName.get(className), values])
                 .filter(([boatClass]) => boatClass)
                 .map(([boatClass, [count, time]]) => [boatClass, [count, new Date(time), getScore(count, time)]])
                 .sort(([, [, , scoreA]], [, [, , scoreB]]) => scoreB - scoreA);
@@ -281,7 +334,7 @@ class Indexes {
     }
 
     static getBoatCounts(results) {
-        const boatCounts = new AutoMap(Result.getBoatClassId, () => [0, 0]);
+        const boatCounts = new AutoMap((result) => result.getBoatClass().getClassName(), () => [0, 0]);
         for (let result of results) {
             boatCounts.upsert(result, ([count, last]) => [count + 1, Math.max(last, result.getRace().getDate().getTime())]);
         }
@@ -333,17 +386,24 @@ export class StoreFunctions {
         this.createOOD = this.createOOD;
         this.deserialiseResult = this.deserialiseResult;
         this.deserialiseOOD = this.deserialiseOOD;
+        this.deserialiseHelm = this.deserialiseHelm;
         this.assertResultNotStored = this.assertResultNotStored;
         this.assertOODNotStored = this.assertOODNotStored;
         this.createHelmFinish = this.createHelmFinish;
         this.deserialiseRegistered = this.deserialiseRegistered;
         this.getRaceFinishForResults = this.getRaceFinishForResults;
-        this.getRaceFinishForRace = this.getRaceFinishForRace;
         this.isRaceMutable = this.isRaceMutable;
         this.isRaceEditableByUser = this.isRaceEditableByUser;
         this.getSailNumberIndexForHelmBoat = this.getSailNumberIndexForHelmBoat;
         this.setSailNumberCounts = this.setSailNumberCounts;
         this.commitFleetResultsForRace = this.commitFleetResultsForRace;
+        this.commitNewHelmsForResults = this.commitNewHelmsForResults;
+        this.getResultsOODsForRace = this.getResultsOODsForRace;
+        this.createHelmFromClubMember = this.createHelmFromClubMember;
+        this.assertHelmNotStored = this.assertHelmNotStored;
+        this.getStoresStatus = this.getStoresStatus;
+        this.updateStoresStatus = this.updateStoresStatus;
+        this.syncroniseStore = this.syncroniseStore;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
         this.indexes = new Indexes(this.stores);
@@ -363,13 +423,57 @@ export class StoreFunctions {
         );
     }
 
+    updateStoresStatus() {
+        this.storesStatus = this.stores.getStatus();
+    }
+
+    syncroniseStore(storeName) {
+        return this.stores.syncroniseStore(storeName);
+    }
+
+    getStoresStatus() {
+        if (!this.storesStatus) {
+            this.updateStoresStatus();
+        }
+        return this.storesStatus;
+    }
+
+    async commitNewHelmsForResults(race, results, oods, newHelms) {
+        await promiseSleep(0);
+        const [raceResults, raceOODs] = this.getResultsOODsForRace(race, results, oods);
+        const newHelmsById = mapGroupBy(newHelms, [Helm.getId]);
+        const helmsToCommit = new AutoMap(Helm.getId);
+        for (let result of raceResults) {
+            if (newHelmsById.has(Result.getHelmId(result))) {
+                helmsToCommit.upsert(result.getHelm());
+            }
+        }
+        for (let ood of raceOODs) {
+            if (newHelmsById.has(HelmResult.getHelmId(ood))) {
+                helmsToCommit.upsert(ood.getHelm());
+            }
+        }
+        for (let [, helm] of [...helmsToCommit]) {
+            this.stores.helms.add(helm);
+        }
+        await this.stores.helms.sync();
+        return [...helmsToCommit].map(([helmId]) => helmId);
+    }
+
+    getResultsOODsForRace(race, results, oods) {
+        const raceResults = results.filter((result) => Result.getRaceId(result) === Race.getId(race));
+        const raceOODs = oods.filter((ood) => Result.getRaceId(ood) === Race.getId(race));
+        return [raceResults, raceOODs];
+    }
+
     async commitFleetResultsForRace(race, results, oods) {
         await promiseSleep(0);
+        const [raceResults, raceOODs] = this.getResultsOODsForRace(race, results, oods);
         this.getRaceFinishForResults(race, results);
-        for (let result of results) {
+        for (let result of raceResults) {
             this.stores.results.add(result);
         }
-        for (let ood of oods) {
+        for (let ood of raceOODs) {
             this.stores.oods.add(ood);
         }
         await this.stores.results.sync();
@@ -407,19 +511,25 @@ export class StoreFunctions {
         return [mutableRaces, immutableRaces];
     }
 
-    createOOD(race, helm) {
+    createOOD(race, helm, newHelms = []) {
         const ood = HelmResult.fromHelmRace(
-            this.stores.helms.get(Helm.getId(helm)),
+            this.stores.getHelmFromHelmId(Helm.getId(helm), newHelms),
             race
         );
         this.assertOODNotStored(ood);
         return ood;
     }
 
-    createRegisteredHelm(race, helm, boatClass, boatSailNumber) {
+    createHelmFromClubMember(clubMember, gender, noviceInFirstRace) {
+        const newHelm = Helm.fromClubMember(clubMember, gender, noviceInFirstRace);
+        this.assertHelmNotStored(newHelm);
+        return newHelm;
+    }
+
+    createRegisteredHelm(race, helm, boatClass, boatSailNumber, newHelms = []) {
         const result = MutableRaceResult.fromUser(
             race,
-            this.stores.helms.get(Helm.getId(helm)),
+            this.stores.getHelmFromHelmId(Helm.getId(helm), newHelms),
             this.stores.clubClasses.has(BoatClass.getId(boatClass))
                 ? this.stores.clubClasses.get(BoatClass.getId(boatClass))
                 : this.stores.ryaClasses.get(BoatClass.getId(boatClass)),
@@ -433,6 +543,20 @@ export class StoreFunctions {
         const result = Result.fromMutableRaceResult(mutableResult, laps, pursuitFinishPosition, finishTime, finishCode);
         this.assertResultNotStored(result);
         return result;
+    }
+
+    assertHelmNotStored(helm) {
+        class HelmExistsError extends Error { };
+        try {
+            const existing = this.stores.helms.get(Helm.getId(helm));
+            throw new HelmExistsError();
+        }
+        catch (err) {
+            if (err instanceof HelmExistsError) {
+                throw err;
+            }
+            return true;
+        }
     }
 
     assertOODNotStored(helmResult) {
@@ -455,7 +579,7 @@ export class StoreFunctions {
         try {
             const resultId = HelmResult.getId(helmResult);
             const existing = this.stores.OODS.has(resultId)
-                ? this.purusitresultsResults.get(resultId)
+                ? this.results.get(resultId)
                 : this.purusitResults.get(resultId);
             throw new ResultExistsError();
         }
@@ -467,47 +591,37 @@ export class StoreFunctions {
         }
     }
 
-    deserialiseRegistered(storedRegistered) {
+    deserialiseHelm(storeHelm) {
+        const helm = this.stores.deserialiseHelm(storeHelm);
+        this.assertHelmNotStored(helm);
+        return helm;
+    }
+
+    deserialiseRegistered(storedRegistered, newHelms = []) {
         // TODO - add error handling
         // missing helm/boat
         // existing result
-        const registered = this.stores.deserialiseResult(storedRegistered, MutableRaceResult);
+        const registered = this.stores.deserialiseResult(storedRegistered, newHelms, MutableRaceResult);
         this.assertResultNotStored(registered);
         return registered;
     }
 
-    deserialiseResult(storeResult) {
+    deserialiseResult(storeResult, newHelms = []) {
         // TODO - add error handling
         // missing helm/boat
         // existing result
-        const result = this.stores.deserialiseResult(storeResult);
+        const result = this.stores.deserialiseResult(storeResult, newHelms);
         this.assertResultNotStored(result);
         return result;
     }
 
-    deserialiseOOD(storeOOD) {
+    deserialiseOOD(storeOOD, newHelms = []) {
         // TODO - add error handling
         // missing helm/boat
         // existing result
-        const ood = this.stores.deserialiseResult(storeOOD, HelmResult);
+        const ood = this.stores.deserialiseResult(storeOOD, newHelms, HelmResult);
         this.assertOODNotStored(ood);
         return ood;
-    }
-
-    getRaceFinishForRace(race) {
-        const storedOODs = this.stores.oods.all();
-        const storedPursuitResults = this.stores.purusitResults.all();
-        const storedFleetResults = this.stores.results.all();
-        const storedSeriesRaces = this.stores.seriesRaces.all();
-
-        const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(
-            storedOODs,
-            storedPursuitResults,
-            storedFleetResults,
-            storedSeriesRaces,
-        );
-
-        return raceFinishes.find((raceFinish) => Race.getId(raceFinish) === Race.getId(race));
     }
 
     getRaceFinishForResults(race, mutableResults = [], mutableOODs = [], mutableSeriesRaces = []) {

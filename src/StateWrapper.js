@@ -1,9 +1,10 @@
-import { Outlet, useSearchParams } from "react-router-dom";
+import { Outlet, useParams, useSearchParams } from "react-router-dom";
 import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState";
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
 import { getSheetIdFromURL } from "./common";
-import { Button, Box } from "@chakra-ui/react";
+import { Button, Box, Text } from "@chakra-ui/react";
+import { GreenButton, RedButton } from "./components/Buttons";
 import { StoreFunctions } from "./store/Stores";
 import { tokenGenerator } from "./token.js";
 
@@ -43,11 +44,15 @@ async function initialiseServices(token, urlToken) {
     };
 }
 
-const STATE_DESERIALISER = ({ registered, results, oods }, services) => {
+const STATE_DESERIALISER = ({ registered, results, oods, newHelms, isPursuitRace }, services) => {
+    const deserialisedHelms = newHelms.map((newHelm) => services.deserialiseHelm(newHelm));
+
     return {
-        registered: registered.map((registeredResult) => services.deserialiseRegistered(registeredResult)),
-        results: results.map((result) => services.deserialiseResult(result)),
-        oods: oods.map((ood) => services.deserialiseOOD(ood)),
+        registered: registered.map((registeredResult) => services.deserialiseRegistered(registeredResult, deserialisedHelms)),
+        results: results.map((result) => services.deserialiseResult(result, deserialisedHelms)),
+        oods: oods.map((ood) => services.deserialiseOOD(ood, deserialisedHelms)),
+        newHelms: deserialisedHelms,
+        isPursuitRace,
     };
 };
 
@@ -55,6 +60,8 @@ const DEFAULT_STATE = {
     results: [],
     registered: [],
     oods: [],
+    newHelms: [],
+    isPursuitRace: false,
 };
 
 const DEFAULT_SERVICE_STATE = {
@@ -124,8 +131,6 @@ function ServicesWrapper({ token, urlToken }) {
         );
     }
 
-    // console.log(services);
-
     return (
         <StateWrapper />
     );
@@ -147,12 +152,13 @@ function StateOutlet() {
     const [state, updateAppState] = useAppState(DEFAULT_STATE);
     const services = useServices();
 
-    console.log(state);
+    useEffect(() => {
+        services.updateStoresStatus();
+    }, [state]);
+
     return (
         <>
-            {/* <Box>
-                <Debug />
-            </Box> */}
+            <Debug />
             {!state &&
                 <p>Loading state...</p>
             }
@@ -165,18 +171,79 @@ function StateOutlet() {
             {state && services.ready &&
                 <Outlet />
             }
-            {/* This is a bit gross as it relies on the Outlet implementations to not render until they have state but they're currently forcing a redirect*/}
-            {/* <Outlet /> */}
         </>
     )
 }
 
+function StoreSync({ store }) {
+    const [syncronizing, updateSyncronizing] = useState(false);
+    const [failed, updateFailed] = useState(false);
+    const services = useServices();
+
+    const syncStore = (store) => {
+        updateSyncronizing(true);
+        services.syncroniseStore(store)
+            .then(() => updateSyncronizing(false))
+            .catch(() => updateFailed(true));
+    }
+
+    return <>
+        {!failed &&
+            <RedButton onClick={(() => syncStore(store))} isLoading={syncronizing} loadingText={`Syncronizing Store: ${store}`}>{`Synchronise store: ${store}`}</RedButton>
+        }
+        {failed &&
+            <RedButton onClick={(() => syncStore(store))} disabled={true}>{`Synchronise store: ${store} failed`}</RedButton>
+        }
+    </>
+}
+
+function StoresSync() {
+    const services = useServices();
+
+    return <>
+        {Object.entries(services.getStoresStatus()).map(([store, synced], index) => (
+            <Box key={`StoreSync${index}`}>
+                {synced &&
+                    <Box>
+                        <GreenButton disabled={true}>{`Store: ${store} is in sync`}</GreenButton>
+                    </Box>
+                }
+                {!synced &&
+                    <Box>
+                        <StoreSync store={store} />
+                    </Box>
+                }
+            </Box>
+        ))
+        }
+    </>;
+}
+
 function Debug() {
     const [state, updateAppState] = useAppState();
+    let [searchParams, setSearchParams] = useSearchParams();
+    const [debug, updateDebug] = useState();
+    const [showState, updateShowState] = useState(false);
+
+    useEffect(() => {
+        if (!debug) {
+            const debug = searchParams.get("debug");
+            if (debug) {
+                updateDebug(true);
+                setSearchParams();
+            }
+        }
+    }, []);
+
+    if (!debug) {
+        return <></>;
+    }
 
     return (
         <>
             <Button onClick={() => console.log(state)}>Log state</Button>
+            <Button onClick={() => localStorage.clear()}>Clear cache</Button>
+            <Button onClick={() => updateShowState(!showState)}>Show state</Button>
             <Button onClick={() => updateAppState((prevState) => ({
                 ...prevState,
                 count:
@@ -185,6 +252,10 @@ function Debug() {
                         : 1
             }))}
             >Update state</Button>
+            <StoresSync />
+            <Box>
+                <Text>{`${JSON.stringify(state, null, 4)}`}</Text>
+            </Box>
         </>
     )
 }

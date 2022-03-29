@@ -1,8 +1,10 @@
 import { Box, Button, Flex, Heading, List, ListItem, Text, Spacer, Grid, GridItem, useDisclosure } from "@chakra-ui/react";
-import { AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter } from "@chakra-ui/react";
+import {
+    AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter
+} from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useAppState, useServices } from "../useAppState";
 import { getURLDate, parseURLDate, useBack } from "../common";
@@ -12,6 +14,8 @@ import Result from "../store/types/Result";
 import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpers.js";
 
 import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import Helm from "../store/types/Helm";
 
 const RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
 
@@ -85,7 +89,9 @@ function secondsToMinutesSeconds(totalSeconds) {
 }
 
 function formatMinutesSeconds([minutes, seconds]) {
-    const pad = (v) => `0${Math.round(v)}`.slice(-2);
+    const pad = (v) => {
+        return `0${Math.round(v)}`.slice(v > 100 ? -3 : -2);
+    }
     return [pad(minutes), pad(seconds)].join(":");
 }
 
@@ -96,6 +102,10 @@ function formatBoatClass(className) {
 
 function formatPI(personalInterval) {
     return Math.round((personalInterval + Number.EPSILON) * 100) / 100;
+}
+
+function formatFleetPursuit(isPursuitRace) {
+    return isPursuitRace ? "pursuit" : "fleet";
 }
 
 function ResultDimension({ children, ...props }) {
@@ -143,17 +153,27 @@ function getDimensionValue(dimension, result) {
         case "CLASS_HANDICAP":
             return result.getBoatClass().getPY();
         case "PERSONAL_CORRECTED_TIME":
-            return formatMinutesSeconds(secondsToMinutesSeconds(result.getPersonalCorrectedFinishTime()));
+            return result.isValidFinish()
+                ? formatMinutesSeconds(secondsToMinutesSeconds(result.getPersonalCorrectedFinishTime()))
+                : "DNF"
         case "PERSONAL_HANDICAP_RESULT":
-            return result.getPersonalHandicapFromRace();
+            return result.isValidFinish()
+                ? result.getPersonalHandicapFromRace()
+                : "DNF"
         case "PERSONAL_INTERVAL":
-            return formatPI(calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()));
+            return result.isValidFinish()
+                ? formatPI(calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()))
+                : "DNF"
         case "PERSONAL_INTERVAL_FROM_PH":
             return formatPI(calculatePIFromPersonalHandicap(result.getRollingPersonalHandicapBeforeRace(), result.getPersonalHandicapFromRace()));
         case "CLASS_CORRECTED_TIME":
-            return formatMinutesSeconds(secondsToMinutesSeconds(result.getClassCorrectedTime()));
+            return result.isValidFinish()
+                ? formatMinutesSeconds(secondsToMinutesSeconds(result.getClassCorrectedTime()))
+                : "DNF"
         case "FINISH_TIME":
-            return formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()));
+            return result.isValidFinish()
+                ? formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()))
+                : "DNF"
         case "LAPS":
             return result.getLaps();
         default:
@@ -200,7 +220,8 @@ function RegisteredListItem({ registered, onClick }) {
     </>
 }
 
-function AlertDialogExample({ children, deleteHeading, deleteBody, onConfirm }) {
+function AlertDialogWrapper
+    ({ children, deleteHeading, onConfirm, confirmButtonText = "Delete" }) {
     const cancelRef = React.useRef();
     const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -216,6 +237,7 @@ function AlertDialogExample({ children, deleteHeading, deleteBody, onConfirm }) 
             </Box>
             <>
                 <AlertDialog
+
                     isOpen={isOpen}
                     leastDestructiveRef={cancelRef}
                     onClose={onClose}
@@ -235,7 +257,7 @@ function AlertDialogExample({ children, deleteHeading, deleteBody, onConfirm }) 
                                     Cancel
                                 </Button>
                                 <Button colorScheme='red' onClick={onDelete} ml={3}>
-                                    Delete
+                                    {confirmButtonText}
                                 </Button>
                             </AlertDialogFooter>
                         </AlertDialogContent>
@@ -257,9 +279,28 @@ function DeleteFinisher({ finisher, children }) {
     };
 
     return (
-        <AlertDialogExample onConfirm={() => deleteFinisher()} deleteHeading={`Delete result for ${HelmResult.getHelmId(finisher)}.`}>
+        <AlertDialogWrapper
+            onConfirm={() => deleteFinisher()} deleteHeading={`Delete result for ${HelmResult.getHelmId(finisher)}.`}>
             {children}
-        </AlertDialogExample >
+        </AlertDialogWrapper>
+    )
+}
+
+function DeleteRegistered({ registeredToDelete, children }) {
+    const [, updateAppState] = useAppState();
+
+    const deleteRegistered = () => {
+        updateAppState(({ registered, ...state }) => ({
+            ...state,
+            registered: registered.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(registeredToDelete)),
+        }));
+    };
+
+    return (
+        <AlertDialogWrapper
+            onConfirm={() => deleteRegistered()} deleteHeading={`Delete registered helm: ${HelmResult.getHelmId(registeredToDelete)}.`}>
+            {children}
+        </AlertDialogWrapper>
     )
 }
 
@@ -275,9 +316,10 @@ function DeleteOOD({ ood, children }) {
     };
 
     return (
-        <AlertDialogExample onConfirm={() => deleteOOD()} deleteHeading={`Delete OOD: ${HelmResult.getHelmId(ood)}.`}>
+        <AlertDialogWrapper
+            onConfirm={() => deleteOOD()} deleteHeading={`Delete OOD: ${HelmResult.getHelmId(ood)}.`}>
             {children}
-        </AlertDialogExample >
+        </AlertDialogWrapper>
     )
 }
 
@@ -300,18 +342,20 @@ function FinisherListItem({ result }) {
     const sailNumber = result.getSailNumber();
     const finishTime = formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()));
     const laps = result.getLaps();
+    const validFinish = result.isValidFinish();
 
     return <>
         <DeleteFinisher finisher={result} >
             <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
                 <Flex>
                     <Grid
-                        templateColumns='repeat(3, 1fr)'
+                        templateColumns='repeat(17, 1fr)'
                         gap={3}
                         width={"100%"}>
-                        <ResultDimension colSpan={1}>{helmName}</ResultDimension>
-                        <ResultDimension colSpan={1}>{`${boatClass}, ${sailNumber}`}</ResultDimension>
-                        <ResultDimension colSpan={1}>{`${laps} lap${laps > 1 ? "s" : ""} in ${finishTime}`}</ResultDimension>
+                        <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                        <ResultDimension colSpan={5}>{`${sailNumber}, ${boatClass}`}</ResultDimension>
+                        {validFinish && <ResultDimension colSpan={6}>{`${laps} lap${laps > 1 ? "s" : ""} in ${finishTime}`}</ResultDimension>}
+                        {!validFinish && <ResultDimension colSpan={6}>{"DNF"}</ResultDimension>}
                     </Grid>
                 </Flex>
             </Box>
@@ -390,12 +434,78 @@ function RegisteredView({ registered, ...props }) {
         <ResultsList {...props}>
             {registered.map((registeredHelm) =>
                 <ListItem key={HelmResult.getId(registeredHelm)}>
-                    <RegisteredListItem registered={registeredHelm} onClick={() => navigateTo(`register/${HelmResult.getHelmId(registeredHelm)}`)} />
+                    <RegisteredListItem
+                        registered={registeredHelm}
+                        onClick={() => navigateTo(`fleetFinish/${HelmResult.getHelmId(registeredHelm)}`)} />
                 </ListItem>
             )}
         </ResultsList>
     );
 }
+
+function PursuitFinishView({ registered, onPositionsUpdated, ...props }) {
+    const onDragEnd = (result) => {
+        const { destination, source, draggableId } = result;
+
+        if (!destination) {
+            return;
+        }
+
+        if (destination.droppableId === source.droppableId && destination.index === source.index) {
+            return;
+        }
+
+        const newRegistered = [...registered];
+        const [removed] = newRegistered.splice(source.index, 1);
+        newRegistered.splice(destination.index, 0, removed);
+        onPositionsUpdated(newRegistered);
+    }
+    return (
+        <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="pursuitFinish">
+                {(provided) =>
+                    <PursuitResultsList
+                        innerRef={provided.innerRef}
+                        {...provided.droppableProps}
+                        {...props}
+                    >
+                        {registered.map((registeredHelm, index) =>
+                            <PursuitResultsList key={HelmResult.getId(registeredHelm)}>
+                                <Draggable draggableId={HelmResult.getId(registeredHelm)} index={index}>
+                                    {(provided) =>
+                                        <ListItem
+                                            key={HelmResult.getId(registeredHelm)}
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+
+                                        >
+                                            <DeleteRegistered registeredToDelete={registeredHelm}>
+                                                <RegisteredListItem registered={registeredHelm} />
+                                            </DeleteRegistered>
+                                        </ListItem>
+                                    }
+                                </Draggable>
+                            </PursuitResultsList>
+                        )}
+                        {provided.placeholder}
+                    </PursuitResultsList>
+                }
+            </Droppable>
+        </DragDropContext>
+    );
+}
+
+function PursuitResultsList({ children, innerRef, ...props }) {
+    return (
+        <Box ref={innerRef} {...props}>
+            <List spacing="5px">
+                {children}
+            </List>
+        </Box>
+    )
+}
+
 
 function FinisherView({ results, ...props }) {
     return (
@@ -421,7 +531,7 @@ function OODView({ oods, ...props }) {
     );
 }
 
-function ResultsList({ children, ...props }) {
+function ResultsList({ children, isDisabled, ...props }) {
     return (
         <Box {...props}>
             <List spacing="5px">
@@ -429,6 +539,71 @@ function ResultsList({ children, ...props }) {
             </List>
         </Box>
     )
+}
+
+function CommitResultsDialog({ race, onSuccess, onFailed, onStarted, children }) {
+    const [appState, updateAppState] = useAppState();
+    const services = useServices();
+    const [committing] = useState(false);
+
+    const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
+    const raceOODs = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
+    const allNewHelms = appState.newHelms;
+
+    const asyncCommitNewHelms = async () => {
+        if (committing) {
+            return;
+        }
+        return services
+            .commitNewHelmsForResults(race, raceResults, raceOODs, allNewHelms)
+            .then((helmIdsRemoved) =>
+                updateAppState(({ newHelms, ...state }) => ({
+                    ...state,
+                    newHelms: newHelms.filter((newHelm) => !helmIdsRemoved.includes(Helm.getId(newHelm))),
+                }))
+            )
+            .catch((err) => onFailed(err));
+    };
+
+    const asyncCommitResults = async () => {
+        if (committing) {
+            return;
+        }
+        return services
+            .commitFleetResultsForRace(race, raceResults, raceOODs)
+            .then(() =>
+                updateAppState(({ results, oods, ...state }) => ({
+                    ...state,
+                    // TODO need to test this is correctly removed (safer to use ID lookups)
+                    results: results.filter((result) => !raceResults.includes(result)),
+                    oods: oods.filter((ood) => !raceOODs.includes(ood))
+                }))
+            )
+            .then(() => onSuccess())
+            .catch((err) => onFailed(err))
+    };
+
+
+    const commitResults = () => {
+        if (committing) {
+            return;
+        }
+        onStarted();
+        asyncCommitNewHelms()
+            .then(() => asyncCommitResults());
+    };
+
+    return (
+        <AlertDialogWrapper
+            onConfirm={() => commitResults()}
+            deleteHeading={
+                raceOODs.length ? `Are you sure you want to commit results?`
+                    : `No OODS have been registered. Are you sure you want to commit results?`}
+            confirmButtonText={"Commit results"}
+        >
+            {children}
+        </AlertDialogWrapper>
+    );
 }
 
 export default function Race() {
@@ -451,51 +626,65 @@ export default function Race() {
     const oods = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
 
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
-    const commitResults = () => {
+    const committingResultsStarted = () => {
         setCommittingResults(true);
-        services
-            .commitFleetResultsForRace(race, raceResults, oods)
-            .catch((err) => console.log(err))
-            .then(() =>
-                updateAppState(({ results, ...state }) => ({
-                    ...state,
-                    results: results.filter((result) => !raceResults.includes(result)),
-                }))
-            )
-            .then(() => updateEditingRace(false))
-            .then(() => setRaceIsMutable(services.isRaceMutable(raceDate, raceNumber)))
-            .then(() => setCommittingResults(false));
-        console.log("Commit results");
     };
+
+    const committingResultsSuccess = () => {
+        updateEditingRace(false);
+        setRaceIsMutable(services.isRaceMutable(raceDate, raceNumber));
+        setCommittingResults(false);
+    };
+
+    const committingResultsFailed = () => {
+        throw new Error("Failed to commit results to store");
+    };
+
+    const updatePursuitPositions = (newRegistered) => {
+        updateAppState(({ registered, ...state }) => ({
+            ...state,
+            registered: newRegistered,
+        }));
+    }
+
+    const setIsPursuitRace = (value) => {
+        updateAppState(({ isPursuitRace, ...state }) => ({
+            ...state,
+            isPursuitRace: value,
+        }))
+    }
 
     return (
         <>
-            <Flex direction="column" margin="5px">
+            <Flex direction="column" margin="5px" minHeight="90vh">
                 <Box marginTop="20px" />
-                {/* <Center width="100%"> */}
                 <Flex direction="row" marginBottom="20px">
                     <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
                     <Spacer width="50px" />
-                    <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} race`}</Heading>
+                    <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(appState.isPursuitRace)} race`}</Heading>
                 </Flex>
-                {/* </Center> */}
                 {raceIsMutable && editingRace &&
                     <>
-                        <BackButton>Back to races</BackButton>
-                        <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
-                        <Flex direction="column" marginBottom="20px">
-                            <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
-                        </Flex>
-                        {Boolean(raceRegistered.length) &&
+                        {!appState.isPursuitRace &&
                             <>
-                                <Heading size={"lg"} marginBottom="10px">Registered</Heading>
-                                <RegisteredView marginBottom="20px" registered={raceRegistered} />
+                                {Boolean(raceRegistered.length) &&
+                                    <>
+                                        <Heading size={"lg"} marginBottom="10px">Registered</Heading>
+                                        <RegisteredView marginBottom="20px" registered={raceRegistered} />
+                                    </>
+                                }
+                                {Boolean(raceResults.length) &&
+                                    <>
+                                        <Heading size={"lg"} marginBottom="10px">Finishers</Heading>
+                                        <FinisherView marginBottom="20px" results={raceResults} />
+                                    </>
+                                }
                             </>
                         }
-                        {Boolean(raceResults.length) &&
+                        {appState.isPursuitRace &&
                             <>
-                                <Heading size={"lg"} marginBottom="10px">Finishers</Heading>
-                                <FinisherView marginBottom="20px" results={raceResults} />
+                                <Heading size={"lg"} marginBottom="10px">Registered</Heading>
+                                <PursuitFinishView marginBottom="20px" registered={raceRegistered} onPositionsUpdated={updatePursuitPositions} />
                             </>
                         }
                         {Boolean(oods.length) &&
@@ -512,11 +701,14 @@ export default function Race() {
                             onClick={() => updateEditingRace(true)}
                             isDisabled={committingResults}
                         >Edit results</RedButton>
-                        <BlueButton
-                            onClick={() => commitResults()}
-                            isLoading={committingResults}
-                            loadingText='Committing Results'
-                        >Commit results</BlueButton>
+                        <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
+                            <BlueButton
+                                onClick={(event) => event.preventDefault()}
+                                isLoading={committingResults}
+                                loadingText='Committing Results'
+                                style={{ width: "100%" }}
+                            >Commit results</BlueButton>
+                        </CommitResultsDialog>
                         <RaceResultsView results={raceResults} race={race} isDisabled={committingResults} />
 
                         {Boolean(oods.length) &&
@@ -528,14 +720,25 @@ export default function Race() {
                     </>
                 }
                 {!raceIsMutable &&
-                    <>
-                        <BackButton>Back to races</BackButton>
-                        <RaceResultsView race={race} />
-                    </>
+                    <RaceResultsView race={race} />
                 }
                 {editingRace && !raceRegistered.length && raceResults.length > 2 &&
                     <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>
                 }
+                <Spacer />
+                {raceIsMutable && editingRace &&
+                    <>
+                        <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
+                        <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
+                        {!Boolean(raceResults.length) &&
+                            <>
+                                {!appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Set to pursuit race</BlueButton>}
+                                {appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Set to fleet race</BlueButton>}
+                            </>
+                        }
+                    </>
+                }
+                <BackButton disabled={committingResults}>Back to races</BackButton>
             </Flex>
         </>
     )

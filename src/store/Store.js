@@ -46,6 +46,23 @@ export default class Store {
         return this.lastSyncDate;
     }
 
+    storesInSync() {
+        if (!this.hasRemoteStore) {
+            throw new Error(`Cannot sync local store as no remote store exists for ${this.storeName}`);
+        }
+
+        const syncDate = this.getLastSyncDate();
+        const allLocal = this.all();
+        let created = allLocal
+            .filter((obj) => obj.createdAfterDate(syncDate));
+
+        let updated = allLocal
+            .filter((obj) => obj.updatedAfterDate(syncDate))
+            .filter((obj) => !created.includes(obj));
+
+        return !updated.length && !created.length;
+    }
+
     async syncRemoteStateToLocalState(force = false) {
         if (!this.hasRemoteStore) {
             throw new Error(`Cannot sync local store as no remote store exists for ${this.storeName}`);

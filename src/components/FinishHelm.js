@@ -22,10 +22,12 @@ import {
 } from '@chakra-ui/react';
 
 import { CheckCircleIcon } from '@chakra-ui/icons';
+import FinishCode from "../store/types/FinishCode";
 
 function FinishHelm() {
     const navigateBack = useBack();
     const [finishTimeSeconds, setFinishTimeSeconds] = useState();
+    const [isDNF, setIsDNF] = useState(false);
     const [finishedLaps, setFinishedLaps] = useState();
     const [appState, updateAppState] = useAppState();
     const services = useServices();
@@ -62,7 +64,7 @@ function FinishHelm() {
                     ],
                     results: [
                         ...results,
-                        services.createHelmFinish(registeredResult, finishedLaps, undefined, finishTimeSeconds),
+                        services.createHelmFinish(registeredResult, finishedLaps, undefined, finishTimeSeconds, isDNF ? new FinishCode("DNF") : undefined),
                     ],
                 };
             }
@@ -85,21 +87,6 @@ function FinishHelm() {
 
     return (
         <>
-
-
-            {/* <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
-                <Flex direction={"row"}>
-                    <Box minWidth="110px" paddingTop="5px">
-                        <Text fontSize={"lg"}>{heading}</Text>
-                    </Box>
-                    <Box {...getComboboxProps()}>
-                        <InputGroup>
-                            <Input {...getInputProps()} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
-                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                        </InputGroup>
-                    </Box>
-                </Flex>
-            </Box> */}
             <form onSubmit={(evt) => evt.preventDefault()}>
                 <Center height="80vh">
                     <Flex direction={"column"} height="80vh" width="100%">
@@ -145,12 +132,13 @@ function FinishHelm() {
                             </Box>
                             <FinishTimeSelector
                                 setFinishTimeSeconds={setFinishTimeSeconds}
+                                setDNF={setIsDNF}
                             />
                             {finishTimeSeconds &&
                                 <LapsSelector onLapsUpdated={setFinishedLaps} />
                             }
                             <Spacer />
-                            {finishedLaps &&
+                            {(finishedLaps || isDNF) &&
                                 <Button tabIndex="-1" backgroundColor="green.500" onClick={finishHelm} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
                             }
                             <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>

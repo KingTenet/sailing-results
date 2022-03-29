@@ -84,7 +84,6 @@ export default class Result extends HelmResult {
 
     sortByFinishTimeDesc(secondResult) {
         assertType(secondResult, Result);
-        debugger;
         return secondResult.getFinishTime() - this.getFinishTime();
     }
 

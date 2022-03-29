@@ -7,10 +7,14 @@ import { Center, Text, Button, Flex, Spacer } from '@chakra-ui/react'
 import { useParams } from "react-router-dom";
 import Race from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
+import Helm from "../store/types/Helm";
+import ClubMember from "../store/types/ClubMember";
+import NewHelm from "./NewHelm";
 
 function RegisterHelm() {
     const navigateBack = useBack();
     const [selectedHelm, setSelectedHelm] = useState(null);
+    const [selectedClubMember, setSelectedClubMember] = useState(null);
 
     const [appState, updateAppState] = useAppState();
     const services = useServices();
@@ -28,11 +32,11 @@ function RegisterHelm() {
         ...appState.oods.filter((result) => HelmResult.getRaceId(result) === Race.getId(race))
     ].map((result) => result.getHelm()));
 
-    const [helmsIndex] = useState(() => services.indexes.getHelmsIndex(excludedHelmIds));
+    const [helmsIndex, setHelmsIndex] = useState(null);
 
     const processHelmResult = (event) => {
         event.preventDefault();
-        const newRegisteration = services.createOOD(race, selectedHelm);
+        const newRegisteration = services.createOOD(race, selectedHelm, appState.newHelms);
 
         updateAppState(({ registered, results, oods, ...state }) => {
             if (registered.find((prev) => HelmResult.getId(prev) === HelmResult.getId(newRegisteration))
@@ -59,7 +63,39 @@ function RegisterHelm() {
 
     useEffect(() => {
         services.indexes.updateFromResults(appState.results);
+        if (!selectedHelm) {
+            setHelmsIndex(services.indexes.getHelmsIndex(excludedHelmIds, appState.newHelms))
+        }
     }, [appState.results]);
+
+    const handleSelectedHelm = (selectedHelm) => {
+        if (selectedHelm instanceof ClubMember) {
+            // Do some club member stuff..
+            setSelectedClubMember(selectedHelm);
+        }
+        else {
+            setSelectedHelm(selectedHelm);
+        }
+    };
+
+    const onNewHelm = (newHelm) => {
+        updateAppState(({ newHelms, ...state }) => {
+            if (newHelms.find((prev) => Helm.getId(prev) === Helm.getId(newHelm))) {
+                throw new Error("Cannot add helm that already exists");
+            }
+            else {
+                return {
+                    ...state,
+                    newHelms: [
+                        ...newHelms,
+                        newHelm,
+                    ]
+                };
+            }
+        });
+
+        setSelectedHelm(newHelm);
+    };
 
     return (
         <>
@@ -67,17 +103,18 @@ function RegisterHelm() {
                 <Center height="80vh">
                     <Flex direction={"column"} height="80vh" width="100%">
                         <Flex direction={"column"} height="100%" >
-                            <Autocomplete
-                                heading={"Helm"}
+                            {helmsIndex && !selectedClubMember && <Autocomplete
+                                heading={"OOD"}
                                 data={helmsIndex.data}
                                 itemToString={(helm) => (helm ? helm.getName() : "")}
                                 filterData={(inputValue) => helmsIndex.search(inputValue)}
-                                handleSelectedItemChange={setSelectedHelm}
-                                getInvalidItemString={(partialMatch) => `${partialMatch} has not raced before, create a new helm record`}
-                                createNewMessage={"Add OOD to race"}
+                                handleSelectedItemChange={handleSelectedHelm}
                                 placeholder={"Enter name here..."}
-                                openOnFocus={true}
                             />
+                            }
+                            {
+                                selectedClubMember && <NewHelm onNewHelm={onNewHelm} clubMember={selectedClubMember} />
+                            }
                         </Flex>
                         <Spacer />
                         {selectedHelm &&

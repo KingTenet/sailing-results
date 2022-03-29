@@ -16,7 +16,7 @@ async function run(date = (new Date(Date.now())).toISOString().slice(0, 10), num
     );
 
     console.log("Creating token:");
-    console.log(`Race date: ${raceDate}`);
+    console.log(`Race dates: ${raceDate}`);
     console.log(`Number of races: ${numberOfRaces}`);
     console.log(`Client email: ${auth.clientEmail}`);
     console.log(`Sheet id: ${resultsSheetId}`);
