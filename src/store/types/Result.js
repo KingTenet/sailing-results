@@ -25,6 +25,11 @@ export default class Result extends HelmResult {
         }
     }
 
+    static getBoatClassName(result) {
+        assertType(result, Result);
+        return result.getBoatClass().getClassName();
+    }
+
     static getBoatClassId(result) {
         assertType(result, Result);
         return BoatClass.getId(result.boatClass);

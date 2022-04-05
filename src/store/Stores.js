@@ -8,7 +8,6 @@ import BoatClass from "./types/BoatClass.js";
 import CorrectedResult from "./types/CorrectedResult.js";
 import Series from "./types/Series.js";
 import Race from "./types/Race.js";
-// import RaceFinish from "./types/RaceFinish.js";
 import SeriesPoints from "./types/SeriesPoints.js";
 import HelmResult from "./types/HelmResult.js";
 import bootstrapLocalStorage from "../bootstrapLocalStorage.js";
@@ -103,42 +102,31 @@ export class Stores {
     //     );
     // }
 
-    processResults() {
-        const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(this.oods.all(), this.purusitResults.all(), this.results.all(), this.seriesRaces.all());
+    processResults(tranformResults) {
+        const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(this.oods.all(), this.purusitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
         this.raceFinishes = raceFinishes;
         this.allCorrectedResults = allCorrectedResults;
         this.seriesPoints = seriesPoints;
     }
 
-    static processResultsStatic(allOODs, allPursuitResults, allFleetResults, allSeriesRaces) {
+    static processResultsStatic(allOODs, allPursuitResults, allFleetResults, allSeriesRaces, transformResults = (results) => results) {
         const oodsByRace = new Map(groupBy(allOODs, HelmResult.getRaceId));
         const raceFinishes = new AutoMap(Race.getId);
         for (let [, oods] of [...oodsByRace]) {
+            // This assigns oods to races, but will be replaced if helms also sailed in that race too.
             raceFinishes.upsert(MutableRaceFinish.fromOODs(oods));
         }
 
-        for (let [, raceResults] of Race.groupResultsByRaceAsc(allPursuitResults)) {
-            raceFinishes.upsert(MutableRaceFinish.fromResults(raceResults));
+        for (let [race, raceResults] of Race.groupResultsByRaceAsc(transformResults(allPursuitResults))) {
+            raceFinishes.upsert(MutableRaceFinish.fromResults(raceResults, undefined, oodsByRace.get(Race.getId(race)) || []));
         }
 
-        allFleetResults
-            .filter((result) => result.hasStaleRemote())
-            .forEach((result) => console.log(result));
-
         const allCorrectedResults = [];
-        for (let [race, raceResults] of Race.groupResultsByRaceAsc(allFleetResults)) {
-            try {
-                if (raceResults.some((result) => result.hasStaleRemote())) {
-                    console.log(`${Race.getId(race)} has stale results`);
-                }
-                const raceFinish = MutableRaceFinish.fromResults(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
+        for (let [race, raceResults] of Race.groupResultsByRaceAsc(transformResults(allFleetResults))) {
+            const raceFinish = MutableRaceFinish.fromResults(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
 
-                raceFinishes.upsert(raceFinish);
-                allCorrectedResults.push(...raceFinish.getCorrectedResults());
-            }
-            catch (err) {
-                throw err;
-            }
+            raceFinishes.upsert(raceFinish);
+            allCorrectedResults.push(...raceFinish.getCorrectedResults());
         }
 
         const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);

@@ -2,6 +2,7 @@ import { getSheetIdFromURL } from "../src/common.js";
 import { Stores } from "../src/store/Stores.js";
 import Race from "../src/store/types/Race.js";
 import auth from "./auth.js";
+import { calculateSCTFromRaceResults } from "../src/common/personalHandicapHelpers.js";
 
 global.DEBUG = true;
 
@@ -45,12 +46,21 @@ async function run(seriesSearchStr, raceSearchStr, personalHandicapStr = false, 
             if (raceFinish) {
                 console.log(`Found race: ${Race.getId(raceFinish)}`);
                 summarizeRaceFinish(seriesFinish, raceFinish, !personalHandicap, true);
+                SCTdebug(raceFinish);
             }
         }
     }
 
     // const seriesId = stores.seriesPoints.find(([,seriesPoints]) => series.includes(seriesSearch));
     // const raceNumber = parseInt(raceNumberSearch);
+}
+
+function SCTdebug(raceFinish) {
+    console.log(`SCT for race: ${raceFinish.getSCT() / raceFinish.getMaxLaps()} `);
+    const raceResults = raceFinish.getCorrectedResults();
+    calculateSCTFromRaceResults(raceResults, true);
+
+    // console.log(JSON.stringify(racePoints, null, 4));
 }
 
 function summarizeRaceFinish(seriesFinish, raceFinish, byClassHandicap, usePHFromSeriesStart = true) {

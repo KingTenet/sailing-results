@@ -1,4 +1,4 @@
-import { groupBy, assertType, average, parseISOString } from "../common.js";
+import { groupBy, assertType, average, parseISOString, logDebug } from "../common.js";
 import BoatClass from "../store/types/BoatClass.js";
 import CorrectedResult from "../store/types/CorrectedResult.js";
 import Race from "../store/types/Race.js";
@@ -21,39 +21,69 @@ PH = PI / 100 * (class PN)
 The values of PH in each race are shown on the race results, and saved in a database to be used to calculate the fixed average personal handicap used for the personal handicap based series results
 
 */
-export function calculateSCTFromRaceResults(raceResults) {
-    if (raceResults.some((result) => result.getRace().isBefore(FIRST_RACE_FOR_ADVANCED_SCT_CALC))) {
-        return calculateBasicSCTFromRaceResults(raceResults);
-    }
+export function calculateSCTFromRaceResults(raceResults, debug) {
+    const log = (msg) => logDebug(msg, debug);
 
     const finishers = raceResults
         .filter((result) => result.finishCode.validFinish());
-    const raceMaxLaps = getLapsForNormalisation(finishers);
 
     let compliesWithRYA = true;
 
     if (finishers.length < 4) {
         compliesWithRYA = false;
-        // return undefined;
     }
 
     const classes = groupBy(finishers, Result.getBoatClassId);
     if (classes.length < 2) {
         compliesWithRYA = false;
-        // return undefined;
     }
 
-    // TODO re-enable 
-    // const resultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
-    const resultsToCountForACT = Math.round(finishers.length * 2 / 3);
+    log("Complies with RYA " + compliesWithRYA);
+
+    if (raceResults.some((result) => result.getRace().isBefore(FIRST_RACE_FOR_ADVANCED_SCT_CALC))) {
+        log("Using basic SCT calculation");
+        return [...calculateBasicSCTFromRaceResults(raceResults), compliesWithRYA];
+    }
+
+    log("Valid finishers " + finishers.length);
+    const raceMaxLaps = getLapsForNormalisation(finishers);
+
+    log("Max laps " + raceMaxLaps);
+
+    // The previous system has variously used Math.round and Math.ceil for this calculation
+    // the documentation suggests it should be Math.ceil
+    const numResultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
+
+    log(`Number of results to count for ACT: ${numResultsToCountForACT}`);
 
     const finishTimes = finishers
         .map((result) => result.getClassCorrectedTime(raceMaxLaps))
         .sort((a, b) => b - a);
 
-    const ACT = average(finishTimes.slice(-resultsToCountForACT));
+    log(`Class corrected times: ${finishTimes}`);
+    log(`Class corrected times per lap: ${finishTimes.map((ft) => ft / raceMaxLaps)}`);
 
-    return [average(finishTimes.filter((time) => time < (ACT * 1.05))), raceMaxLaps];
+    const resultsToCountForACT = finishTimes.slice(-numResultsToCountForACT);
+    log(`Results to count for ACT: ${resultsToCountForACT}`);
+
+    const ACT = average(resultsToCountForACT);
+
+    log(`ACT: ${ACT}`);
+    log(`ACT per lap: ${ACT / raceMaxLaps}`);
+
+    const resultsToCountForSCT = finishTimes.filter((time) => time < (ACT * 1.05));
+    log(`Number of results to count for SCT: ${resultsToCountForSCT.length}`);
+    log(`Results to count for SCT: ${resultsToCountForSCT}`);
+    const SCT = average(resultsToCountForSCT);
+
+    log(`SCT: ${SCT}`);
+    log(`SCT per lap: ${SCT / raceMaxLaps}`);
+    log(`SCT x 105%: ${SCT * 1.05}`);
+    log(`SCT per lap x 105%: ${SCT / raceMaxLaps * 1.05}`);
+
+    log(`Results < 105% SCT: ${finishTimes.filter((time) => time < (SCT * 1.05))}`)
+
+    return [SCT, raceMaxLaps, compliesWithRYA];
 }
 
 export function calculateBasicSCTFromRaceResults(raceResults) {

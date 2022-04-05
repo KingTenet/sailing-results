@@ -66,11 +66,16 @@ export default class StoreWrapper {
         return this.store.delete(...args);
     }
 
+    clear() {
+        const allValues = this.all();
+        allValues.forEach((value) => this.delete(value));
+    }
+
     async sync(force = false) {
         return await this.store.syncRemoteStateToLocalState(force);
     }
 
-    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), createSheetIfMissing = false, toStore = (obj) => obj.toStore(), getId = Type.getId) {
+    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), createSheetIfMissing = false, toStore = (obj) => obj.toStore(), getId = Type.getId, sheetHeaders = Type.sheetHeaders()) {
         let store = new Store(
             storeName,
             raceResultsDocument,
@@ -79,7 +84,7 @@ export default class StoreWrapper {
             getId,
             services,
             createSheetIfMissing,
-            Type.sheetHeaders(),
+            sheetHeaders,
         );
         await store.init();
         return new StoreWrapper(store);

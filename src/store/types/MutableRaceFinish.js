@@ -35,9 +35,10 @@ export default class MutableRaceFinish extends Race {
     }
 
     calculateSCT() {
-        const [sct, raceMaxLaps] = calculateSCTFromRaceResults(this.results) || [];
+        const [sct, raceMaxLaps, ryaApprovedSCT] = calculateSCTFromRaceResults(this.results) || [];
         this.sct = sct;
         this.raceMaxLaps = raceMaxLaps;
+        this.ryaApprovedSCT = ryaApprovedSCT;
     }
 
     hasResults() {
@@ -61,26 +62,27 @@ export default class MutableRaceFinish extends Race {
             : this.correctedResults;
     }
 
-    addResult(result) {
-        assertType(result, Result);
-        assert(Result.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
-        assert(!this.hasImmutableResults(), "Cannot add results to an immutable race finish");
-        this.results.push(result);
-        this.processResults();
-    }
+    // addResult(result) {
+    //     assertType(result, Result);
+    //     assert(Result.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
+    //     assert(!this.hasImmutableResults(), "Cannot add results to an immutable race finish");
+    //     this.results.push(result);
+    //     this.processResults();
+    // }
 
-    addOOD(ood) {
-        assertType(ood, HelmResult);
-        assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
-        assert(!this.hasImmutableResults(), "Cannot add oods to an immutable race finish");
-        this.oods = [...this.oods, ood];
-    }
+    // addOOD(ood) {
+    //     assertType(ood, HelmResult);
+    //     assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
+    //     assert(!this.hasImmutableResults(), "Cannot add oods to an immutable race finish");
+    //     this.oods = [...this.oods, ood];
+    // }
 
     validateRaceType() {
+        assert(this.results.some((result) => result.finishCode.validFinish()), `RaceFinish date:${this.date} number:${this.raceNumber} has no valid finishers`);
         if (this.results.some((result) => result.getFinishTime())
             && this.isPursuitRace()
         ) {
-            throw new Error(`RaceFinish date:${this.raceDate} number:${this.raceNumber} must contain only one type of race`);
+            throw new Error(`RaceFinish date:${this.date} number:${this.raceNumber} must contain only one type of race`);
         }
     }
 

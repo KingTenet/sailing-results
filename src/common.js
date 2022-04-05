@@ -1,8 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { GoogleSpreadsheet } from "google-spreadsheet";
-import inBrowser from "./inBrowser";
+import inBrowser from "./inBrowser.js";
 
 const KEY_SEP = "::";
+
+export function logDebug(msg, debug) {
+    if (debug) {
+        console.log(msg);
+    }
+}
 
 
 export function average(arr, mapItem = (item) => item) {

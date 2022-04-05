@@ -71,6 +71,11 @@ export default class CorrectedResult extends Result {
         ];
     }
 
+    static getRaceId(result) {
+        assertType(result, CorrectedResult);
+        return result.raceFinish;
+    }
+
     toStore() {
         return {
             "Gender": this.helm.getGender(),

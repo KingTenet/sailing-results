@@ -1,4 +1,4 @@
-import { isOnline, promiseSleep } from "../common";
+import { isOnline, promiseSleep } from "../common.js";
 
 class RemoteStoreNoNetwork extends Error { }
 class RemoteStoreNoAccess extends Error { }
@@ -77,9 +77,11 @@ export default class RemoteStore {
             return remoteStore;
         }
         catch (err) {
+            // TODO - this does not capture all non-network errors. Eg. RemoteStoreNoSheet error
             if (err?.code === "ENOTFOUND" || (err.request && err.response)) {
                 throw err;
             }
+            console.log(err);
             throw new RemoteStoreNoNetwork("No network connection so couldn't create remote store");
         }
     }
