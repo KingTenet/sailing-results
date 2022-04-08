@@ -28,27 +28,40 @@ export class Stores {
     }
 
     async init() {
-        this.clubMembers = await StoreWrapper.create("Active Membership", this.raceResultsDocument, this, ClubMember);
-        this.helms = await StoreWrapper.create("Helms", this.raceResultsDocument, this, Helm);
+        await promiseSleep(10); // Required to get spinner to render!?
+        const promiseClubMembers = StoreWrapper.create("Active Membership", this.raceResultsDocument, this, ClubMember);;
+        const promiseHelms = StoreWrapper.create("Helms", this.raceResultsDocument, this, Helm);
 
-        const clubMembersByName = mapGroupBy(this.clubMembers.all(), [ClubMember.getId]);
-        this.helms.all()
-            .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
-            .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
+        const promiseRYAClasses = StoreWrapper.create("RYA Full List", this.raceResultsDocument, this, BoatClass);
+        const promiseClubClasses = StoreWrapper.create("Club Handicaps", this.raceResultsDocument, this, BoatClass);
+        const promiseSeriesRaces = StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
 
-        this.ryaClasses = await StoreWrapper.create("RYA Full List", this.raceResultsDocument, this, BoatClass);
-        this.clubClasses = await StoreWrapper.create("Club Handicaps", this.raceResultsDocument, this, BoatClass);
+        const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces]);
+        this.clubMembers = clubMembers;
+        this.helms = helms;
+        this.ryaClasses = ryaClasses;
+        this.clubClasses = clubClasses;
+        this.seriesRaces = seriesRaces;
 
         const getOODsFromStore = (result) => HelmResult.fromStore(
             result,
             (helmId) => this.helms.get(helmId),
         );
 
-        this.oods = await StoreWrapper.create("OODs", this.raceResultsDocument, this, HelmResult, getOODsFromStore);
+        const promiseOODs = StoreWrapper.create("OODs", this.raceResultsDocument, this, HelmResult, getOODsFromStore);
+        const promisePursuitResults = StoreWrapper.create("Pursuit Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
+        const promiseFleetResults = StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
+        const [oods, pursuitResults, fleetResults] = await Promise.all([promiseOODs, promisePursuitResults, promiseFleetResults]);
+        this.oods = oods;
+        this.pursuitResults = pursuitResults;
+        this.results = fleetResults;
 
-        this.purusitResults = await StoreWrapper.create("Pursuit Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
-        this.results = await StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
-        this.seriesRaces = await StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
+        const clubMembersByName = mapGroupBy(this.clubMembers.all(), [ClubMember.getId]);
+        this.helms.all()
+            .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
+            .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
+
+        this.processResults();
     }
 
     getStatus() {
@@ -103,15 +116,22 @@ export class Stores {
     // }
 
     processResults(tranformResults) {
-        const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(this.oods.all(), this.purusitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
+        const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(this.oods.all(), this.pursuitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
         this.raceFinishes = raceFinishes;
         this.allCorrectedResults = allCorrectedResults;
         this.seriesPoints = seriesPoints;
     }
 
-    static processResultsStatic(allOODs, allPursuitResults, allFleetResults, allSeriesRaces, transformResults = (results) => results) {
+    static processResultsStatic(allOODs, allPursuitResults, allFleetResults, allSeriesRaces, transformResults = (results) => results, previousRaceFinishes = [], previousCorrectedResults = []) {
+        console.log(`Started processing: OODs:${allOODs.length}, Fleet results:${allFleetResults.length}, Pursuit Results:${allPursuitResults.length} Series Races:${allSeriesRaces.length}`);
+        const started = Date.now();
         const oodsByRace = new Map(groupBy(allOODs, HelmResult.getRaceId));
         const raceFinishes = new AutoMap(Race.getId);
+
+        for (let raceFinish of previousRaceFinishes) {
+            raceFinishes.upsert(raceFinish);
+        }
+
         for (let [, oods] of [...oodsByRace]) {
             // This assigns oods to races, but will be replaced if helms also sailed in that race too.
             raceFinishes.upsert(MutableRaceFinish.fromOODs(oods));
@@ -121,7 +141,7 @@ export class Stores {
             raceFinishes.upsert(MutableRaceFinish.fromResults(raceResults, undefined, oodsByRace.get(Race.getId(race)) || []));
         }
 
-        const allCorrectedResults = [];
+        const allCorrectedResults = [...previousCorrectedResults];
         for (let [race, raceResults] of Race.groupResultsByRaceAsc(transformResults(allFleetResults))) {
             const raceFinish = MutableRaceFinish.fromResults(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
 
@@ -141,7 +161,9 @@ export class Stores {
                     .filter(Boolean)
             )]);
 
-        return [seriesPoints, [...raceFinishes.values()], allCorrectedResults];
+        const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults];
+        console.log(`Finished processing results in ${Math.round(Date.now() - started)} ms`);
+        return allProcesssed;
     }
 
     static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
@@ -173,7 +195,7 @@ class Indexes {
     getAllResults(results = []) {
         return [
             ...this.stores.results.all(),
-            ...this.stores.purusitResults.all(),
+            ...this.stores.pursuitResults.all(),
             ...results
         ];
     }
@@ -392,6 +414,7 @@ export class StoreFunctions {
         this.getStoresStatus = this.getStoresStatus;
         this.updateStoresStatus = this.updateStoresStatus;
         this.syncroniseStore = this.syncroniseStore;
+        this.reprocessStoredResults = this.reprocessStoredResults;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
         this.indexes = new Indexes(this.stores);
@@ -409,6 +432,10 @@ export class StoreFunctions {
             superUser,
             editableRaceDateStr && parseURLDate(editableRaceDateStr)
         );
+    }
+
+    reprocessStoredResults() {
+        return this.stores.processResults();
     }
 
     updateStoresStatus() {
@@ -487,7 +514,7 @@ export class StoreFunctions {
     }
 
     getRaces() {
-        const storedPursuitResults = this.stores.purusitResults.all();
+        const storedPursuitResults = this.stores.pursuitResults.all();
         const storedFleetResults = this.stores.results.all();
         const immutableRaces = Race.groupResultsByRaceAsc([...storedPursuitResults, ...storedFleetResults])
             .map(([race]) => race);
@@ -568,7 +595,7 @@ export class StoreFunctions {
             const resultId = HelmResult.getId(helmResult);
             const existing = this.stores.OODS.has(resultId)
                 ? this.results.get(resultId)
-                : this.purusitResults.get(resultId);
+                : this.pursuitResults.get(resultId);
             throw new ResultExistsError();
         }
         catch (err) {
@@ -623,15 +650,25 @@ export class StoreFunctions {
         const mutablePursuitResults = mutableResults.length && Race.isPursuitRace(mutableResults) ? mutableResults : [];
 
         const storedOODs = this.stores.oods.all();
-        const storedPursuitResults = this.stores.purusitResults.all();
+        const storedPursuitResults = this.stores.pursuitResults.all();
         const storedFleetResults = this.stores.results.all();
         const storedSeriesRaces = this.stores.seriesRaces.all();
 
+        // const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(
+        //     [...storedOODs, ...mutableOODs],
+        //     [...storedPursuitResults, ...mutablePursuitResults],
+        //     [...storedFleetResults, ...mutableFleetResults],
+        //     [...storedSeriesRaces, ...mutableSeriesRaces]
+        // );
+
         const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(
             [...storedOODs, ...mutableOODs],
-            [...storedPursuitResults, ...mutablePursuitResults],
-            [...storedFleetResults, ...mutableFleetResults],
-            [...storedSeriesRaces, ...mutableSeriesRaces]
+            [],
+            mutableFleetResults,
+            storedSeriesRaces,
+            undefined,
+            this.stores.raceFinishes,
+            this.stores.allCorrectedResults,
         );
 
         return raceFinishes.find((raceFinish) => Race.getId(raceFinish) === raceId);

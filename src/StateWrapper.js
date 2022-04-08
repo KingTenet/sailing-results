@@ -3,18 +3,18 @@ import { useAppState, useServices, ServicesContext, CachedContext, useCachedStat
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
 import { getSheetIdFromURL } from "./common";
-import { Button, Box, Text } from "@chakra-ui/react";
+import { Button, Box, Text, Spinner, Flex } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import { StoreFunctions } from "./store/Stores";
 import { tokenGenerator } from "./token.js";
 
-const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
-const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
+const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
+const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
 const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
 const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
 const readOnlyAuth = {
-    privateKey: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCxvupp/CrJ2geF\nSL5xLl6L5w0/oXrQFSjIDSGpQjA5HK5eEWl9b8sdLjVMUDKMXOa0jmUzywpj6DaM\nqL4nvKcj8JQ58nuqh2HOJsau7kWtmKqo6S1gUVZDWcshvX5lRbBQeVcxxAth1t+d\npgu4BOr609Pxc7QgBuD6vC8t5LK+uXCsvmCzuvgfTgt5A+IClGv06VfkD9iCj7oR\ntsNgHWFUC6Z/yl8CEuUPzfuT723bjUMOt1kIakXAERUF7otWNHRvEUzNwi+SVkdI\nrrPonFi+xQoFxDxZqpx+JDuDXT1RBO7GYHtq//eN9i1PlNbc2GtNPA0up4XhibNi\n1u/Gptu7AgMBAAECggEAGn2pQz2FhQr9NvSmCYlPJwu7EkI3Yx7cMqCeZTMLq99l\n73gp4DuSqpkx8Vs8hWXtLnjQhX0b4dMAmksl+BcqU/VtqgtFOh+uSILH9tdlRB+u\nQ7lo/WNx91zBJRiwZ1iRFBVZlP2ycpULQ9w0/+qfuN1sR56meGV+D3CPmYftyfXq\nQgpnGiBspNlaTIPNgUo7f1H8gwaVUz7b9xcJ6WgILqcqZgQJf8Pp1yC2i+nHgnR6\nqqv8RqY4Iom+UcOM0ZrrlYrcLgzemw7j22ziXru35KGIxlzZ9yVHafpR+UEIpUnv\nUPjHYQPGFPRBrYI7ZZ0W9idyu7fDupKAZsa1SzHbSQKBgQDy1BViyOzqZbWhr8ps\nAqChlbCEUG34+P1WbI6sZcrPvmm9ebOjrLFVo/aiP/JnCV2nAzwFXHzblQpQpkPe\n9rSeB4Js3M24Gq9ZMOkGdNwTCMICNAQNqhIPpZSYC2OPbYjSPtMWlBOAwBIRmgK2\nplLNdQxClGSXnYO+dvlYUS0d0wKBgQC7YxgC0U1v6UUx0cQbo/2SeqaHuflgiAHu\nR+qrBdsramC9QzKXiWVYP9xI6u7FUVPyFhRWp+rgyPDphnkb9+1BtOdF7JpXd7e7\ng3yBoIOsRa4uIIUIRrMZRN17TQSZG/bBY40fY9+ohHhA0+/M8yoKARAD+HU9so4k\nK2hG1AxReQKBgE8dGfqdS9LyYELVazXVhVAf3Oq+6ZV8Sc2mgLVaVMFqYDkDNavV\nz9D/IpOqEefP/Vs0ipGUmHlSDZJJGUPDTQVPnQaqybt5tjdw3/rih/ELoWnmWIu7\nJTdD0y3WSBGqtjEJlux8Qf5olXp2mvu3JLMbt2rZvgxHnWyohoRnrjNRAoGBALB/\nwOD+heLQJGWtf/rM9w2eSvbym8ppsO/ge0/FP0/gbeg2wBNtzbBWzkU8S9Q9K0WN\nuHB6z0gU3J4JFE/csXO/UktRdXrHf562VXK/XubH5yz5YnSOKym07KyzuY4BgeVb\nwFP9vW+7/oyJU4iGzWUI5S3oO332jd3RqPF1z3h5AoGBAN4X9GfqaPMX2abyi8G5\nJmLbe99mFvJ//6hChY1VcYlj3+wbQiD63R16FI6hZ/H0c8EI23SEWFT1ZD8JeD2p\npIbrLQ84SQa9jYQyWWo7T44LY/tRx3Aryt9440ajCDx2KpN8BEDbUxCwK32kIIpk\nSYymff5fx8tUYIqVxVoE9+W8\n-----END PRIVATE KEY-----\n",
-    clientEmail: "test-622@abiding-bongo-302712.iam.gserviceaccount.com"
+    privateKey: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDdBV/YE3Csc2aR\nL3a7uJQmxsID0YBCEGeXo6ZEK6jGbNTl+PtGDgtPYEV9yLqmIhnZwi8J9l7rUYFb\nmxJ7jcwWob7C9OZfvML7uxVUaZ7hMRr2z2H4hOi3/KGRD85dRAbbcjokCpTdnpp4\nc3WoaI3kjct8SRyuYoAKQU/Wdp9Gkq3QRNfb+HmoCrVQ6NlrO1du1oRxouT05Kq/\nfos73+M0ayY0fhb/srIFZ6I7DZ+rVZIfjBEsqcvJlSBRu08dNY5lkn3kgEvNSs61\nBJWuiQz4EBi6kt3j0cjE4rex4HPvOfc7t7ZIGaBAx3JdDy657bWXat/AnRYiEmeV\nx59ALPS7AgMBAAECggEAAhwyucIYJ/7wD0AxqE6PISTYcsEVmH8S/7hUKYyn9cEE\n2IjW6U8DN6F9K47DjW6zUK6eB8Cegy09IjrdFpxLdjnagH6Zeaq4ZKV46VxN/bg1\nmctwE+qjVPWOzoik/6OOVAEHe6zOlnEU6EQXiJSUkKAnJBghZt7RrYdjGj9gSB2w\n1/SiNm+Z7mOvufLXI59NQkZUYPJ/pR1EaP7krC7yQ3OYUQNeyR9jyKH1exrqY8xT\nhZyUZ08eSkntbSdBsYQQ39owMiyxFsPyUP7Dkq8HZPNZBwJpPnuExpKTRpQeqmaT\nqlmH0u/2TdJ5cGVMhaa2ZY1ASlXftuOyY6JgKiRKOQKBgQD1tDc3xatFBONwTPGT\ndYJ8SW9z9IpH0J7cWR96mQOcuE9CpnCCbsvEy3kT/5RObYh0nP2Q7ezOyN5Xc4ej\noYoHxCXW8Fr+QQEGD6nZfCQSef3uPzJDeGa0w1LP6nZ3U6ebpGDhMKrAK34THYDa\nFg22bYL94c98r1u1hC0OJ79fMwKBgQDmSF9ihhLLKhTFGnt41NnsIpWP3SwCpPvS\nyvpY5nFjaXgU5ODck/CUbvBuntChWIL4d5dKkf1Yur5Y+b549x/uQjt+liu9ywk6\niK5/3q7rXNTYOJb0zTfpYItDKMAswVvqNQYpD4BeoxqffuqgMCfSinwOY/PVcXtM\nBB3R5Xe0WQKBgQDkGhyxMFeiSbmERkp3pT4weFR6B+pgZXM2CZ9Jx8gstIcQz0fg\nL1AJMQUE5d8fOFzYNe7Jn7ia+KxB78VaydtE/npKovU22c5DfEMo3zD13j858X2O\nWbav1i2JTJgSi50sx1wRc4bxxO7UfC1lSdgNJnnXjM19aabwSvcxDwGBNQKBgQDc\na2Wxnneas5rR1zlcPRCib7AM1jzsAxNvfw4Fzf22lBt2lGWPfKOI0G+e0rEL3vbt\n8TqFDBwdtBHChLqGerS7j/X2grM3pYId3vp4NqPjcSXiGLiVdWERJ3HlRLo9nI7o\nLPzKjKXo7+HpzMezsKRNaHS6KX4ZTdgguMf6QtRDcQKBgAV/S0wydKkTwagpJdzs\nBcM5Aq0HvAaoxxeUuz4b3a8doHKckq3XQL+73T4KQ8NtZkS0tUfOmFTra5aayVfS\ni2eL70fmKmjjIrSrOg/Nqu5D0Jd8a9UaI18UqiKJZ/KXMUw9MDAj81eI4TdVS0ax\n0+x82ccIPGQ5cqIeTH139BwK\n-----END PRIVATE KEY-----\n",
+    clientEmail: "read-only@nhebsc-results.iam.gserviceaccount.com",
 };
 
 async function initialiseServicesFromToken(token, refreshCache) {
@@ -33,12 +33,15 @@ async function initialiseReadOnlyServices() {
 }
 
 async function initialiseServices(token, urlToken) {
+    console.log("Initialising services");
+    const started = Date.now();
     const refreshCache = Boolean(urlToken);
 
     const storeFunctions = token
         ? await initialiseServicesFromToken(token, refreshCache)
         : await initialiseReadOnlyServices();
 
+    console.log(`Finished initialising services in ${Math.round(Date.now() - started)}ms`);
     return {
         ...storeFunctions,
     };
@@ -123,10 +126,15 @@ export default function TokenWrapper() {
 function ServicesWrapper({ token, urlToken }) {
     const services = useServices(async () => initialiseServices(token, urlToken))
 
+    console.log("Services Wrapper");
     if (!services.ready) {
+        console.log("Rendering spinner");
         return (
             <>
-                <p>Initialising services...</p>
+                <Flex width="100vw" height="100vh" align={"center"} justify={"center"} direction="column">
+                    <Spinner color='blue.500' size="xl" />
+                    <Text marginLeft={"10px"} marginTop={"20px"}>Loading...</Text>
+                </Flex>
             </>
         );
     }

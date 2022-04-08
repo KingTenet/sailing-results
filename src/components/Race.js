@@ -237,7 +237,6 @@ function AlertDialogWrapper
             </Box>
             <>
                 <AlertDialog
-
                     isOpen={isOpen}
                     leastDestructiveRef={cancelRef}
                     onClose={onClose}
@@ -579,6 +578,7 @@ function CommitResultsDialog({ race, onSuccess, onFailed, onStarted, children })
                     oods: oods.filter((ood) => !raceOODs.includes(ood))
                 }))
             )
+            .then(() => services.reprocessStoredResults())
             .then(() => onSuccess())
             .catch((err) => onFailed(err))
     };
@@ -701,14 +701,14 @@ export default function Race() {
                             onClick={() => updateEditingRace(true)}
                             isDisabled={committingResults}
                         >Edit results</RedButton>
-                        <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
+                        {/* <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
                             <BlueButton
                                 onClick={(event) => event.preventDefault()}
                                 isLoading={committingResults}
                                 loadingText='Committing Results'
                                 style={{ width: "100%" }}
                             >Commit results</BlueButton>
-                        </CommitResultsDialog>
+                        </CommitResultsDialog> */}
                         <RaceResultsView results={raceResults} race={race} isDisabled={committingResults} />
 
                         {Boolean(oods.length) &&

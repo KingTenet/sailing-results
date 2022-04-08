@@ -84,14 +84,12 @@ export default function Races() {
             <Flex direction="column" margin="5px">
                 <Box marginTop="20px" />
                 <Flex direction="row" marginBottom="20px">
-                    <Heading size={"lg"} marginLeft="20px">{`All Races`}</Heading>
-                    {/* <Spacer width="50px" /> */}
-                    {/* <Heading size={"lg"} marginRight="20px">{`Somin`}</Heading> */}
+                    <Heading size={"lg"} marginLeft="20px">{`Editable Races`}</Heading>
                 </Flex>
-                <Box>
+                <Box marginBottom="20px">
                     <RacesView races={editableRaces} />
                 </Box>
-                <BackButton>Back</BackButton>
+                {/* <BackButton>Back</BackButton> */}
             </Flex>
         </>
     );

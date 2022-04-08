@@ -44,9 +44,6 @@ function RegisterHelm() {
         console.log("in process helm result");
         const newRegisteration = services.createRegisteredHelm(race, selectedHelm, selectedBoat, parseInt(sailNumber), appState.newHelms);
 
-        console.log(newRegisteration);
-        debugger;
-
         updateAppState(({ registered, results, oods, ...state }) => {
             if (registered.find((prev) => HelmResult.getId(prev) === HelmResult.getId(newRegisteration))
                 || results.find((prev) => HelmResult.getId(prev) === HelmResult.getId(newRegisteration))

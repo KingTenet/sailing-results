@@ -196,7 +196,7 @@ export async function limitSheetsRequest(req) {
 }
 
 export function getSheetIdFromURL(url) {
-    let matches = url.match(new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/.*$"))
+    let matches = url.match(new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/?.*$"))
     if (!matches || !matches[1]) {
         throw new Error("Invalid URL format, google sheet ID should match regex https://docs.google.com/spreadsheets/d/([^/]+)/.*$");
     }
