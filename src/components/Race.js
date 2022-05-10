@@ -19,11 +19,9 @@ import { DroppableContext, DroppableList } from "./Droppable";
 import Helm from "../store/types/Helm";
 import { DeleteIcon } from "@chakra-ui/icons";
 
-
-
 const BASE_DROPPABLE_STYLE = {
     backgroundColor: "lightBlue",
-    borderRadius: "5px",
+    borderRadius: "12px",
     borderColor: "DarkSlateGray",
     borderWidth: "0px 0px 0px 0px",
     padding: "10px 2px 10px 2px",
@@ -238,11 +236,13 @@ function DeleteOOD({ ood, children }) {
 
 function ListItemWrapper({ children, ...props }) {
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} marginBottom={"5px"} backgroundColor="white" {...props}>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" {...props}>
             <Flex>
                 {children}
             </Flex>
+
         </Box>
+        <Box height={"3px"}></Box>
     </>
 }
 
@@ -498,7 +498,7 @@ function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, Registere
                                 DroppableHeader={FinishedDroppableHeader}
                             />
                         }
-                        {draggingFinisher &&
+                        {(draggingFinisher) &&
                             <WrappedDroppableList
                                 droppableId={"deleteFinisher"}
                                 getDroppableStyle={deleteGetDroppableStyle}
@@ -527,11 +527,9 @@ function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, Registere
                 }
             </DroppableContext>
             {!renderingDeleteDropZone &&
-                <Portal containerRef={portalRef}>
-                    <Box style={{ ...deleteGetDroppableStyle(), backgroundColor: "inherit" }} hidden={false}>
-                        <DeleteDroppableHeader placeholder={true} />
-                    </Box>
-                </Portal>
+                <Box style={{ ...deleteGetDroppableStyle(), backgroundColor: "inherit" }} hidden={false}>
+                    <DeleteDroppableHeader placeholder={true} />
+                </Box>
             }
         </>
     );
@@ -589,7 +587,7 @@ export default function Race() {
     function Wrapped({ children }) {
         return (
             <Box bg="blue.50" minHeight="100vh" margin="0">
-                <Flex direction="column" minHeight="100vh" alignItems>
+                <Flex direction="column" minHeight="80vh" alignItems>
                     <Flex direction="row" marginTop="20px" marginBottom="20px">
                         <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
                         <Spacer width="50px" />
@@ -597,7 +595,6 @@ export default function Race() {
                     </Flex>
                     {children}
                     <BackButton disabled={committingResults}>Back to races</BackButton>
-                    <Box ref={portalRef} />
                 </Flex>
             </Box>
         )
@@ -611,6 +608,7 @@ export default function Race() {
                 {!raceRegistered.length && raceResults.length > 2 &&
                     <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>
                 }
+                <Spacer />
                 <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
                 <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
                 {!Boolean(raceResults.length) &&
