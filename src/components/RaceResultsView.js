@@ -260,12 +260,12 @@ export default function RaceResultsView({ results, oods, race, ...props }) {
                     </ListItem>
                 )}
             </ResultsList>
-            {Boolean(oods.length) &&
+            {/* {Boolean(oods.length) &&
                 <>
                     <Heading size={"lg"} marginBottom="10px">OODs</Heading>
                     <OODView marginBottom="20px" oods={oods} {...props} />
                 </>
-            }
+            } */}
 
             <GreenButton onClick={toggleResultsView} autoFocus {...props}>{buttonMsg}</GreenButton>
         </>

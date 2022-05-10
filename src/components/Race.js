@@ -1,7 +1,4 @@
-import { Box, Button, Flex, Heading, List, Text, Spacer, Grid, GridItem, useDisclosure, Portal } from "@chakra-ui/react";
-import {
-    AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter
-} from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, Spacer } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import React, { useRef, useState } from "react";
@@ -15,9 +12,8 @@ import RaceResultsView from "./RaceResultsView";
 
 import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
-
-import Helm from "../store/types/Helm";
 import { DeleteIcon } from "@chakra-ui/icons";
+import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem } from "./ListItems";
 
 const BASE_DROPPABLE_STYLE = {
     backgroundColor: "lightBlue",
@@ -100,266 +96,9 @@ const dnfGetDroppableStyle = getDroppableStyleForHighlight({
     // borderColor: "DarkOrange",
 });
 
-function secondsToMinutesSeconds(totalSeconds) {
-    const SECONDS_IN_MINUTE = 60;
-    var minutes = Math.floor(totalSeconds / SECONDS_IN_MINUTE);
-    var seconds = totalSeconds % SECONDS_IN_MINUTE;
-    return [minutes, seconds];
-}
-
-function formatMinutesSeconds([minutes, seconds]) {
-    const pad = (v) => {
-        return `0${Math.round(v)}`.slice(v > 100 ? -3 : -2);
-    }
-    return [pad(minutes), pad(seconds)].join(":");
-}
-
-function formatBoatClass(className) {
-    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
-    return className.split(" ").map((word) => capitalize(word.toLowerCase())).join(" ");
-}
-
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
 }
-
-function ResultDimension({ children, ...props }) {
-    return (
-        <GridItem
-            height='20px'
-            {...props}>
-            <Text isTruncated>{children}</Text>
-        </GridItem>
-    );
-}
-
-function AlertDialogWrapper
-    ({ children, deleteHeading, onConfirm, confirmButtonText = "Delete" }) {
-    const cancelRef = React.useRef();
-    const { isOpen, onOpen, onClose } = useDisclosure();
-
-    const onDelete = () => {
-        onClose();
-        onConfirm();
-    }
-
-    return (
-        <>
-            <Box onClick={onOpen}>
-                {children}
-            </Box>
-            <>
-                <AlertDialog
-                    isOpen={isOpen}
-                    leastDestructiveRef={cancelRef}
-                    onClose={onClose}
-                >
-                    <AlertDialogOverlay>
-                        <AlertDialogContent>
-                            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
-                                {deleteHeading}
-                            </AlertDialogHeader>
-
-                            <AlertDialogBody>
-                                Are you sure? This action cannot be undone.
-                            </AlertDialogBody>
-
-                            <AlertDialogFooter>
-                                <Button ref={cancelRef} onClick={onClose}>
-                                    Cancel
-                                </Button>
-                                <Button colorScheme='red' onClick={onDelete} ml={3}>
-                                    {confirmButtonText}
-                                </Button>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialogOverlay>
-                </AlertDialog>
-            </>
-        </>
-    )
-}
-
-function DeleteFinisher({ finisher, children }) {
-    const [, updateAppState] = useAppState();
-
-    const deleteFinisher = () => {
-        updateAppState(({ results, ...state }) => ({
-            ...state,
-            results: results.filter((result) => HelmResult.getId(result) !== HelmResult.getId(finisher)),
-        }));
-    };
-
-    return (
-        <AlertDialogWrapper
-            onConfirm={() => deleteFinisher()} deleteHeading={`Delete result for ${HelmResult.getHelmId(finisher)}.`}>
-            {children}
-        </AlertDialogWrapper>
-    )
-}
-
-// function DeleteRegistered({ registeredToDelete, children }) {
-//     const [, updateAppState] = useAppState();
-
-//     const deleteRegistered = () => {
-//         updateAppState(({ registered, ...state }) => ({
-//             ...state,
-//             registered: registered.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(registeredToDelete)),
-//         }));
-//     };
-
-//     return (
-//         <AlertDialogWrapper
-//             onConfirm={() => deleteRegistered()} deleteHeading={`Delete registered helm: ${HelmResult.getHelmId(registeredToDelete)}.`}>
-//             {children}
-//         </AlertDialogWrapper>
-//     )
-// }
-
-function DeleteOOD({ ood, children }) {
-    const [, updateAppState] = useAppState();
-
-    const deleteOOD = () => {
-        updateAppState(({ oods, ...state }) => ({
-            ...state,
-            oods: oods.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(ood)),
-        }));
-    };
-
-    return (
-        <AlertDialogWrapper
-            onConfirm={() => deleteOOD()} deleteHeading={`Delete OOD: ${HelmResult.getHelmId(ood)}.`}>
-            {children}
-        </AlertDialogWrapper>
-    )
-}
-
-function ListItemWrapper({ children, ...props }) {
-    return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" {...props}>
-            <Flex>
-                {children}
-            </Flex>
-
-        </Box>
-        <Box height={"3px"}></Box>
-    </>
-}
-
-function RegisteredListItem({ registered, onClick }) {
-    const helmName = Result.getHelmId(registered);
-    const boatClass = formatBoatClass(registered.getBoatClass().getClassName());
-    const sailNumber = registered.getSailNumber();
-
-    return (
-        <ListItemWrapper onClick={onClick}>
-            <Grid
-                templateColumns='repeat(3, 1fr)'
-                gap={5}
-                width={"100%"}>
-                <ResultDimension colSpan={1}>{helmName}</ResultDimension>
-                <ResultDimension colSpan={1}>{boatClass}</ResultDimension>
-                <ResultDimension colSpan={1}>{sailNumber}</ResultDimension>
-            </Grid>
-        </ListItemWrapper>
-    );
-}
-
-function PursuitFinishListItem({ result, index }) {
-    const helmName = Result.getHelmId(result);
-    const boatClass = formatBoatClass(result.getBoatClass().getClassName());
-    const sailNumber = result.getSailNumber();
-
-    return (
-        <DeleteFinisher finisher={result} >
-            <ListItemWrapper>
-                <Grid
-                    templateColumns='repeat(16, 1fr)'
-                    gap={3}
-                    width={"100%"}>
-                    <ResultDimension colSpan={1}>{index + 1}</ResultDimension>
-                    <ResultDimension colSpan={6}>{helmName}</ResultDimension>
-                    <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
-                    <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
-                </Grid>
-            </ListItemWrapper>
-        </DeleteFinisher>
-    )
-}
-
-function OODListItem({ ood }) {
-    const helmName = Result.getHelmId(ood);
-
-    return (
-        <DeleteOOD ood={ood} >
-            <ListItemWrapper>
-                <Grid templateColumns='repeat(1, 1fr)'>
-                    <ResultDimension colSpan={1}>{helmName}</ResultDimension>
-                </Grid>
-            </ListItemWrapper>
-        </DeleteOOD>
-    )
-}
-
-
-function FinisherListItem({ result }) {
-    const helmName = Result.getHelmId(result);
-    const boatClass = formatBoatClass(result.getBoatClass().getClassName());
-    const sailNumber = result.getSailNumber();
-    const finishTime = formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()));
-    const laps = result.getLaps();
-    const validFinish = result.isValidFinish();
-
-    return <>
-        <DeleteFinisher finisher={result} >
-            <ListItemWrapper>
-                <Grid
-                    templateColumns='repeat(17, 1fr)'
-                    gap={3}
-                    width={"100%"}>
-                    <ResultDimension colSpan={6}>{helmName}</ResultDimension>
-                    <ResultDimension colSpan={5}>{`${sailNumber}, ${boatClass}`}</ResultDimension>
-                    {validFinish && <ResultDimension colSpan={6}>{`${laps} lap${laps > 1 ? "s" : ""} in ${finishTime}`}</ResultDimension>}
-                    {!validFinish && <ResultDimension colSpan={6}>{"DNF"}</ResultDimension>}
-                </Grid>
-            </ListItemWrapper>
-        </DeleteFinisher>
-    </>
-}
-
-function DraggableView({ registered, results, oods, isPursuitRace, portalRef }) {
-    const navigateTo = useNavigate();
-    const finished = results.filter((result) => result.finishCode.validFinish());
-    const dnf = results.filter((result) => !result.finishCode.validFinish());
-
-    const WrappedRegisteredListItem = ({ item }) =>
-        <RegisteredListItem
-            registered={item}
-            onClick={() => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)}
-        />
-
-    const WrappedFinisherListItem = ({ item }) => <FinisherListItem result={item} />
-    const WrappedOODListItem = ({ item }) => <OODListItem ood={item} />
-    const WrappedPursuitFinishListItem = ({ item, index }) => <PursuitFinishListItem result={item} index={index} />
-
-    return (
-        <DraggableFinishView
-            PursuitFinishListItem={WrappedPursuitFinishListItem}
-            pursuitFinishes={registered}
-            RegisteredListItem={WrappedRegisteredListItem}
-            registered={registered}
-            FinishedListItem={WrappedFinisherListItem}
-            finished={finished}
-            DNFListItem={WrappedFinisherListItem}
-            dnf={dnf}
-            OODListItem={WrappedOODListItem}
-            oods={oods}
-            isPursuitRace={isPursuitRace}
-            portalRef={portalRef}
-        />
-    );
-}
-
 
 function DroppableHeader({ isDraggingOver, heading }) {
     return (
@@ -532,6 +271,39 @@ function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, Registere
                 </Box>
             }
         </>
+    );
+}
+
+function DraggableView({ registered, results, oods, isPursuitRace, portalRef }) {
+    const navigateTo = useNavigate();
+    const finished = results.filter((result) => result.finishCode.validFinish());
+    const dnf = results.filter((result) => !result.finishCode.validFinish());
+
+    const WrappedRegisteredListItem = ({ item }) =>
+        <RegisteredListItem
+            registered={item}
+            onClick={() => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)}
+        />
+
+    const WrappedFinisherListItem = ({ item }) => <FinisherListItem result={item} />
+    const WrappedOODListItem = ({ item }) => <OODListItem ood={item} />
+    const WrappedPursuitFinishListItem = ({ item, index }) => <PursuitFinishListItem result={item} index={index} />
+
+    return (
+        <DraggableFinishView
+            PursuitFinishListItem={WrappedPursuitFinishListItem}
+            pursuitFinishes={registered}
+            RegisteredListItem={WrappedRegisteredListItem}
+            registered={registered}
+            FinishedListItem={WrappedFinisherListItem}
+            finished={finished}
+            DNFListItem={WrappedFinisherListItem}
+            dnf={dnf}
+            OODListItem={WrappedOODListItem}
+            oods={oods}
+            isPursuitRace={isPursuitRace}
+            portalRef={portalRef}
+        />
     );
 }
 
