@@ -1,10 +1,10 @@
-import { Box, Button, Flex, Heading, List, ListItem, Text, Spacer, Grid, GridItem, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, List, ListItem, Text, Spacer, Grid, GridItem, useDisclosure, Icon } from "@chakra-ui/react";
 import {
     AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter
 } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { useAppState, useServices } from "../useAppState";
 import { getURLDate, parseURLDate, useBack } from "../common";
@@ -12,10 +12,95 @@ import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
 import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpers.js";
+import { useDimensionsToggle, useSortedResults } from "../common/hooks.js";
 
 import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Helm from "../store/types/Helm";
+import { DeleteIcon } from "@chakra-ui/icons";
+
+
+const BASE_DROPPABLE_STYLE = {
+    backgroundColor: "lightBlue",
+    borderRadius: "5px",
+    borderColor: "DarkSlateGray",
+    borderWidth: "0px 0px 0px 0px",
+    padding: "10px 2px 10px 2px",
+    borderStyle: "solid",
+    marginBottom: "10px",
+    // margin: "0px 0px 10px 0px",
+};
+
+const DEFAULT_DROPPABLE_HIGHLIGHT_STYLE = {
+    backgroundColor: "lightBlue",
+    borderColor: "darkGreen",
+    borderStyle: "dashed",
+    borderWidth: "2px 2px 2px 2px",
+    padding: "8px 0px 8px 0px",
+}
+
+function getDroppableStyleForHighlight(
+    highlightStyles = DEFAULT_DROPPABLE_HIGHLIGHT_STYLE,
+    baseStyle = BASE_DROPPABLE_STYLE
+) {
+    return (isDraggingOver) => {
+        if (!isDraggingOver) {
+            return {
+                ...BASE_DROPPABLE_STYLE,
+                ...baseStyle,
+            };
+        }
+
+        return {
+            ...BASE_DROPPABLE_STYLE,
+            ...baseStyle,
+            ...DEFAULT_DROPPABLE_HIGHLIGHT_STYLE,
+            ...highlightStyles,
+        };
+    }
+}
+
+
+const registeredGetDroppableStyle = getDroppableStyleForHighlight({
+
+}, {
+    ...BASE_DROPPABLE_STYLE,
+    backgroundColor: "lightBlue",
+});
+
+const defaultGetDroppableStyle = getDroppableStyleForHighlight({
+    backgroundColor: "lightGreen",
+    borderStyle: "dashed",
+    borderWidth: "2px",
+    // borderRadius: "10px",
+    borderColor: "darkGreen",
+}, {
+    ...BASE_DROPPABLE_STYLE,
+    backgroundColor: "lightGreen",
+});
+
+const deleteGetDroppableStyle = getDroppableStyleForHighlight({
+    backgroundColor: "pink",
+    borderStyle: "dashed",
+    borderWidth: "2px",
+    // borderRadius: "10px",
+    borderColor: "red",
+}, {
+    ...BASE_DROPPABLE_STYLE,
+    minHeight: "52px",
+    backgroundColor: "pink",
+});
+const dnfGetDroppableStyle = getDroppableStyleForHighlight({
+    backgroundColor: "#ffc680",
+    borderStyle: "dashed",
+    borderWidth: "2px",
+    // borderRadius: "10px",
+    borderColor: "DarkOrange",
+}, {
+    ...BASE_DROPPABLE_STYLE,
+    backgroundColor: "#ffc680",
+    // borderColor: "DarkOrange",
+});
 
 const RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
 
@@ -183,7 +268,7 @@ function getDimensionValue(dimension, result) {
 
 function ResultListItem({ result, position, toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3 }) {
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white">
             <Flex>
                 <Grid
                     templateColumns='repeat(16, 1fr)'
@@ -205,7 +290,7 @@ function RegisteredListItem({ registered, onClick }) {
     const sailNumber = registered.getSailNumber();
 
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} onClick={onClick}>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" onClick={onClick}>
             <Flex>
                 <Grid
                     templateColumns='repeat(3, 1fr)'
@@ -217,6 +302,30 @@ function RegisteredListItem({ registered, onClick }) {
                 </Grid>
             </Flex>
         </Box>
+    </>
+}
+
+function PursuitFinishListItem({ result, index }) {
+    const helmName = Result.getHelmId(result);
+    const boatClass = formatBoatClass(result.getBoatClass().getClassName());
+    const sailNumber = result.getSailNumber();
+
+    return <>
+        <DeleteFinisher finisher={result} >
+            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white">
+                <Flex>
+                    <Grid
+                        templateColumns='repeat(16, 1fr)'
+                        gap={3}
+                        width={"100%"}>
+                        <ResultDimension colSpan={1}>{index + 1}</ResultDimension>
+                        <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                        <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
+                        <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
+                    </Grid>
+                </Flex>
+            </Box>
+        </DeleteFinisher>
     </>
 }
 
@@ -327,7 +436,7 @@ function OODListItem({ ood }) {
 
     return <>
         <DeleteOOD ood={ood} >
-            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" >
                 <ResultDimension colSpan={1}>{helmName}</ResultDimension>
             </Box>
         </DeleteOOD>
@@ -345,7 +454,7 @@ function FinisherListItem({ result }) {
 
     return <>
         <DeleteFinisher finisher={result} >
-            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white">
                 <Flex>
                     <Grid
                         templateColumns='repeat(17, 1fr)'
@@ -360,28 +469,6 @@ function FinisherListItem({ result }) {
             </Box>
         </DeleteFinisher>
     </>
-}
-
-
-function useSortedResults(results, race) {
-    const services = useServices();
-    const [raceFinish] = useState(
-        () => services.getRaceFinishForResults(race, results),
-        [],
-    );
-
-    return [
-        raceFinish.getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a)),
-        raceFinish.getClassCorrectedPointsByResult(),
-        raceFinish.getPersonalCorrectedPointsByResult(),
-        raceFinish.getMaxLaps(),
-        raceFinish.getSCT(),
-    ];
-}
-
-function useDimensionsToggle(dimensions) {
-    const [dimensionCounter, updateDimensionCounter] = useState(0);
-    return [dimensions[dimensionCounter % dimensions.length], () => updateDimensionCounter(dimensionCounter + 1)];
 }
 
 function RaceResultsView({ results, race, ...props }) {
@@ -442,6 +529,38 @@ function RegisteredView({ registered, ...props }) {
     );
 }
 
+function DraggableView({ registered, results, oods, isPursuitRace }) {
+    const navigateTo = useNavigate();
+    const finished = results.filter((result) => result.finishCode.validFinish());
+    const dnf = results.filter((result) => !result.finishCode.validFinish());
+
+    const WrappedRegisteredListItem = ({ helmResult }) =>
+        <RegisteredListItem
+            registered={helmResult}
+            onClick={() => navigateTo(`fleetFinish/${HelmResult.getHelmId(helmResult)}`)}
+        />
+
+    const WrappedFinisherListItem = ({ helmResult }) => <FinisherListItem result={helmResult} />
+    const WrappedOODListItem = ({ helmResult }) => <OODListItem ood={helmResult} />
+    const WrappedPursuitFinishListItem = ({ helmResult, index }) => <PursuitFinishListItem result={helmResult} index={index} />
+
+    return (
+        <DraggableFinishView
+            PursuitFinishListItem={WrappedPursuitFinishListItem}
+            pursuitFinishes={registered}
+            RegisteredListItem={WrappedRegisteredListItem}
+            registered={registered}
+            FinishedListItem={WrappedFinisherListItem}
+            finished={finished}
+            DNFListItem={WrappedFinisherListItem}
+            dnf={dnf}
+            OODListItem={WrappedOODListItem}
+            oods={oods}
+            isPursuitRace={isPursuitRace}
+        />
+    );
+}
+
 function PursuitFinishView({ registered, onPositionsUpdated, ...props }) {
     const onDragEnd = (result) => {
         const { destination, source, draggableId } = result;
@@ -495,6 +614,188 @@ function PursuitFinishView({ registered, onPositionsUpdated, ...props }) {
     );
 }
 
+function DroppableList({ DraggableListItem, listItems = [], droppableId, DroppableHeader, isDropDisabled, getDroppableStyle }) {
+    return (
+        < DroppableWrapper
+            droppableId={droppableId}
+            isDropDisabled={isDropDisabled || false}
+        >
+            {(isDraggingOver, placeholder) =>
+                <Box style={getDroppableStyle(isDraggingOver)}>
+                    {DroppableHeader && <DroppableHeader isDraggingOver={isDraggingOver} listItems={listItems} />}
+                    {listItems.map((helmResult, index) =>
+                        <Draggable
+                            key={HelmResult.getId(helmResult)}
+                            draggableId={`${droppableId}${HelmResult.getId(helmResult)}`}
+                            index={index}
+                        >
+                            {(draggableProvided) =>
+                                <Box
+                                    key={HelmResult.getId(helmResult)}
+                                    ref={draggableProvided.innerRef}
+                                    {...draggableProvided.draggableProps}
+                                    {...draggableProvided.dragHandleProps}
+                                >
+                                    <DraggableListItem helmResult={helmResult} index={index} />
+                                </Box>
+                            }
+                        </Draggable>
+                    )}
+                    {placeholder}
+                </Box>
+            }
+        </DroppableWrapper >
+    );
+};
+
+const DroppableWrapper = ({ droppableId, children, isDropDisabled }) => {
+    console.log("Drop disabled " + isDropDisabled);
+    return (
+        <Droppable
+            droppableId={droppableId}
+            isDropDisabled={isDropDisabled}
+        >
+            {(droppableProvided, snapshot) =>
+                <Box
+                    ref={droppableProvided.innerRef}
+                    {...droppableProvided.droppableProps}
+                >
+                    {children(snapshot.isDraggingOver, droppableProvided.placeholder)}
+                </Box>
+            }
+        </Droppable>
+    )
+};
+
+function RegisteredDroppableHeader({ isDraggingOver }) {
+    return (
+        <Flex direction="row">
+            <Text paddingLeft="10px" fontSize="20px">Registered</Text>
+        </Flex>
+    );
+}
+
+function FinishedDroppableHeader({ isDraggingOver }) {
+    return (
+        <Flex direction="row">
+            <Text paddingLeft="10px" fontSize="20px">Finished</Text>
+        </Flex>
+    );
+}
+
+function OODDroppableHeader({ isDraggingOver }) {
+    return (
+        <Flex direction="row">
+            <Text paddingLeft="10px" fontSize="20px">OOD</Text>
+        </Flex>
+    );
+}
+
+function DNFDroppableHeader({ isDraggingOver, listItems }) {
+    return (
+        <Flex direction="row">
+            <Text paddingLeft="10px" fontSize="20px">DNF</Text>
+            {listItems && !Boolean(listItems.length)
+                && <Text fontSize="15px" marginTop="5px" marginLeft="80px">Drag any non-finishers here!</Text>
+            }
+        </Flex>
+    );
+}
+
+function DeleteDroppableHeader({ isDraggingOver, placeholder }) {
+    if (placeholder) {
+        return (
+            <Flex direction="row">
+                <Box boxSize="2em" />
+                <Spacer />
+                <Text paddingLeft="20px" fontSize="20px">{" "}</Text>
+                <Spacer />
+                <Box boxSize="2em" />
+            </Flex>
+        );
+    }
+
+    return (
+        <Flex direction="row">
+            <DeleteIcon boxSize="2em" />
+            <Spacer />
+            <Text paddingLeft="20px" fontSize="20px">Drag to delete</Text>
+            <Spacer />
+            <DeleteIcon boxSize="2em" />
+        </Flex>
+    );
+}
+
+function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, RegisteredListItem, registered, FinishedListItem, finished = [], dnf, OODListItem, oods, isPursuitRace, onPositionsUpdated }) {
+    const [draggingRegistered, setIsDraggingRegistered] = useState(false);
+    const onBeforeDragRegistered = () => setIsDraggingRegistered(true)
+    const onDragRegisteredEnd = () => setIsDraggingRegistered(false);
+
+    const [draggingFinisher, setIsDraggingFinisher] = useState(false);
+    const onBeforeDragFinisher = () => setIsDraggingFinisher(true);
+    const onDragFinisherEnd = () => setIsDraggingFinisher(false);
+
+    const [draggingOOD, setIsDraggingOOD] = useState(false);
+    const onBeforeDragOOD = () => setIsDraggingOOD(true);
+    const onDragOODEnd = () => setIsDraggingOOD(false);
+
+    const renderingDeleteDropZone = draggingRegistered || draggingFinisher || draggingOOD;
+
+    return (
+        <>
+            {isPursuitRace &&
+                <DragDropContext onDragEnd={onDragRegisteredEnd} onBeforeCapture={onBeforeDragRegistered}>
+                    {pursuitFinishes && Boolean(pursuitFinishes.length) &&
+                        <DroppableList getDroppableStyle={defaultGetDroppableStyle} DraggableListItem={PursuitFinishListItem} listItems={pursuitFinishes} droppableId={"pursuitFinishes"} DroppableHeader={FinishedDroppableHeader} />
+                    }
+                    {(registered && Boolean(registered.length) || (dnf && Boolean(dnf.length))) &&
+                        <DroppableList getDroppableStyle={dnfGetDroppableStyle} DraggableListItem={FinishedListItem} listItems={dnf} droppableId={"dnf"} DroppableHeader={DNFDroppableHeader} />
+                    }
+                    {draggingRegistered &&
+                        <DroppableList getDroppableStyle={deleteGetDroppableStyle} droppableId={"deleteRegistered"} DroppableHeader={DeleteDroppableHeader} />
+                    }
+                </DragDropContext>
+            }
+            {!isPursuitRace &&
+                <>
+                    <DragDropContext onDragEnd={onDragRegisteredEnd} onBeforeCapture={onBeforeDragRegistered}>
+                        {registered && Boolean(registered.length) &&
+                            <DroppableList getDroppableStyle={registeredGetDroppableStyle} DraggableListItem={RegisteredListItem} listItems={registered} droppableId={"registered"} isDropDisabled={true} DroppableHeader={RegisteredDroppableHeader} />
+                        }
+                        {(registered && Boolean(registered.length) || (dnf && Boolean(dnf.length))) &&
+                            <DroppableList getDroppableStyle={dnfGetDroppableStyle} DraggableListItem={FinishedListItem} listItems={dnf} droppableId={"dnf"} DroppableHeader={DNFDroppableHeader} />
+                        }
+                        {draggingRegistered &&
+                            <DroppableList getDroppableStyle={deleteGetDroppableStyle} droppableId={"deleteRegistered"} DroppableHeader={DeleteDroppableHeader} />
+                        }
+                    </DragDropContext>
+                    <DragDropContext onDragEnd={onDragFinisherEnd} onBeforeCapture={onBeforeDragFinisher}>
+                        {finished && Boolean(finished.length) &&
+                            <DroppableList getDroppableStyle={defaultGetDroppableStyle} DraggableListItem={FinishedListItem} listItems={finished} droppableId={"finished"} DroppableHeader={FinishedDroppableHeader} />
+                        }
+                        {draggingFinisher &&
+                            <DroppableList getDroppableStyle={deleteGetDroppableStyle} droppableId={"deleteFinisher"} DroppableHeader={DeleteDroppableHeader} />
+                        }
+                    </DragDropContext>
+                </>
+            }
+            <DragDropContext onDragEnd={onDragOODEnd} onBeforeCapture={onBeforeDragOOD}>
+                {oods && Boolean(oods.length) &&
+                    <DroppableList getDroppableStyle={defaultGetDroppableStyle} DraggableListItem={OODListItem} listItems={oods} droppableId={"oods"} DroppableHeader={OODDroppableHeader} />
+                }
+                {draggingOOD &&
+                    <DroppableList getDroppableStyle={deleteGetDroppableStyle} droppableId={"deleteOOD"} DroppableHeader={DeleteDroppableHeader} />
+                }
+            </DragDropContext>
+            {!renderingDeleteDropZone &&
+                <Box style={{ ...deleteGetDroppableStyle(), backgroundColor: "inherit" }} hidden={false}>
+                    <DeleteDroppableHeader placeholder={true} />
+                </Box>
+            }
+        </>
+    );
+}
+
 function PursuitResultsList({ children, innerRef, ...props }) {
     return (
         <Box ref={innerRef} {...props}>
@@ -504,7 +805,6 @@ function PursuitResultsList({ children, innerRef, ...props }) {
         </Box>
     )
 }
-
 
 function FinisherView({ results, ...props }) {
     return (
@@ -656,52 +956,56 @@ export default function Race() {
 
     return (
         <>
-            <Flex direction="column" margin="5px" minHeight="90vh">
-                <Box marginTop="20px" />
-                <Flex direction="row" marginBottom="20px">
-                    <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
-                    <Spacer width="50px" />
-                    <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(appState.isPursuitRace)} race`}</Heading>
-                </Flex>
-                {raceIsMutable && editingRace &&
-                    <>
-                        {!appState.isPursuitRace &&
+            <Box bg="blue.50" minHeight="100vh" margin="0">
+                <Flex direction="column" minHeight="90vh">
+                    {/* <Box marginTop="20px" /> */}
+                    <Flex direction="row" marginTop="50px" marginBottom="20px">
+                        <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
+                        <Spacer width="50px" />
+                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(appState.isPursuitRace)} race`}</Heading>
+                    </Flex>
+                    {raceIsMutable && editingRace &&
+                        <>
                             <>
-                                {Boolean(raceRegistered.length) &&
-                                    <>
-                                        <Heading size={"lg"} marginBottom="10px">Registered</Heading>
-                                        <RegisteredView marginBottom="20px" registered={raceRegistered} />
-                                    </>
-                                }
-                                {Boolean(raceResults.length) &&
-                                    <>
-                                        <Heading size={"lg"} marginBottom="10px">Finishers</Heading>
-                                        <FinisherView marginBottom="20px" results={raceResults} />
-                                    </>
-                                }
+                                <DraggableView registered={raceRegistered} results={raceResults} oods={oods} isPursuitRace={appState.isPursuitRace} />
                             </>
-                        }
-                        {appState.isPursuitRace &&
-                            <>
-                                <Heading size={"lg"} marginBottom="10px">Registered</Heading>
-                                <PursuitFinishView marginBottom="20px" registered={raceRegistered} onPositionsUpdated={updatePursuitPositions} />
-                            </>
-                        }
-                        {Boolean(oods.length) &&
-                            <>
-                                <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                                <OODView marginBottom="20px" oods={oods} isDisabled={committingResults} />
-                            </>
-                        }
-                    </>
-                }
-                {raceIsMutable && !editingRace && Boolean(raceResults.length) &&
-                    <>
-                        <RedButton
-                            onClick={() => updateEditingRace(true)}
-                            isDisabled={committingResults}
-                        >Edit results</RedButton>
-                        {/* <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
+                            {false && !appState.isPursuitRace &&
+                                <>
+                                    {Boolean(raceRegistered.length) &&
+                                        <>
+                                            <Heading size={"lg"} marginBottom="10px">Registered</Heading>
+                                            <RegisteredView marginBottom="20px" registered={raceRegistered} />
+                                        </>
+                                    }
+                                    {Boolean(raceResults.length) &&
+                                        <>
+                                            <Heading size={"lg"} marginBottom="10px">Finishers</Heading>
+                                            <FinisherView marginBottom="20px" results={raceResults} />
+                                        </>
+                                    }
+                                </>
+                            }
+                            {false && appState.isPursuitRace &&
+                                <>
+                                    <Heading size={"lg"} marginBottom="10px">Registered</Heading>
+                                    <PursuitFinishView marginBottom="20px" registered={raceRegistered} onPositionsUpdated={updatePursuitPositions} />
+                                </>
+                            }
+                            {false && Boolean(oods.length) &&
+                                <>
+                                    <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+                                    <OODView marginBottom="20px" oods={oods} isDisabled={committingResults} />
+                                </>
+                            }
+                        </>
+                    }
+                    {raceIsMutable && !editingRace && Boolean(raceResults.length) &&
+                        <>
+                            <RedButton
+                                onClick={() => updateEditingRace(true)}
+                                isDisabled={committingResults}
+                            >Edit results</RedButton>
+                            {/* <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
                             <BlueButton
                                 onClick={(event) => event.preventDefault()}
                                 isLoading={committingResults}
@@ -709,37 +1013,38 @@ export default function Race() {
                                 style={{ width: "100%" }}
                             >Commit results</BlueButton>
                         </CommitResultsDialog> */}
-                        <RaceResultsView results={raceResults} race={race} isDisabled={committingResults} />
+                            <RaceResultsView results={raceResults} race={race} isDisabled={committingResults} />
 
-                        {Boolean(oods.length) &&
-                            <>
-                                <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                                <OODView marginBottom="20px" oods={oods} isDisabled={committingResults} />
-                            </>
-                        }
-                    </>
-                }
-                {!raceIsMutable &&
-                    <RaceResultsView race={race} />
-                }
-                {editingRace && !raceRegistered.length && raceResults.length > 2 &&
-                    <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>
-                }
-                <Spacer />
-                {raceIsMutable && editingRace &&
-                    <>
-                        <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
-                        <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
-                        {!Boolean(raceResults.length) &&
-                            <>
-                                {!appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Set to pursuit race</BlueButton>}
-                                {appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Set to fleet race</BlueButton>}
-                            </>
-                        }
-                    </>
-                }
-                <BackButton disabled={committingResults}>Back to races</BackButton>
-            </Flex>
+                            {Boolean(oods.length) &&
+                                <>
+                                    <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+                                    <OODView marginBottom="20px" oods={oods} isDisabled={committingResults} />
+                                </>
+                            }
+                        </>
+                    }
+                    {!raceIsMutable &&
+                        <RaceResultsView race={race} />
+                    }
+                    {editingRace && !raceRegistered.length && raceResults.length > 2 &&
+                        <GreenButton onClick={() => updateEditingRace(false)} marginTop="20px" autoFocus>View Results</GreenButton>
+                    }
+                    <Spacer />
+                    {raceIsMutable && editingRace &&
+                        <>
+                            <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
+                            <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
+                            {!Boolean(raceResults.length) &&
+                                <>
+                                    {!appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
+                                    {appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
+                                </>
+                            }
+                        </>
+                    }
+                    <BackButton disabled={committingResults}>Back to races</BackButton>
+                </Flex>
+            </Box>
         </>
     )
 }

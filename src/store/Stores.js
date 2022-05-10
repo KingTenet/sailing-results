@@ -29,6 +29,8 @@ export class Stores {
 
     async init() {
         await promiseSleep(10); // Required to get spinner to render!?
+        const started = Date.now();
+        console.log(`Started loading`);
         const promiseClubMembers = StoreWrapper.create("Active Membership", this.raceResultsDocument, this, ClubMember);;
         const promiseHelms = StoreWrapper.create("Helms", this.raceResultsDocument, this, Helm);
 
@@ -61,6 +63,8 @@ export class Stores {
             .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
             .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
 
+
+        console.log(`Loaded results in ${Math.round(Date.now() - started)} ms`);
         this.processResults();
     }
 
@@ -115,9 +119,20 @@ export class Stores {
     //     );
     // }
 
+    getRaceFinishes() {
+        return this.raceFinishes;
+    }
+
+    getRaceFinish(race) {
+        assertType(race, Race);
+        const raceId = Race.getId(race);
+        return this.raceFinishes.find((raceFinish) => Race.getId(raceFinish) === raceId);
+    }
+
     processResults(tranformResults) {
         const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(this.oods.all(), this.pursuitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
         this.raceFinishes = raceFinishes;
+        // this.raceFinishesMap = new Map(raceFinishes);
         this.allCorrectedResults = allCorrectedResults;
         this.seriesPoints = seriesPoints;
     }
@@ -163,6 +178,7 @@ export class Stores {
 
         const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults];
         console.log(`Finished processing results in ${Math.round(Date.now() - started)} ms`);
+
         return allProcesssed;
     }
 
@@ -642,6 +658,10 @@ export class StoreFunctions {
     getRaceFinishForResults(race, mutableResults = [], mutableOODs = [], mutableSeriesRaces = []) {
         const raceId = Race.getId(race);
 
+        if (!mutableResults.length && !mutableOODs.length && !mutableSeriesRaces.length) {
+            return this.stores.getRaceFinish(race);
+        }
+
         if (mutableResults.some((result) => Race.getId(result.getRace()) !== raceId)) {
             throw new Error("All results must be from same race");
         }
@@ -667,7 +687,7 @@ export class StoreFunctions {
             mutableFleetResults,
             storedSeriesRaces,
             undefined,
-            this.stores.raceFinishes,
+            this.stores.getRaceFinishes(),
             this.stores.allCorrectedResults,
         );
 

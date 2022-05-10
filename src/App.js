@@ -87,7 +87,7 @@ function MyRoutes() {
         {
             path: '/', element: <StateWrapper />, children: [
                 { path: '/', element: <Home />, index: true },
-                { path: '/races/', element: <Races /> },
+                { path: '/races/', element: <Races liveOnly={true} /> },
                 { path: '/races/:raceDate/:raceNumber', element: <Race /> },
                 { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm /> },
                 { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },

@@ -9,8 +9,7 @@ import { BackButton } from "./Buttons";
 import Race from "../store/types/Race";
 import { useNavigate } from "react-router-dom";
 import HelmResult from "../store/types/HelmResult";
-
-const ignoreBeforeRace = new Race(parseURLDate("2020-01-01"), 1);
+import { useSortedResults } from "../common/hooks";
 
 function RaceDimension({ children, ...props }) {
     return (
@@ -41,6 +40,28 @@ function RaceListItem({ raceDate, raceNumber, raceResults = [], raceRegistered =
     </>
 }
 
+function ImmutableRaceListItem({ raceDate, raceNumber, raceResults = [], wonBy = [], onClick }) {
+    const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
+    return <>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} onClick={onClick}>
+            <Flex>
+                <Grid
+                    templateColumns={`repeat(${5 + wonBy.length}, 1fr)`}
+                    gap={5}
+                    width={"100%"}>
+                    <RaceDimension colSpan={1}>{`${getURLDate(raceDate).replace(/-/g, "/")}`}</RaceDimension>
+                    <RaceDimension colSpan={1}>{`${formatRaceNumber(raceNumber)} race`}</RaceDimension>
+                    <RaceDimension colSpan={1}>{`${raceResults.length} result${raceResults.length - 1 ? "s" : ""}`}</RaceDimension>
+                    <RaceDimension colSpan={1}>Won by</RaceDimension>
+                    {wonBy.length && wonBy.map((helm, key) => (
+                        <RaceDimension colSpan={1} key={`helm${key}`}>{helm}</RaceDimension>
+                    ))}
+                </Grid>
+            </Flex>
+        </Box>
+    </>
+}
+
 function RacesView({ races, ...props }) {
     const navigateTo = useNavigate();
     const [appState] = useAppState();
@@ -51,7 +72,13 @@ function RacesView({ races, ...props }) {
         <RacesList {...props}>
             {races.map((race) =>
                 <ListItem key={Race.getId(race)}>
-                    <RaceListItem raceDate={race.getDate()} raceNumber={race.getNumber()} raceResults={resultsByRace.get(Race.getId(race))} raceRegistered={registeredByRace.get(Race.getId(race))} onClick={() => navigateTo(`${getURLDate(race.getDate())}/${race.getNumber()}`)} />
+                    <RaceListItem
+                        raceDate={race.getDate()}
+                        raceNumber={race.getNumber()}
+                        raceResults={resultsByRace.get(Race.getId(race))}
+                        raceRegistered={registeredByRace.get(Race.getId(race))}
+                        onClick={() => navigateTo(`${getURLDate(race.getDate())}/${race.getNumber()}`)}
+                    />
                 </ListItem>
             )}
         </RacesList >
@@ -68,8 +95,55 @@ function RacesList({ children, ...props }) {
     )
 }
 
+function ImmutableRace({ race }) {
+    const navigateTo = useNavigate();
+    const [correctedResults, resultsByClass, resultsByPH, maxLaps, SCT, isPursuitRace] = useSortedResults(undefined, race) || [];
 
-export default function Races() {
+    const getWinners = (positionalResults) => {
+        debugger;
+        const firstPlacePositionalResult = positionalResults[0];
+        if (!firstPlacePositionalResult) {
+            return undefined;
+        }
+        const pointsForFirstPlace = firstPlacePositionalResult[1];
+        if (pointsForFirstPlace === 1) {
+            return [HelmResult.getHelmId(firstPlacePositionalResult[0])];
+        }
+        return positionalResults.filter(([, position]) => position === pointsForFirstPlace).map(([result]) => HelmResult.getHelmId(result));
+    };
+
+    const classWinners = getWinners(resultsByClass);
+    const phWinners = !isPursuitRace ? getWinners(resultsByPH) : [];
+
+    const wonBy = [...phWinners, ...classWinners];
+
+    return <ListItem>
+        <ImmutableRaceListItem
+            raceDate={race.getDate()}
+            raceNumber={race.getNumber()}
+            raceResults={correctedResults}
+            wonBy={wonBy}
+            onClick={() => navigateTo(`${getURLDate(race.getDate())}/${race.getNumber()}`)}
+        />
+    </ListItem>
+}
+
+
+function ImmutableRacesView({ races, ...props }) {
+
+    return (
+        <RacesList {...props}>
+            {races.map((race) =>
+                <ImmutableRace race={race} key={Race.getId(race)} />
+            )}
+        </RacesList >
+    );
+}
+
+
+
+
+export default function Races({ liveOnly = false }) {
     const services = useServices();
     const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces());
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
@@ -83,12 +157,26 @@ export default function Races() {
         <>
             <Flex direction="column" margin="5px">
                 <Box marginTop="20px" />
-                <Flex direction="row" marginBottom="20px">
-                    <Heading size={"lg"} marginLeft="20px">{`Editable Races`}</Heading>
-                </Flex>
-                <Box marginBottom="20px">
-                    <RacesView races={editableRaces} />
-                </Box>
+                {editableRaces.length &&
+                    <>
+                        <Flex direction="row" marginBottom="20px">
+                            <Heading size={"lg"} marginLeft="20px">{`Active Races`}</Heading>
+                        </Flex>
+                        <Box marginBottom="20px">
+                            <RacesView races={editableRaces} />
+                        </Box>
+                    </>
+                }
+                {!liveOnly && immutableRaces.length &&
+                    <>
+                        <Flex direction="row" marginBottom="20px">
+                            <Heading size={"lg"} marginLeft="20px">{`Race Results`}</Heading>
+                        </Flex>
+                        <Box marginBottom="20px">
+                            <ImmutableRacesView races={immutableRaces} />
+                        </Box>
+                    </>
+                }
                 {/* <BackButton>Back</BackButton> */}
             </Flex>
         </>

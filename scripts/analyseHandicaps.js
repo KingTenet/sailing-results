@@ -73,7 +73,7 @@ async function outputClassAnalysis(stores, sheetName, sheetDoc, tranformResults)
 
 async function outputHeadToHead(stores, sheetName, sheetDoc, helmAId, helmBId) {
     stores.processResults();
-    const headToHeadResults = stores.raceFinishes
+    const headToHeadResults = stores.getRaceFinishes()
         .filter((raceFinish) => raceFinish.hasResults())
         .map((raceFinish) => raceFinish.getClassCorrectedPointsByResult())
         .map((resultsByPosition) => resultsByPosition.filter(([result]) => [helmAId, helmBId].includes(Result.getHelmId(result))))

@@ -2,10 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+// import App from './DND';
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import * as serviceWorker from './serviceWorkerRegistration';
+import initArrayAtPolyfill from "./polyfills.js";
 serviceWorker.register();
-
+initArrayAtPolyfill();
 
 const rootElement = document.getElementById("root");
 

@@ -127,6 +127,15 @@ function ServicesWrapper({ token, urlToken }) {
     const services = useServices(async () => initialiseServices(token, urlToken))
 
     console.log("Services Wrapper");
+    if (services.error) {
+        return (
+            <>
+                <Text>{`${services.error}`}</Text>
+                <Text>{JSON.stringify(services.error.stack)}</Text>
+            </>
+        );
+    }
+
     if (!services.ready) {
         console.log("Rendering spinner");
         return (

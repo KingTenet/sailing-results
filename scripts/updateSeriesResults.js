@@ -33,7 +33,7 @@ async function updateCorrectedResults(raceFinishesByRaceAsc, correctedResultsSto
 }
 
 async function updateAllSeriesResults(stores) {
-    const raceFinishes = stores.raceFinishes;
+    const raceFinishes = stores.getRaceFinish();
     const raceFinishesByRaceAsc = [...raceFinishes]
         .map(([, raceFinish]) => raceFinish)
         .sort((a, b) => a.sortByRaceAsc(b));

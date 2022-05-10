@@ -24,13 +24,16 @@ export function useServices(initialiseServices) {
     // const [cachedState] = useAppState();
 
     useEffect(() => {
-        if (!appServices?.ready && initialiseServices) {
+        if (!appServices.error && !appServices?.ready && initialiseServices) {
             initialiseServices()
                 .then((services) => updateAppServices({
                     ...services,
                     ready: true,
                 }))
-                .catch((err) => console.log(err));
+                .catch((err) => updateAppServices({
+                    error: err,
+                    ready: false,
+                }));
         }
     });
 

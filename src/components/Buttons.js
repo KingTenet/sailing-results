@@ -20,6 +20,7 @@ export function RedButton({ children, ...props }) {
         <Button
             backgroundColor="red.500"
             marginBottom="20px"
+            maxWidth="500px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>
@@ -32,6 +33,7 @@ export function GreenButton({ children, ...props }) {
         <Button
             backgroundColor="green.500"
             marginBottom="20px"
+            maxWidth="500px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>
@@ -44,6 +46,7 @@ export function BlueButton({ children, ...props }) {
         <Button
             backgroundColor="blue.500"
             marginBottom="20px"
+            maxWidth="500px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>
