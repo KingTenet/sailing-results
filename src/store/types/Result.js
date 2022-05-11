@@ -78,6 +78,15 @@ export default class Result extends HelmResult {
         return new Result(mutableResult.getRace(), mutableResult.getHelm(), mutableResult.getBoatClass(), mutableResult.boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, StoreObject.fromStore({}));
     }
 
+    static fromRegistered(helmResult, pursuitFinishPosition) {
+        assertType(helmResult, HelmResult);
+        const mutableResult = MutableRaceResult.fromUser(helmResult.getRace(), helmResult.getHelm(), helmResult.getBoatClass(), helmResult.getSailNumber());
+        if (!pursuitFinishPosition) {
+            return Result.fromMutableRaceResult(mutableResult, undefined, undefined, undefined, new FinishCode("DNF"));
+        }
+        return Result.fromMutableRaceResult(mutableResult, undefined, pursuitFinishPosition, undefined);
+    }
+
     getClassCorrectedTime(raceMaxLaps) {
         let boatClass = this.getBoatClass();
         if (!this.finishCode.validFinish()) {

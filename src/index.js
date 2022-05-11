@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 // import App from './DND';
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+import { ChakraProvider, extendTheme, withDefaultColorScheme } from "@chakra-ui/react";
 import * as serviceWorker from './serviceWorkerRegistration';
 import initArrayAtPolyfill from "./polyfills.js";
 serviceWorker.register();
@@ -31,6 +31,7 @@ const config = {
     useSystemColorMode: false
 };
 const theme = extendTheme({ colors, config });
+// const theme = extendTheme(withDefaultColorScheme({ colorScheme: 'red' }))
 
 ReactDOM.render(
     <ChakraProvider theme={theme}>

@@ -22,12 +22,10 @@ import {
 } from '@chakra-ui/react';
 
 import { CheckCircleIcon } from '@chakra-ui/icons';
-import FinishCode from "../store/types/FinishCode";
 
 function FinishHelm() {
     const navigateBack = useBack();
     const [finishTimeSeconds, setFinishTimeSeconds] = useState();
-    const [isDNF, setIsDNF] = useState(false);
     const [finishedLaps, setFinishedLaps] = useState();
     const [appState, updateAppState] = useAppState();
     const services = useServices();
@@ -64,7 +62,7 @@ function FinishHelm() {
                     ],
                     results: [
                         ...results,
-                        services.createHelmFinish(registeredResult, finishedLaps, undefined, finishTimeSeconds, isDNF ? new FinishCode("DNF") : undefined),
+                        services.createHelmFinish(registeredResult, finishedLaps, undefined, finishTimeSeconds),
                     ],
                 };
             }
@@ -130,15 +128,12 @@ function FinishHelm() {
                                     </Box>
                                 </Flex>
                             </Box>
-                            <FinishTimeSelector
-                                setFinishTimeSeconds={setFinishTimeSeconds}
-                                setDNF={setIsDNF}
-                            />
+                            <FinishTimeSelector setFinishTimeSeconds={setFinishTimeSeconds} />
                             {finishTimeSeconds &&
                                 <LapsSelector onLapsUpdated={setFinishedLaps} />
                             }
                             <Spacer />
-                            {(finishedLaps || isDNF) &&
+                            {(finishedLaps) &&
                                 <Button tabIndex="-1" backgroundColor="green.500" onClick={finishHelm} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
                             }
                             <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>

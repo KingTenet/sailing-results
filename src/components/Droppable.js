@@ -1,22 +1,27 @@
 import { Box } from "@chakra-ui/react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-export function DroppableContext({ setIsDragging, children }) {
+export function DroppableContext({ setIsDragging, onDragEnd, children }) {
+    const handleDragEnd = (...props) => {
+        setIsDragging(false);
+        onDragEnd(...props);
+    };
+
     return (
-        <DragDropContext onDragEnd={() => setIsDragging(false)} onBeforeCapture={() => setIsDragging(true)}>
+        <DragDropContext onDragEnd={(...props) => handleDragEnd(...props)} onBeforeCapture={() => setIsDragging(true)}>
             {children}
         </DragDropContext>
     );
 }
 
-export function DroppableList({ DraggableListItem, listItems = [], droppableId, DroppableHeader, isDropDisabled, getDroppableStyle, getId }) {
+export function DroppableList({ DraggableListItem, listItems = [], droppableId, DroppableHeader, isDropDisabled, DroppableContainer, getId }) {
     return (
         < DroppableWrapper
             droppableId={droppableId}
             isDropDisabled={isDropDisabled || false}
         >
             {(isDraggingOver, placeholder) =>
-                <Box style={getDroppableStyle(isDraggingOver)}>
+                <DroppableContainer isDraggingOver={isDraggingOver}>
                     {DroppableHeader && <DroppableHeader isDraggingOver={isDraggingOver} listItems={listItems} />}
                     {listItems.map((item, index) =>
                         <Draggable
@@ -37,7 +42,7 @@ export function DroppableList({ DraggableListItem, listItems = [], droppableId, 
                         </Draggable>
                     )}
                     {placeholder}
-                </Box>
+                </DroppableContainer>
             }
         </DroppableWrapper >
     );

@@ -95,10 +95,6 @@ function formatPI(personalInterval) {
     return Math.round((personalInterval + Number.EPSILON) * 100) / 100;
 }
 
-function formatFleetPursuit(isPursuitRace) {
-    return isPursuitRace ? "pursuit" : "fleet";
-}
-
 function ResultDimension({ children, ...props }) {
     return (
         <GridItem
@@ -256,16 +252,25 @@ export default function RaceResultsView({ results, oods, race, ...props }) {
                 <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
                 {sortedResults.map(([result, position]) =>
                     <ListItem key={HelmResult.getId(result)}>
-                        <ResultListItem result={result} raceView={raceView} position={position} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+                        <ResultListItem
+                            result={result}
+                            raceView={raceView}
+                            position={position}
+                            dimension1={dimension1}
+                            dimension2={dimension2}
+                            dimension3={dimension3}
+                            toggleDimension1={toggleDimension1}
+                            toggleDimension2={toggleDimension2}
+                            toggleDimension3={toggleDimension3} />
                     </ListItem>
                 )}
             </ResultsList>
-            {/* {Boolean(oods.length) &&
+            {Boolean(oods.length) &&
                 <>
                     <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                    <OODView marginBottom="20px" oods={oods} {...props} />
+                    <OODView marginBottom="20px" oods={oods} />
                 </>
-            } */}
+            }
 
             <GreenButton onClick={toggleResultsView} autoFocus {...props}>{buttonMsg}</GreenButton>
         </>

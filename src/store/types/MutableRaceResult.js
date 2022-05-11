@@ -3,6 +3,7 @@ import StoreObject from "./StoreObject.js";
 import Race from "./Race.js";
 import BoatClass from "./BoatClass.js";
 import HelmResult from "./HelmResult.js";
+import Result from "./Result.js";
 
 export default class MutableRaceResult extends HelmResult {
     constructor(race, helm, boatClass, boatSailNumber, metadata) {
@@ -38,6 +39,11 @@ export default class MutableRaceResult extends HelmResult {
 
     static fromUser(race, helm, boatClass, boatSailNumber) {
         return new MutableRaceResult(race, helm, boatClass, boatSailNumber, StoreObject.fromStore({}));
+    }
+
+    static fromResult(result) {
+        assertType(result, Result);
+        return MutableRaceResult.fromUser(result.getRace(), result.getHelm(), result.getBoatClass(), result.boatSailNumber);
     }
 
     getSailNumber() {

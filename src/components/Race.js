@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Text, Spacer } from "@chakra-ui/react";
+import { Box, Collapse, Flex, Heading, Spacer } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import React, { useRef, useState } from "react";
@@ -12,186 +12,121 @@ import RaceResultsView from "./RaceResultsView";
 
 import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
-import { DeleteIcon } from "@chakra-ui/icons";
 import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem } from "./ListItems";
-
-const BASE_DROPPABLE_STYLE = {
-    backgroundColor: "lightBlue",
-    borderRadius: "12px",
-    borderColor: "DarkSlateGray",
-    borderWidth: "0px 0px 0px 0px",
-    padding: "10px 2px 10px 2px",
-    borderStyle: "solid",
-    marginBottom: "10px",
-    // margin: "0px 0px 10px 0px",
-};
-
-const DEFAULT_DROPPABLE_HIGHLIGHT_STYLE = {
-    backgroundColor: "lightBlue",
-    borderColor: "darkGreen",
-    borderStyle: "dashed",
-    borderWidth: "2px 2px 2px 2px",
-    padding: "8px 0px 8px 0px",
-}
-
-function getDroppableStyleForHighlight(
-    highlightStyles = DEFAULT_DROPPABLE_HIGHLIGHT_STYLE,
-    baseStyle = BASE_DROPPABLE_STYLE
-) {
-    return (isDraggingOver) => {
-        if (!isDraggingOver) {
-            return {
-                ...BASE_DROPPABLE_STYLE,
-                ...baseStyle,
-            };
-        }
-
-        return {
-            ...BASE_DROPPABLE_STYLE,
-            ...baseStyle,
-            ...DEFAULT_DROPPABLE_HIGHLIGHT_STYLE,
-            ...highlightStyles,
-        };
-    }
-}
-
-const registeredGetDroppableStyle = getDroppableStyleForHighlight({
-
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    backgroundColor: "lightBlue",
-});
-
-const defaultGetDroppableStyle = getDroppableStyleForHighlight({
-    backgroundColor: "lightGreen",
-    borderStyle: "dashed",
-    borderWidth: "2px",
-    // borderRadius: "10px",
-    borderColor: "darkGreen",
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    backgroundColor: "lightGreen",
-});
-
-const deleteGetDroppableStyle = getDroppableStyleForHighlight({
-    backgroundColor: "pink",
-    borderStyle: "dashed",
-    borderWidth: "2px",
-    // borderRadius: "10px",
-    borderColor: "red",
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    minHeight: "52px",
-    backgroundColor: "pink",
-});
-const dnfGetDroppableStyle = getDroppableStyleForHighlight({
-    backgroundColor: "#ffc680",
-    borderStyle: "dashed",
-    borderWidth: "2px",
-    // borderRadius: "10px",
-    borderColor: "DarkOrange",
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    backgroundColor: "#ffc680",
-    // borderColor: "DarkOrange",
-});
+import { RegisteredCard, DeleteCard, DNFCard, FinishersCard } from "./Cards";
+import { RegisteredDroppableHeader, DeleteDroppableHeader, DNFDroppableHeader, FinishedDroppableHeader, OODDroppableHeader } from "./CardHeaders";
+import MutableRaceResult from "../store/types/MutableRaceResult";
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
 }
 
-function DroppableHeader({ isDraggingOver, heading }) {
-    return (
-        <Flex direction="row">
-            <Text paddingLeft="10px" fontSize="20px">{heading}</Text>
-        </Flex>
-    );
-}
-
-function RegisteredDroppableHeader({ isDraggingOver }) {
-    return <DroppableHeader heading={"Registered"} isDraggingOver={isDraggingOver} />;
-}
-
-function FinishedDroppableHeader({ isDraggingOver }) {
-    return <DroppableHeader heading={"Finished"} isDraggingOver={isDraggingOver} />;
-}
-
-function OODDroppableHeader({ isDraggingOver }) {
-    return <DroppableHeader heading={"OODs"} isDraggingOver={isDraggingOver} />;
-}
-
-function DNFDroppableHeader({ isDraggingOver, listItems }) {
-    return (
-        <Flex direction="row">
-            <Text paddingLeft="10px" fontSize="20px">DNF</Text>
-            {listItems && !Boolean(listItems.length)
-                && <Text fontSize="15px" marginTop="5px" marginLeft="80px">Drag any non-finishers here!</Text>
-            }
-        </Flex>
-    );
-}
-
-function DeleteDroppableHeader({ isDraggingOver, placeholder }) {
-    if (placeholder) {
-        return (
-            <Flex direction="row">
-                <Box boxSize="2em" />
-                <Spacer />
-                <Text paddingLeft="20px" fontSize="20px">{" "}</Text>
-                <Spacer />
-                <Box boxSize="2em" />
-            </Flex>
-        );
-    }
-
-    return (
-        <Flex direction="row">
-            <DeleteIcon boxSize="2em" />
-            <Spacer />
-            <Text paddingLeft="20px" fontSize="20px">Drag to delete</Text>
-            <Spacer />
-            <DeleteIcon boxSize="2em" />
-        </Flex>
-    );
-}
-
-function WrappedDroppableList({ item, ...props }) {
+function WrappedDroppableList({ item, isOpen, ...props }) {
     return <DroppableList getId={(item) => HelmResult.getId(item)} {...props} />
 }
 
-function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, RegisteredListItem, registered, FinishedListItem, finished = [], dnf, OODListItem, oods, isPursuitRace, portalRef }) {
+function DraggableFinishView({
+    PursuitFinishListItem,
+    RegisteredListItem,
+    registered,
+    FinishedListItem,
+    finished = [],
+    dnf,
+    OODListItem,
+    oods,
+    isPursuitRace,
+    onDragCompleted
+}) {
     const [draggingRegistered, setIsDraggingRegistered] = useState(false);
     const [draggingFinisher, setIsDraggingFinisher] = useState(false);
     const [draggingOOD, setIsDraggingOOD] = useState(false);
 
+    const pursuitFinishes = registered;
+
     const renderingDeleteDropZone = draggingRegistered || draggingFinisher || draggingOOD;
 
+    const onDragEnd = (result) => {
+        const insertItem = (newItem, index, items) => [...items.slice(0, index), newItem, ...items.slice(index)];
+        const deleteItem = (index, items) => [...items.slice(0, index), ...items.slice(index + 1)];
+
+        const { source, destination } = result;
+
+        if (!destination ||
+            (source.droppableId === destination.droppableId && source.index === destination.index)) {
+            return;
+        }
+
+        let newRegistered = registered;
+        let newFinished = finished;
+        let newDNF = dnf;
+        let newOODs = oods;
+
+        const actOnRegistered = (action) => newRegistered = action(newRegistered);
+        const actOnDNF = (action) => newDNF = action(newDNF);
+        const actOnFinished = (action) => newFinished = action(newFinished);
+        const actOnOOD = (action) => newOODs = action(newOODs);
+
+        const droppableActor = {
+            "pursuitFinishes": actOnRegistered,
+            "registered": actOnRegistered,
+            "dnf": actOnDNF,
+            "pursuitDNF": actOnDNF,
+            "finished": actOnFinished,
+            "oods": actOnOOD,
+        };
+
+        const sourceActor = droppableActor[source.droppableId];
+        const destinationActor = droppableActor[destination.droppableId];
+
+        if (!sourceActor) {
+            throw new Error("Unknown droppableId " + source.droppableId);
+        }
+
+        if (destination.droppableId !== "delete" && !destinationActor) {
+            throw new Error("Unknown droppableId " + destination.droppableId);
+        }
+
+        if (destination.droppableId === "delete") {
+            // Just need to modify source...
+            sourceActor((items) => deleteItem(source.index, items));
+        }
+        else {
+            let deletedItem;
+            sourceActor((items) => {
+                deletedItem = items[source.index];
+                return deleteItem(source.index, items);
+            });
+            destinationActor((items) => insertItem(deletedItem, destination.index, items))
+        }
+
+        return onDragCompleted(newRegistered, newFinished, newDNF, newOODs);
+    };
     return (
         <>
             {isPursuitRace &&
-                <DroppableContext setIsDragging={setIsDraggingRegistered}>
+                <DroppableContext setIsDragging={setIsDraggingRegistered} onDragEnd={onDragEnd}>
                     {pursuitFinishes && Boolean(pursuitFinishes.length) &&
                         <WrappedDroppableList
                             droppableId={"pursuitFinishes"}
                             listItems={pursuitFinishes}
                             DraggableListItem={PursuitFinishListItem}
-                            getDroppableStyle={defaultGetDroppableStyle}
+                            DroppableContainer={FinishersCard}
                             DroppableHeader={FinishedDroppableHeader}
                         />
                     }
                     {(registered && Boolean(registered.length) || (dnf && Boolean(dnf.length))) &&
                         <WrappedDroppableList
-                            droppableId={"dnf"}
+                            droppableId={"pursuitDNF"}
                             listItems={dnf}
                             DraggableListItem={FinishedListItem}
-                            getDroppableStyle={dnfGetDroppableStyle}
+                            DroppableContainer={DNFCard}
                             DroppableHeader={DNFDroppableHeader}
                         />
                     }
                     {draggingRegistered &&
                         <WrappedDroppableList
-                            droppableId={"deleteRegistered"}
-                            getDroppableStyle={deleteGetDroppableStyle}
+                            droppableId={"delete"}
+                            DroppableContainer={DeleteCard}
                             DroppableHeader={DeleteDroppableHeader}
                         />
                     }
@@ -199,13 +134,13 @@ function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, Registere
             }
             {!isPursuitRace &&
                 <>
-                    <DroppableContext setIsDragging={setIsDraggingRegistered}>
+                    <DroppableContext setIsDragging={setIsDraggingRegistered} onDragEnd={onDragEnd}>
                         {registered && Boolean(registered.length) &&
                             <WrappedDroppableList
                                 droppableId={"registered"}
                                 listItems={registered}
                                 DraggableListItem={RegisteredListItem}
-                                getDroppableStyle={registeredGetDroppableStyle}
+                                DroppableContainer={RegisteredCard}
                                 DroppableHeader={RegisteredDroppableHeader}
                                 isDropDisabled={true}
                             />
@@ -215,58 +150,59 @@ function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, Registere
                                 droppableId={"dnf"}
                                 listItems={dnf}
                                 DraggableListItem={FinishedListItem}
-                                getDroppableStyle={dnfGetDroppableStyle}
+                                DroppableContainer={DNFCard}
                                 DroppableHeader={DNFDroppableHeader}
                             />
                         }
                         {draggingRegistered &&
                             <WrappedDroppableList
-                                droppableId={"deleteRegistered"}
-                                getDroppableStyle={deleteGetDroppableStyle}
+                                droppableId={"delete"}
+                                DroppableContainer={DeleteCard}
                                 DroppableHeader={DeleteDroppableHeader}
                             />
                         }
                     </DroppableContext>
-                    <DroppableContext setIsDragging={setIsDraggingFinisher}>
+                    <DroppableContext setIsDragging={setIsDraggingFinisher} onDragEnd={onDragEnd}>
                         {finished && Boolean(finished.length) &&
                             <WrappedDroppableList
                                 droppableId={"finished"}
                                 listItems={finished}
                                 DraggableListItem={FinishedListItem}
-                                getDroppableStyle={defaultGetDroppableStyle}
+                                DroppableContainer={FinishersCard}
                                 DroppableHeader={FinishedDroppableHeader}
+                                isDropDisabled={true}
                             />
                         }
                         {(draggingFinisher) &&
                             <WrappedDroppableList
-                                droppableId={"deleteFinisher"}
-                                getDroppableStyle={deleteGetDroppableStyle}
+                                droppableId={"delete"}
+                                DroppableContainer={DeleteCard}
                                 DroppableHeader={DeleteDroppableHeader}
                             />
                         }
                     </DroppableContext>
                 </>
             }
-            <DroppableContext setIsDragging={setIsDraggingOOD}>
+            <DroppableContext setIsDragging={setIsDraggingOOD} onDragEnd={onDragEnd}>
                 {oods && Boolean(oods.length) &&
                     <WrappedDroppableList
                         droppableId={"oods"}
                         listItems={oods}
                         DraggableListItem={OODListItem}
-                        getDroppableStyle={defaultGetDroppableStyle}
+                        DroppableContainer={FinishersCard}
                         DroppableHeader={OODDroppableHeader}
                     />
                 }
                 {draggingOOD &&
                     <WrappedDroppableList
-                        droppableId={"deleteOOD"}
-                        getDroppableStyle={deleteGetDroppableStyle}
+                        droppableId={"delete"}
+                        DroppableContainer={DeleteCard}
                         DroppableHeader={DeleteDroppableHeader}
                     />
                 }
             </DroppableContext>
             {!renderingDeleteDropZone &&
-                <Box style={{ ...deleteGetDroppableStyle(), backgroundColor: "inherit" }} hidden={false}>
+                <Box>
                     <DeleteDroppableHeader placeholder={true} />
                 </Box>
             }
@@ -274,10 +210,8 @@ function DraggableFinishView({ PursuitFinishListItem, pursuitFinishes, Registere
     );
 }
 
-function DraggableView({ registered, results, oods, isPursuitRace, portalRef }) {
+function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateRaceResults }) {
     const navigateTo = useNavigate();
-    const finished = results.filter((result) => result.finishCode.validFinish());
-    const dnf = results.filter((result) => !result.finishCode.validFinish());
 
     const WrappedRegisteredListItem = ({ item }) =>
         <RegisteredListItem
@@ -292,7 +226,6 @@ function DraggableView({ registered, results, oods, isPursuitRace, portalRef }) 
     return (
         <DraggableFinishView
             PursuitFinishListItem={WrappedPursuitFinishListItem}
-            pursuitFinishes={registered}
             RegisteredListItem={WrappedRegisteredListItem}
             registered={registered}
             FinishedListItem={WrappedFinisherListItem}
@@ -302,15 +235,13 @@ function DraggableView({ registered, results, oods, isPursuitRace, portalRef }) 
             OODListItem={WrappedOODListItem}
             oods={oods}
             isPursuitRace={isPursuitRace}
-            portalRef={portalRef}
+            onDragCompleted={updateRaceResults}
         />
     );
 }
 
 export default function Race() {
-    const portalRef = useRef();
     const navigateTo = useNavigate();
-    const navigateBack = useBack();
     const [appState, updateAppState] = useAppState();
     const params = useParams();
     const raceDateStr = params["raceDate"];
@@ -342,18 +273,28 @@ export default function Race() {
         throw new Error("Failed to commit results to store");
     };
 
-    const updatePursuitPositions = (newRegistered) => {
-        updateAppState(({ registered, ...state }) => ({
-            ...state,
-            registered: newRegistered,
-        }));
-    }
-
     const setIsPursuitRace = (value) => {
         updateAppState(({ isPursuitRace, ...state }) => ({
             ...state,
             isPursuitRace: value,
         }))
+    }
+
+    const finished = raceResults.filter((result) => result.finishCode.validFinish());
+    const dnf = raceResults.filter((result) => !result.finishCode.validFinish());
+
+    const updateRaceResults = (newRegistered, newFinished, newDNF, newOODs) => {
+        updateAppState((state) => ({
+            ...state,
+            registered: newRegistered.map((result) => result instanceof Result ? MutableRaceResult.fromResult(result) : result),
+            results: newFinished !== finished || newDNF !== dnf
+                ? [
+                    ...newFinished,
+                    ...newDNF.map((helmResult) => Result.fromRegistered(helmResult)),
+                ]
+                : raceResults,
+            oods: newOODs,
+        }));
     }
 
     function Wrapped({ children }) {
@@ -375,7 +316,7 @@ export default function Race() {
     if (editingRace) {
         return (
             <Wrapped>
-                <DraggableView registered={raceRegistered} results={raceResults} oods={oods} isPursuitRace={appState.isPursuitRace} portalRef={portalRef} />
+                <DraggableView registered={raceRegistered} finished={finished} dnf={dnf} oods={oods} isPursuitRace={appState.isPursuitRace} updateRaceResults={updateRaceResults} />
                 <Box marginTop="20px" />
                 {!raceRegistered.length && raceResults.length > 2 &&
                     <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>
@@ -383,7 +324,7 @@ export default function Race() {
                 <Spacer />
                 <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
                 <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
-                {!Boolean(raceResults.length) &&
+                {!Boolean(raceResults.filter((result) => result.finishCode.validFinish()).length) &&
                     <>
                         {!appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
                         {appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
