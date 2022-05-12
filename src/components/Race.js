@@ -13,7 +13,7 @@ import RaceResultsView from "./RaceResultsView";
 import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
 import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem } from "./ListItems";
-import { RegisteredCard, DeleteCard, DNFCard, FinishersCard } from "./Cards";
+import { RegisteredCard, DeleteCard, DNFCard, FinishersCard, PlaceholderCard } from "./Cards";
 import { RegisteredDroppableHeader, DeleteDroppableHeader, DNFDroppableHeader, FinishedDroppableHeader, OODDroppableHeader } from "./CardHeaders";
 import MutableRaceResult from "../store/types/MutableRaceResult";
 
@@ -202,9 +202,9 @@ function DraggableFinishView({
                 }
             </DroppableContext>
             {!renderingDeleteDropZone &&
-                <Box>
+                <PlaceholderCard>
                     <DeleteDroppableHeader placeholder={true} />
-                </Box>
+                </PlaceholderCard>
             }
         </>
     );

@@ -38,7 +38,7 @@ export function DeleteDroppableHeader({ isDraggingOver, placeholder }) {
             <Flex direction="row">
                 <Box boxSize="2em" />
                 <Spacer />
-                <Text paddingLeft="20px" fontSize="20px">{" "}</Text>
+                <Text paddingLeft="20px" fontSize="20px"></Text>
                 <Spacer />
                 <Box boxSize="2em" />
             </Flex>

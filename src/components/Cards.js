@@ -69,6 +69,7 @@ const deleteGetDroppableStyle = getDroppableStyleForHighlight({
     minHeight: "52px",
     backgroundColor: "pink",
 });
+
 const dnfGetDroppableStyle = getDroppableStyleForHighlight({
     backgroundColor: "#ffc680",
     borderStyle: "dashed",
@@ -81,8 +82,14 @@ const dnfGetDroppableStyle = getDroppableStyleForHighlight({
     // borderColor: "DarkOrange",
 });
 
+const placeholderStyle = getDroppableStyleForHighlight(undefined, { backgroundColor: "inherit",  });
+
 export function RegisteredCard({ isDraggingOver, ...props }) {
     return <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
+}
+
+export function PlaceholderCard({ isDraggingOver, ...props }) {
+    return <Box style={placeholderStyle(isDraggingOver)} {...props} />
 }
 
 export function DeleteCard({ isDraggingOver, ...props }) {
