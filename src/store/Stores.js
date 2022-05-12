@@ -230,6 +230,47 @@ class Indexes {
         this.sailNumbersByBoat = Indexes.getSailNumbersForBoat(this.getAllResults(results));
     }
 
+    // getHelmsIndexOld(excludedHelms = [], newHelms = []) {
+    //     const helmIdsToExclude = excludedHelms.map(Helm.getId);
+
+    //     const getScore = (count, time) => {
+    //         if (count > 2) {
+    //             return time;
+    //         }
+    //         return count;
+    //     }
+
+    //     const sortCountsByScore = (helmCounts) => {
+    //         return helmCounts.map(([helmId, values]) => [this.stores.getHelmFromHelmId(helmId, newHelms), values])
+    //             .map(([helm, [count, time]]) => [helm, [count, new Date(time), getScore(count, time)]])
+    //             .sort(([, [, , scoreA]], [, [, , scoreB]]) => scoreB - scoreA);
+    //     }
+
+    //     // Sorted by score desc
+    //     const helmsByScore = sortCountsByScore([...this.helms]);
+
+    //     const helmsById = helmsByScore.map(([helm]) => Helm.getId(helm));
+
+    //     const oldHelmsWithoutResults = this.stores.helms.all().filter((oldHelm) => !helmsById.includes(Helm.getId(oldHelm)));
+    //     const newHelmsWithoutResults = newHelms.filter((newHelm) => !helmsById.includes(Helm.getId(newHelm)));
+    //     const helmsWithoutResultsById = [...oldHelmsWithoutResults, ...newHelmsWithoutResults].map(Helm.getId);
+    //     const membersNotHelms = this.stores.clubMembers.all()
+    //         .filter((clubMember) => !helmsById.includes(ClubMember.getId(clubMember)) && !helmsWithoutResultsById.includes(ClubMember.getId(clubMember)));
+
+    //     return new SearchIndex(
+    //         [...helmsByScore.map(([helm]) => helm)
+    //             .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
+    //         ...newHelmsWithoutResults
+    //             .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
+    //         ...oldHelmsWithoutResults
+    //             .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
+    //         ...membersNotHelms
+    //             .filter((clubMember) => !helmIdsToExclude.includes(ClubMember.getId(clubMember)))
+    //         ],
+    //         "name",
+    //     );
+    // }
+
     getHelmsIndex(excludedHelms = [], newHelms = []) {
         const helmIdsToExclude = excludedHelms.map(Helm.getId);
 
@@ -240,33 +281,30 @@ class Indexes {
             return count;
         }
 
-        const sortCountsByScore = (helmCounts) => {
-            return helmCounts.map(([helmId, values]) => [this.stores.getHelmFromHelmId(helmId, newHelms), values])
-                .map(([helm, [count, time]]) => [helm, [count, new Date(time), getScore(count, time)]])
-                .sort(([, [, , scoreA]], [, [, , scoreB]]) => scoreB - scoreA);
+        const scoresByHelmId = new Map([...this.helms]
+            .map(([helmId, [count, time]]) => [helmId, getScore(count, time)]));
+
+        const getHelmForId = (helmId) => {
+            try {
+                return this.stores.getHelmFromHelmId(helmId, newHelms);
+            }
+            catch (err) {
+                return false;
+            }
         }
 
-        // Sorted by score desc
-        const helmsByScore = sortCountsByScore([...this.helms]);
-
-        const helmsById = helmsByScore.map(([helm]) => Helm.getId(helm));
-
-        const oldHelmsWithoutResults = this.stores.helms.all().filter((oldHelm) => !helmsById.includes(Helm.getId(oldHelm)));
-        const newHelmsWithoutResults = newHelms.filter((newHelm) => !helmsById.includes(Helm.getId(newHelm)));
-        const helmsWithoutResultsById = [...oldHelmsWithoutResults, ...newHelmsWithoutResults].map(Helm.getId);
-        const membersNotHelms = this.stores.clubMembers.all()
-            .filter((clubMember) => !helmsById.includes(ClubMember.getId(clubMember)) && !helmsWithoutResultsById.includes(ClubMember.getId(clubMember)));
-
         return new SearchIndex(
-            [...helmsByScore.map(([helm]) => helm)
-                .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
-            ...newHelmsWithoutResults
-                .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
-            ...oldHelmsWithoutResults
-                .filter((helm) => !helmIdsToExclude.includes(Helm.getId(helm))),
-            ...membersNotHelms
-                .filter((clubMember) => !helmIdsToExclude.includes(ClubMember.getId(clubMember)))
-            ],
+            this.stores.clubMembers.all()
+                .map((clubMember) => {
+                    const helmId = ClubMember.getId(clubMember);
+                    if (helmIdsToExclude.includes(helmId)) {
+                        return false;
+                    }
+                    return [getHelmForId(helmId) || clubMember, scoresByHelmId.get(helmId) || 0]
+                })
+                .filter(Boolean)
+                .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+                .map(([helm]) => helm),
             "name",
         );
     }
