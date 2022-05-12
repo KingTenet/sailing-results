@@ -22,10 +22,10 @@ export function DeleteFinisher({ finisher, children }) {
     )
 }
 
-export function DeleteRegistered({ registeredToDelete, children }) {
+export function DeletePursuitFinish({ registeredToDelete, children }) {
     const [, updateAppState] = useAppState();
 
-    const deleteRegistered = () => {
+    const deletePursuitFinish = () => {
         updateAppState(({ registered, ...state }) => ({
             ...state,
             registered: registered.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(registeredToDelete)),
@@ -34,7 +34,7 @@ export function DeleteRegistered({ registeredToDelete, children }) {
 
     return (
         <AlertDialogWrapper
-            onConfirm={() => deleteRegistered()} deleteHeading={`Delete registered helm: ${HelmResult.getHelmId(registeredToDelete)}.`}>
+            onConfirm={() => deletePursuitFinish()} deleteHeading={`Delete helm: ${HelmResult.getHelmId(registeredToDelete)}.`}>
             {children}
         </AlertDialogWrapper>
     )

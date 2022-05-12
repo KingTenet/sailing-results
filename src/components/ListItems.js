@@ -1,7 +1,7 @@
 import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
 import React from "react";
 import Result from "../store/types/Result";
-import { DeleteFinisher, DeleteOOD, DeleteRegistered } from "./DeleteItems";
+import { DeleteFinisher, DeleteOOD, DeletePursuitFinish } from "./DeleteItems";
 
 
 
@@ -71,7 +71,7 @@ export function PursuitFinishListItem({ result, index }) {
     const sailNumber = result.getSailNumber();
 
     return (
-        <DeleteRegistered registeredToDelete={result} >
+        <DeletePursuitFinish registeredToDelete={result} >
             <ListItemWrapper>
                 <Grid
                     templateColumns='repeat(16, 1fr)'
@@ -83,7 +83,7 @@ export function PursuitFinishListItem({ result, index }) {
                     <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
                 </Grid>
             </ListItemWrapper>
-        </DeleteRegistered>
+        </DeletePursuitFinish>
     )
 }
 
