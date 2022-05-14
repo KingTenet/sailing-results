@@ -481,6 +481,7 @@ export class StoreFunctions {
             seriesResultsSheetId,
             forceRefresh
         );
+        console.log("Race date: " + editableRaceDateStr);
         return new StoreFunctions(
             stores,
             superUser,
@@ -550,6 +551,7 @@ export class StoreFunctions {
     }
 
     isRaceEditableByUser(race) {
+        debugger;
         if (this.superUser) {
             return true;
         }

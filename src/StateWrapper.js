@@ -25,6 +25,14 @@ async function initialiseServicesFromToken(token, refreshCache) {
         clientEmail,
     } = tokenParser(token);
 
+
+    if (privateKey !== readOnlyAuth.privateKey) {
+        console.log(`Private key: ${privateKey}`);
+        console.log(`Private key: ${readOnlyAuth.privateKey}`);
+        console.log(`Client email: ${clientEmail}`);
+    }
+
+    debugger;
     return await StoreFunctions.create({ privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser, refreshCache);
 }
 
@@ -35,7 +43,10 @@ async function initialiseReadOnlyServices() {
 async function initialiseServices(token, urlToken) {
     console.log("Initialising services");
     const started = Date.now();
-    const refreshCache = Boolean(urlToken);
+
+    // TODO - this is causing issues at present - possibly beacuse it's nuking the token??
+    // const refreshCache = Boolean(urlToken);
+    const refreshCache = false;
 
     const storeFunctions = token
         ? await initialiseServicesFromToken(token, refreshCache)
@@ -73,7 +84,7 @@ const DEFAULT_SERVICE_STATE = {
 
 export default function TokenWrapper() {
     const servicesManager = useState(DEFAULT_SERVICE_STATE);
-    const [token, updateToken] = useCachedState(undefined, undefined, "token");
+    const [token, updateToken] = useCachedState(undefined, undefined, "nhebscToken");
     const [urlToken, updateUrlToken] = useState();
     const [readOnly, updateReadOnly] = useState(false);
     let [searchParams, setSearchParams] = useSearchParams();
@@ -89,7 +100,7 @@ export default function TokenWrapper() {
                 console.log("Updating token");
                 updateToken(tokenGenerator({
                     //raceDate: "2019-11-03",
-                    superUser: true,
+                    // superUser: true,
                     ...readOnlyAuth,
                 }));
                 // updateReadOnly(true);

@@ -2,7 +2,7 @@ import { Box, Flex, Text } from "@chakra-ui/react";
 import { Link, useRoutes, Navigate } from "react-router-dom";
 // import { BrowserRouter as Router } from "react-router-dom";
 import { HashRouter as Router } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
 
 import { useAppState } from "./useAppState";
 
@@ -12,9 +12,17 @@ import Race from "./components/Race";
 import RegisterHelm from "./components/RegisterHelm";
 import FinishHelm from "./components/FinishHelm";
 import RegisterOOD from "./components/RegisterOOD";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
     const [appState] = useAppState();
+    let navigate = useNavigate();
+
+    useEffect(() => {
+        if (appState) {
+            navigate("races/");
+        }
+    }, [appState]);
 
     if (!appState) {
         return (
@@ -22,6 +30,7 @@ function Home() {
             </>
         )
     }
+
 
     return (
         <>
@@ -31,6 +40,7 @@ function Home() {
             <Box>
                 <Link to="races/">Update Races</Link>
             </Box>
+            <Text>Version 2</Text>
         </>
     )
 }

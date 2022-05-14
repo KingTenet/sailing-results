@@ -141,8 +141,6 @@ function ImmutableRacesView({ races, ...props }) {
 }
 
 
-
-
 export default function Races({ liveOnly = false }) {
     const services = useServices();
     const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces());
@@ -152,21 +150,23 @@ export default function Races({ liveOnly = false }) {
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
         .filter((race) => !race.isBefore(filterRace));
+    console.log(mutableRaces);
+    console.log(latestImmutableRaceDate);
 
     return (
         <>
             <Flex direction="column" margin="5px">
                 <Box marginTop="20px" />
-                {editableRaces.length &&
-                    <>
-                        <Flex direction="row" marginBottom="20px">
-                            <Heading size={"lg"} marginLeft="20px">{`Active Races`}</Heading>
-                        </Flex>
-                        <Box marginBottom="20px">
-                            <RacesView races={editableRaces} />
-                        </Box>
-                    </>
-                }
+
+                <Flex direction="row" marginBottom="20px">
+                    <Heading size={"lg"} marginLeft="20px">{`Active Races`}</Heading>
+                </Flex>
+                <Box marginBottom="20px">
+                    {Boolean(editableRaces.length)
+                        ? <RacesView races={editableRaces} />
+                        : <Text style={{ marginLeft: "20px" }}>No races can be edited by the current user.</Text>
+                    }
+                </Box>
                 {!liveOnly && immutableRaces.length &&
                     <>
                         <Flex direction="row" marginBottom="20px">
