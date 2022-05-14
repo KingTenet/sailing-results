@@ -460,7 +460,7 @@ export class StoreFunctions {
         this.isRaceEditableByUser = this.isRaceEditableByUser;
         this.getSailNumberIndexForHelmBoat = this.getSailNumberIndexForHelmBoat;
         this.setSailNumberCounts = this.setSailNumberCounts;
-        this.commitFleetResultsForRace = this.commitFleetResultsForRace;
+        this.commitResultsForRace = this.commitResultsForRace;
         this.commitNewHelmsForResults = this.commitNewHelmsForResults;
         this.getResultsOODsForRace = this.getResultsOODsForRace;
         this.createHelmFromClubMember = this.createHelmFromClubMember;
@@ -536,22 +536,25 @@ export class StoreFunctions {
         return [raceResults, raceOODs];
     }
 
-    async commitFleetResultsForRace(race, results, oods) {
+    async commitResultsForRace(race, results, oods) {
         await promiseSleep(0);
         const [raceResults, raceOODs] = this.getResultsOODsForRace(race, results, oods);
-        this.getRaceFinishForResults(race, results);
+        const raceFinish = this.getRaceFinishForResults(race, results);
+        const resultsStore = raceFinish.isPursuitRace()
+            ? this.stores.pursuitResults
+            : this.stores.results;
+
         for (let result of raceResults) {
-            this.stores.results.add(result);
+            resultsStore.add(result);
         }
         for (let ood of raceOODs) {
             this.stores.oods.add(ood);
         }
-        await this.stores.results.sync();
+        await resultsStore.sync();
         await this.stores.oods.sync();
     }
 
     isRaceEditableByUser(race) {
-        debugger;
         if (this.superUser) {
             return true;
         }
@@ -563,7 +566,7 @@ export class StoreFunctions {
         assertType(raceNumber, "number");
         const raceToCheck = new Race(raceDate, raceNumber);
 
-        return Race.groupResultsByRaceAsc(this.stores.results.all())
+        return Race.groupResultsByRaceAsc([...this.stores.results.all(), ...this.stores.pursuitResults.all()])
             .filter(([race]) => Race.getId(race) === Race.getId(raceToCheck))
             .filter(([race]) => this.isRaceEditableByUser(race))
             .reduce((_, [, results]) => !results.length, true);
@@ -723,7 +726,7 @@ export class StoreFunctions {
 
         const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(
             [...storedOODs, ...mutableOODs],
-            [],
+            mutablePursuitResults,
             mutableFleetResults,
             storedSeriesRaces,
             undefined,

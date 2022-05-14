@@ -1,7 +1,7 @@
 import { Box, Flex, Text, Spacer } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 
-function DroppableHeader({ isDraggingOver, heading }) {
+export function DroppableHeader({ isDraggingOver, heading }) {
     return (
         <Flex direction="row">
             <Text paddingLeft="10px" fontSize="20px">{heading}</Text>

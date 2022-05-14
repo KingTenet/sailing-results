@@ -16,6 +16,7 @@ import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListIte
 import { RegisteredCard, DeleteCard, DNFCard, FinishersCard, PlaceholderCard } from "./Cards";
 import { RegisteredDroppableHeader, DeleteDroppableHeader, DNFDroppableHeader, FinishedDroppableHeader, OODDroppableHeader } from "./CardHeaders";
 import MutableRaceResult from "../store/types/MutableRaceResult";
+import CommitResultsDialog from "./CommitResultsDialog";
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
@@ -257,6 +258,7 @@ export default function Race() {
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const oods = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
+    const isPursuitRace = appState.isPursuitRace;
 
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
     const committingResultsStarted = () => {
@@ -269,7 +271,8 @@ export default function Race() {
         setCommittingResults(false);
     };
 
-    const committingResultsFailed = () => {
+    const committingResultsFailed = (err) => {
+        console.log(err);
         throw new Error("Failed to commit results to store");
     };
 
@@ -304,7 +307,7 @@ export default function Race() {
                     <Flex direction="row" marginTop="20px" marginBottom="20px">
                         <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
                         <Spacer width="50px" />
-                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(appState.isPursuitRace)} race`}</Heading>
+                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
                     </Flex>
                     {children}
                     <BackButton disabled={committingResults}>Back to races</BackButton>
@@ -313,21 +316,25 @@ export default function Race() {
         )
     }
 
+    const viewableRaceResults = !isPursuitRace
+        ? raceResults
+        : [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))];
+
     if (editingRace) {
         return (
             <Wrapped>
-                <DraggableView registered={raceRegistered} finished={finished} dnf={dnf} oods={oods} isPursuitRace={appState.isPursuitRace} updateRaceResults={updateRaceResults} />
+                <DraggableView registered={raceRegistered} finished={finished} dnf={dnf} oods={oods} isPursuitRace={isPursuitRace} updateRaceResults={updateRaceResults} />
                 <Box marginTop="20px" />
-                {!raceRegistered.length && raceResults.length > 2 &&
-                    <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View Results</GreenButton>
+                {((isPursuitRace && (raceRegistered.length + raceResults.length) > 2) || (!raceRegistered.length && raceResults.length > 2)) &&
+                    <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View results</GreenButton>
                 }
                 <Spacer />
                 <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
                 <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
                 {!Boolean(raceResults.filter((result) => result.finishCode.validFinish()).length) &&
                     <>
-                        {!appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
-                        {appState.isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
+                        {!isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
+                        {isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
                     </>
                 }
             </Wrapped>
@@ -335,7 +342,7 @@ export default function Race() {
     }
     else {
         return <Wrapped>
-            {/* {Boolean(raceResults.length) &&
+            {Boolean(viewableRaceResults.length) &&
                 <>
                     <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
                         <BlueButton
@@ -346,10 +353,12 @@ export default function Race() {
                         >Commit results</BlueButton>
                     </CommitResultsDialog>
                 </>
-            } */}
-            <RaceResultsView results={raceResults} oods={oods} race={race} isDisabled={committingResults} raceIsMutable={raceIsMutable} />
+            }
+            <RaceResultsView results={viewableRaceResults} oods={oods} race={race} isDisabled={committingResults} raceIsMutable={raceIsMutable} />
             <Spacer />
-            <RedButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</RedButton>
+            {raceIsMutable &&
+                <RedButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</RedButton>
+            }
         </Wrapped>
     }
 }

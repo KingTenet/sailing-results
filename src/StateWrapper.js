@@ -26,13 +26,13 @@ async function initialiseServicesFromToken(token, refreshCache) {
     } = tokenParser(token);
 
 
-    if (privateKey !== readOnlyAuth.privateKey) {
-        console.log(`Private key: ${privateKey}`);
-        console.log(`Private key: ${readOnlyAuth.privateKey}`);
-        console.log(`Client email: ${clientEmail}`);
-    }
+    // if (privateKey !== readOnlyAuth.privateKey) {
+    //     console.log(`Private key: ${privateKey}`);
+    //     console.log(`Private key: ${readOnlyAuth.privateKey}`);
+    //     console.log(`Client email: ${clientEmail}`);
+    // }
 
-    debugger;
+    // debugger;
     return await StoreFunctions.create({ privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser, refreshCache);
 }
 
@@ -97,7 +97,7 @@ export default function TokenWrapper() {
                 setSearchParams();
             }
             else if (!token) {
-                console.log("Updating token");
+                console.log("Using read only token");
                 updateToken(tokenGenerator({
                     //raceDate: "2019-11-03",
                     // superUser: true,
@@ -112,7 +112,7 @@ export default function TokenWrapper() {
                 return;
             }
 
-            console.log("Updating token");
+            console.log("Replacing token");
             updateToken(urlToken);
         }
     }, [urlToken]);

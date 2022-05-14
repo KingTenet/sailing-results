@@ -7,8 +7,11 @@ import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpe
 import { useDimensionsToggle, useSortedResults } from "../common/hooks.js";
 
 import { GreenButton } from "./Buttons";
+import { RegisteredCard } from "./Cards";
+import { DroppableHeader } from "./CardHeaders";
 
-const RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
+const FLEET_RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
+const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
 
 const COLUMN_1_DIMENSIONS = {
     "PERSONAL_HANDICAP": [
@@ -20,6 +23,10 @@ const COLUMN_1_DIMENSIONS = {
         "SAIL_NUMBER",
     ],
     "FINISH_TIME": [
+        "NAME",
+        "SAIL_NUMBER",
+    ],
+    "PURSUIT_POSITIONS": [
         "NAME",
         "SAIL_NUMBER",
     ],
@@ -39,6 +46,10 @@ const COLUMN_2_DIMENSIONS = {
         "CLASS_NAME",
         "CLASS_HANDICAP"
     ],
+    "PURSUIT_POSITIONS": [
+        "CLASS_NAME",
+        "CLASS_HANDICAP"
+    ],
 };
 
 const COLUMN_3_DIMENSIONS = {
@@ -54,6 +65,9 @@ const COLUMN_3_DIMENSIONS = {
     "FINISH_TIME": [
         "FINISH_TIME",
         "LAPS",
+    ],
+    "PURSUIT_POSITIONS": [
+        "SAIL_NUMBER"
     ],
 };
 
@@ -111,7 +125,7 @@ function HeadingRow({ toggleDimension1, toggleDimension2, toggleDimension3, dime
     const dimension3Label = DIMENSION_LABELS[dimension3];
 
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"}>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg="white">
             <Flex>
                 <Grid
                     templateColumns='repeat(16, 1fr)'
@@ -218,13 +232,17 @@ function ResultsList({ children, isDisabled, ...props }) {
     )
 }
 
-export default function RaceResultsView({ results, oods, race, ...props }) {
+export default function RaceResultsView({ results, oods, race, raceIsMutable, ...props }) {
+    const [byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isPursuitRace] = useSortedResults(results, race);
+    const RACE_VIEWS = isPursuitRace
+        ? PURSUIT_RACE_VIEW
+        : FLEET_RACE_VIEWS
     const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
     const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
     const [dimension2, toggleDimension2] = useDimensionsToggle(COLUMN_2_DIMENSIONS[raceView]);
     const [dimension3, toggleDimension3] = useDimensionsToggle(COLUMN_3_DIMENSIONS[raceView]);
 
-    const [byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT] = useSortedResults(results, race);
+
     const sortedResults =
         raceView === "FINISH_TIME" ? byFinishTime.map((result, key) => [result, key + 1])
             : raceView === "CLASS_HANDICAP" ? byClassFinishTime
@@ -245,25 +263,61 @@ export default function RaceResultsView({ results, oods, race, ...props }) {
         updateRaceView(RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length]);
     }
 
+    if (isPursuitRace) {
+        return (
+            <>
+                <RegisteredCard>
+                    <DroppableHeader heading="Pursuit finish points" />
+                    <Box style={{ marginBottom: "10px" }} />
+                    <ResultsList marginBottom="20px" >
+                        <HeadingRow raceView={"PURSUIT_FINISH_POSITIONS"} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+                        {byClassFinishTime.map(([result, position]) =>
+                            <ListItem key={HelmResult.getId(result)}>
+                                <ResultListItem
+                                    result={result}
+                                    raceView={"PURSUIT_FINISH_POSITIONS"}
+                                    position={position}
+                                    dimension1={dimension1}
+                                    dimension2={dimension2}
+                                    dimension3={dimension3}
+                                    toggleDimension1={toggleDimension1}
+                                    toggleDimension2={toggleDimension2}
+                                    toggleDimension3={toggleDimension3} />
+                            </ListItem>
+                        )}
+                    </ResultsList>
+                    {Boolean(oods.length) &&
+                        <>
+                            <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+                            <OODView marginBottom="20px" oods={oods} />
+                        </>
+                    }
+                </RegisteredCard>
+            </>
+        );
+    }
+
     return (
         <>
             <Heading marginBottom="20px" marginLeft="20px" size={"md"}>{`${heading}`}</Heading>
             <ResultsList marginBottom="20px" >
-                <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
-                {sortedResults.map(([result, position]) =>
-                    <ListItem key={HelmResult.getId(result)}>
-                        <ResultListItem
-                            result={result}
-                            raceView={raceView}
-                            position={position}
-                            dimension1={dimension1}
-                            dimension2={dimension2}
-                            dimension3={dimension3}
-                            toggleDimension1={toggleDimension1}
-                            toggleDimension2={toggleDimension2}
-                            toggleDimension3={toggleDimension3} />
-                    </ListItem>
-                )}
+                <>
+                    <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+                    {sortedResults.map(([result, position]) =>
+                        <ListItem key={HelmResult.getId(result)}>
+                            <ResultListItem
+                                result={result}
+                                raceView={raceView}
+                                position={position}
+                                dimension1={dimension1}
+                                dimension2={dimension2}
+                                dimension3={dimension3}
+                                toggleDimension1={toggleDimension1}
+                                toggleDimension2={toggleDimension2}
+                                toggleDimension3={toggleDimension3} />
+                        </ListItem>
+                    )}
+                </>
             </ResultsList>
             {Boolean(oods.length) &&
                 <>
@@ -271,7 +325,6 @@ export default function RaceResultsView({ results, oods, race, ...props }) {
                     <OODView marginBottom="20px" oods={oods} />
                 </>
             }
-
             <GreenButton onClick={toggleResultsView} autoFocus {...props}>{buttonMsg}</GreenButton>
         </>
     );

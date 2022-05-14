@@ -100,7 +100,6 @@ function ImmutableRace({ race }) {
     const [correctedResults, resultsByClass, resultsByPH, maxLaps, SCT, isPursuitRace] = useSortedResults(undefined, race) || [];
 
     const getWinners = (positionalResults) => {
-        debugger;
         const firstPlacePositionalResult = positionalResults[0];
         if (!firstPlacePositionalResult) {
             return undefined;
