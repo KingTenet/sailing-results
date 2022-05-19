@@ -117,7 +117,7 @@ export default function TokenWrapper() {
         }
     }, [urlToken]);
 
-    if (!token && !readOnly) {
+    if (!token) {
         return (
             <>
                 <p>Awaiting token...</p>
@@ -127,9 +127,11 @@ export default function TokenWrapper() {
 
     return (
         <>
-            <ServicesContext.Provider value={servicesManager}>
-                <ServicesWrapper token={token} urlToken={urlToken} />
-            </ServicesContext.Provider>
+            <Box bg="blue.50" minHeight="100vh" >
+                <ServicesContext.Provider value={servicesManager}>
+                    <ServicesWrapper token={token} urlToken={urlToken} />
+                </ServicesContext.Provider>
+            </Box>
         </>
     )
 }

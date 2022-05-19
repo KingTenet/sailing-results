@@ -12,7 +12,9 @@ import Race from "./components/Race";
 import RegisterHelm from "./components/RegisterHelm";
 import FinishHelm from "./components/FinishHelm";
 import RegisterOOD from "./components/RegisterOOD";
+import Series from "./components/Series";
 import { useNavigate } from "react-router-dom";
+import SeriesPoints from "./components/SeriesPoints";
 
 function Home() {
     const [appState] = useAppState();
@@ -98,11 +100,14 @@ function MyRoutes() {
             path: '/', element: <StateWrapper />, children: [
                 { path: '/', element: <Home />, index: true },
                 { path: '/races/', element: <Races liveOnly={true} /> },
-                { path: '/races/:raceDate/:raceNumber', element: <Race /> },
+                { path: '/races/:raceDate/:raceNumber', element: <Race backButtonText="Back to races" /> },
                 { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm /> },
                 { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },
                 { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <FinishHelm isPursuit={false} /> },
                 { path: '/races/:raceDate/:raceNumber/pursuitFinish/:registered', element: <FinishHelm isPursuit={true} /> },
+                { path: '/series/', element: <Series /> },
+                { path: '/series/:season/:series', element: <SeriesPoints /> },
+                { path: '/series/:season/:series/:raceDate/:raceNumber', element: <Race backButtonText="Back to series" /> },
             ]
         },
         { path: '/*', element: <Navigate to="/races" /> },

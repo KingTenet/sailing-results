@@ -124,6 +124,9 @@ export default class CorrectedResult extends Result {
     }
 
     getRollingHandicapsAtRace(race) {
+        if (!race) {
+            return getRollingHandicaps(this.previousResults, this);
+        }
         return getRollingHandicaps(this.previousResults.filter((result) => result.getRace().isBefore(race)), this);
     }
 

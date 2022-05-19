@@ -10,6 +10,8 @@ import Race from "../store/types/Race";
 import { useNavigate } from "react-router-dom";
 import HelmResult from "../store/types/HelmResult";
 import { useSortedResults } from "../common/hooks";
+import { RacesCard } from "./Cards";
+import { DroppableHeader } from "./CardHeaders";
 
 function RaceDimension({ children, ...props }) {
     return (
@@ -24,7 +26,7 @@ function RaceDimension({ children, ...props }) {
 function RaceListItem({ raceDate, raceNumber, raceResults = [], raceRegistered = [], onClick }) {
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} onClick={onClick}>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} onClick={onClick}>
             <Flex>
                 <Grid
                     templateColumns='repeat(4, 1fr)'
@@ -43,7 +45,7 @@ function RaceListItem({ raceDate, raceNumber, raceResults = [], raceRegistered =
 function ImmutableRaceListItem({ raceDate, raceNumber, raceResults = [], wonBy = [], onClick }) {
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} onClick={onClick}>
+        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} onClick={onClick}>
             <Flex>
                 <Grid
                     templateColumns={`repeat(${5 + wonBy.length}, 1fr)`}
@@ -97,7 +99,7 @@ function RacesList({ children, ...props }) {
 
 function ImmutableRace({ race }) {
     const navigateTo = useNavigate();
-    const [correctedResults, resultsByClass, resultsByPH, maxLaps, SCT, isPursuitRace] = useSortedResults(undefined, race) || [];
+    const [raceFinish, correctedResults, resultsByClass, resultsByPH, maxLaps, SCT, isPursuitRace] = useSortedResults(undefined, race) || [];
 
     const getWinners = (positionalResults) => {
         const firstPlacePositionalResult = positionalResults[0];
@@ -149,33 +151,33 @@ export default function Races({ liveOnly = false }) {
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
         .filter((race) => !race.isBefore(filterRace));
-    console.log(mutableRaces);
-    console.log(latestImmutableRaceDate);
 
     return (
         <>
-            <Flex direction="column" margin="5px">
-                <Box marginTop="20px" />
+            <Flex direction="column" padding="5px">
 
-                <Flex direction="row" marginBottom="20px">
-                    <Heading size={"lg"} marginLeft="20px">{`Active Races`}</Heading>
+                <Flex direction="row" marginTop="20px">
+                    <Heading size={"lg"} marginLeft="10px">{`Race Results`}</Heading>
                 </Flex>
-                <Box marginBottom="20px">
-                    {Boolean(editableRaces.length)
-                        ? <RacesView races={editableRaces} />
-                        : <Text style={{ marginLeft: "20px" }}>No races can be edited by the current user.</Text>
-                    }
-                </Box>
+                <Box marginTop="20px" />
+                <RacesCard>
+                    <DroppableHeader heading="Active races" />
+                    <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                        {Boolean(editableRaces.length)
+                            ? <RacesView races={editableRaces} />
+                            : <Text style={{ marginLeft: "20px" }}>No races can be edited by the current user.</Text>
+                        }
+                    </Box>
+                </RacesCard>
                 {!liveOnly && immutableRaces.length &&
-                    <>
-                        <Flex direction="row" marginBottom="20px">
-                            <Heading size={"lg"} marginLeft="20px">{`Race Results`}</Heading>
-                        </Flex>
-                        <Box marginBottom="20px">
+                    <RacesCard>
+                        <DroppableHeader heading="Race results" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
                             <ImmutableRacesView races={immutableRaces} />
                         </Box>
-                    </>
+                    </RacesCard>
                 }
+
                 {/* <BackButton>Back</BackButton> */}
             </Flex>
         </>

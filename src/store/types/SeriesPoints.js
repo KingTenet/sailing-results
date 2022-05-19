@@ -55,6 +55,10 @@ class AsciiTable {
 
         return [rowSep(), ...allRows, ...rows];
     }
+
+    print() {
+        this.getTable().join("\n");
+    }
 }
 
 
@@ -74,6 +78,18 @@ class ResultPoints extends HelmResult {
 
     sortAllPointsDesc(secondPoints) {
         return this.getTotal() - secondPoints.getTotal();
+    }
+
+    isPNS() {
+        return Boolean(this.pnsPoints);
+    }
+
+    isOOD() {
+        return Boolean(this.oodPoints);
+    }
+
+    isDNF() {
+        return Boolean(this.result?.finishCode?.validFinish());
     }
 
     static getBoatClassName(points) {
@@ -108,7 +124,7 @@ class ResultPoints extends HelmResult {
 }
 
 export default class SeriesPoints extends Series {
-    constructor(series, seriesRaces, raceFinishes, oods) {
+    constructor(series, seriesRaces, raceFinishes) {
         assertType(series, Series);
         super(series.getSeasonName(), series.getSeriesName());
         seriesRaces.forEach((seriesRace) => assertType(seriesRace, SeriesRace));
@@ -118,6 +134,10 @@ export default class SeriesPoints extends Series {
         this.plannedRaces = this.seriesRaces.length;
         this.finishedRaces = this.raceFinishes.length;
         this.racesToQualify = Math.ceil(this.plannedRaces / 2 + 1);
+        this.firstRace = seriesRaces
+            .map((seriesRace) => seriesRace.getRace())
+            .sort((raceA, raceB) => raceA.sortByRaceAsc(raceB))
+            .at(0);
 
         this.validateSeriesRaces();
         this.validateRaceFinishes();
@@ -135,25 +155,6 @@ export default class SeriesPoints extends Series {
         if (!this.raceFinishes.map(Race.getId).every((id) => seriesRacesById.has(id))) {
             throw new Error("All race finishes must have an associated series race");
         }
-    }
-
-    getPoints(points, racesToCount, pointsNotScored, oodCount = 0) {
-        console.log(racesToCount);
-        console.log(pointsNotScored);
-        console.log(oodCount);
-        const pnsCount = Math.max(0, racesToCount - points.length - oodCount);
-        const pointsCount = racesToCount - pnsCount - oodCount;
-        const totalPoints = points
-            .sort((a, b) => b - a)
-            .slice(-pointsCount)
-
-        const OODpointsPerRace = Math.round(average(totalPoints) * 10) / 10; // Round to 1dp
-
-        return [
-            (new Array(pnsCount)).fill(pointsNotScored),
-            (new Array(oodCount)).fill(OODpointsPerRace),
-            totalPoints,
-        ];
     }
 
     getOODPointsFromResults(results, oods, racesToCount) {
@@ -269,6 +270,31 @@ export default class SeriesPoints extends Series {
 
     getClassHandicapPoints(date) {
         return this.getPointsByAllResults(date, true);
+    }
+
+    getAllRacePointsByClassHandicap() {
+        this.getPoints();
+        return this.getRacePointsByHelmBoat(this.allClassHandicapPoints);
+    }
+
+    getAllRacePointsByPersonalHandicap() {
+        this.getPoints();
+        return this.getRacePointsByHelmBoat(this.allPersonalHandicapPoints);
+    }
+
+    getRacePointsByHelmBoat(allResultPoints) {
+        // row groups
+        const totalPointsByHelmDesc = groupBy(allResultPoints, [HelmResult.getHelmId], ResultPoints.aggregate)
+            .sort(([, pointsA], [, pointsB]) => pointsA - pointsB);
+
+        // columnHeaders
+        const sortedRaces = this.seriesRaces.map((sr) => sr.getRace()).sort((a, b) => a.sortByRaceAsc(b));
+
+        const helmPointsMap = mapGroupBy(allResultPoints, [HelmResult.getHelmId, HelmResult.getRaceId, ResultPoints.getBoatClassName]);
+
+        const pointsByRace = mapGroupBy(allResultPoints, [HelmResult.getRaceId], ResultPoints.aggregate);
+
+        return [sortedRaces, totalPointsByHelmDesc, helmPointsMap, pointsByRace];
     }
 
     summarizeByClassHandicap(date = new Date()) {
@@ -410,5 +436,14 @@ export default class SeriesPoints extends Series {
         }
         const series = Series.fromSeriesRace(seriesRaces[0]);
         return new SeriesPoints(series, seriesRaces, raceFinishes);
+    }
+
+    getFirstRace() {
+        return this.firstRace;
+    }
+
+    sortBySeriesAsc(secondSeries) {
+        assertType(secondSeries, Series);
+        return this.getFirstRace().sortByRaceAsc(secondSeries.getFirstRace());
     }
 }

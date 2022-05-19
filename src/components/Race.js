@@ -1,4 +1,4 @@
-import { Box, Collapse, Flex, Heading, Spacer } from "@chakra-ui/react";
+import { Alert, AlertIcon, AlertTitle, Box, Collapse, Flex, Heading, Spacer, Text } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import React, { useRef, useState } from "react";
@@ -241,7 +241,7 @@ function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateR
     );
 }
 
-export default function Race() {
+export default function Race({ backButtonText }) {
     const navigateTo = useNavigate();
     const [appState, updateAppState] = useAppState();
     const params = useParams();
@@ -302,7 +302,7 @@ export default function Race() {
 
     function Wrapped({ children }) {
         return (
-            <Box bg="blue.50" minHeight="100vh" margin="0">
+            <Box minHeight="100vh" margin="0">
                 <Flex direction="column" minHeight="80vh" alignItems>
                     <Flex direction="row" marginTop="20px" marginBottom="20px">
                         <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
@@ -310,7 +310,7 @@ export default function Race() {
                         <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
                     </Flex>
                     {children}
-                    <BackButton disabled={committingResults}>Back to races</BackButton>
+                    <BackButton disabled={committingResults}>{backButtonText}</BackButton>
                 </Flex>
             </Box>
         )
@@ -340,25 +340,24 @@ export default function Race() {
             </Wrapped>
         );
     }
-    else {
+    else if ((raceIsMutable && viewableRaceResults.length) || !raceIsMutable) {
         return <Wrapped>
             {Boolean(viewableRaceResults.length) &&
-                <>
-                    <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
-                        <BlueButton
-                            onClick={(event) => event.preventDefault()}
-                            isLoading={committingResults}
-                            loadingText='Committing Results'
-                            style={{ width: "100%" }}
-                        >Commit results</BlueButton>
-                    </CommitResultsDialog>
-                </>
+                <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
+                    <BlueButton
+                        onClick={(event) => event.preventDefault()}
+                        isLoading={committingResults}
+                        loadingText='Committing Results'
+                        style={{ width: "100%" }}
+                    >Commit results</BlueButton>
+                </CommitResultsDialog>
             }
             <RaceResultsView results={viewableRaceResults} oods={oods} race={race} isDisabled={committingResults} raceIsMutable={raceIsMutable} />
             <Spacer />
             {raceIsMutable &&
                 <RedButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</RedButton>
             }
+
         </Wrapped>
     }
 }

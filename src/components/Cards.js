@@ -82,7 +82,7 @@ const dnfGetDroppableStyle = getDroppableStyleForHighlight({
     // borderColor: "DarkOrange",
 });
 
-const placeholderStyle = getDroppableStyleForHighlight(undefined, { backgroundColor: "inherit",  });
+const placeholderStyle = getDroppableStyleForHighlight(undefined, { backgroundColor: "inherit", });
 
 export function RegisteredCard({ isDraggingOver, ...props }) {
     return <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
@@ -102,4 +102,8 @@ export function DNFCard({ isDraggingOver, ...props }) {
 
 export function FinishersCard({ isDraggingOver, ...props }) {
     return <Box style={defaultGetDroppableStyle(isDraggingOver)} {...props} />
+}
+
+export function RacesCard({ isDraggingOver, ...props }) {
+    return <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
 }

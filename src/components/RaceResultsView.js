@@ -1,3 +1,4 @@
+import { Alert, AlertIcon, AlertTitle } from "@chakra-ui/react";
 import { Box, Flex, Heading, List, ListItem, Text, Grid, GridItem } from "@chakra-ui/react";
 import React, { useState } from "react";
 
@@ -233,7 +234,7 @@ function ResultsList({ children, isDisabled, ...props }) {
 }
 
 export default function RaceResultsView({ results, oods, race, raceIsMutable, ...props }) {
-    const [byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isPursuitRace] = useSortedResults(results, race);
+    const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isPursuitRace] = useSortedResults(results, race);
     const RACE_VIEWS = isPursuitRace
         ? PURSUIT_RACE_VIEW
         : FLEET_RACE_VIEWS
@@ -261,6 +262,15 @@ export default function RaceResultsView({ results, oods, race, raceIsMutable, ..
     const toggleResultsView = (event) => {
         event.preventDefault();
         updateRaceView(RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length]);
+    }
+
+    if (!raceFinish) {
+        return (
+            <Alert status='error' marginBottom="20px">
+                <AlertIcon />
+                <AlertTitle mr={2}>{"Race cannot be viewed/edited by current user"}</AlertTitle>
+            </Alert>
+        );
     }
 
     if (isPursuitRace) {

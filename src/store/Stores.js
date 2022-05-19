@@ -444,6 +444,7 @@ export class StoreFunctions {
     constructor(stores, superUser, editableRaceDate) {
         this.stores = stores;
         this.getRaces = this.getRaces;
+        this.getSeriesPoints = this.getSeriesPoints;
         this.getHelmsIndex = this.getHelmsIndex;
         this.getBoatIndexForHelmRace = this.getBoatIndexForHelmRace;
         this.createRegisteredHelm = this.createRegisteredHelm;
@@ -554,10 +555,12 @@ export class StoreFunctions {
         await this.stores.oods.sync();
     }
 
+    getSeriesPoints() {
+        return this.stores.seriesPoints
+            .map(([, seriesPoints]) => seriesPoints);
+    }
+
     isRaceEditableByUser(race) {
-        if (this.superUser) {
-            return true;
-        }
         return this.editableRaceDate && race.getDate().getTime() === this.editableRaceDate.getTime();
     }
 
@@ -566,10 +569,14 @@ export class StoreFunctions {
         assertType(raceNumber, "number");
         const raceToCheck = new Race(raceDate, raceNumber);
 
-        return Race.groupResultsByRaceAsc([...this.stores.results.all(), ...this.stores.pursuitResults.all()])
-            .filter(([race]) => Race.getId(race) === Race.getId(raceToCheck))
-            .filter(([race]) => this.isRaceEditableByUser(race))
-            .reduce((_, [, results]) => !results.length, true);
+        const immutableResults = Race.groupResultsByRaceAsc([...this.stores.results.all(), ...this.stores.pursuitResults.all()])
+            .find(([race]) => Race.getId(race) === Race.getId(raceToCheck));
+
+        if (immutableResults) {
+            return false;
+        }
+
+        return this.isRaceEditableByUser(raceToCheck);
     }
 
     getRaces() {
