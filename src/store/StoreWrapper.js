@@ -67,8 +67,7 @@ export default class StoreWrapper {
     }
 
     clear() {
-        const allValues = this.all();
-        allValues.forEach((value) => this.delete(value));
+        return this.store.clear();
     }
 
     async sync(force = false) {

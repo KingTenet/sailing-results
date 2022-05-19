@@ -45,7 +45,8 @@ export default function CommitResultsDialog({ race, onSuccess, onFailed, onStart
         return services
             .commitResultsForRace(race, mappedRaceResults, raceOODs)
             .then(() => services.reprocessStoredResults())
-            .then(() =>
+            .then(() => {
+                console.log("removing results from appstate");
                 updateAppState(({ results, registered, oods, ...state }) => ({
                     ...state,
                     // TODO need to test this is correctly removed (safer to use ID lookups)
@@ -53,7 +54,7 @@ export default function CommitResultsDialog({ race, onSuccess, onFailed, onStart
                     results: results.filter((result) => !raceResults.includes(result)),
                     oods: oods.filter((ood) => !raceOODs.includes(ood))
                 }))
-            )
+            })
             .then(() => onSuccess())
             .catch((err) => onFailed(err))
     };

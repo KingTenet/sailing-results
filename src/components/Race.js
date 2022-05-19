@@ -266,6 +266,7 @@ export default function Race({ backButtonText }) {
     };
 
     const committingResultsSuccess = () => {
+        console.log("committing results success");
         updateEditingRace(false);
         setRaceIsMutable(services.isRaceMutable(raceDate, raceNumber));
         setCommittingResults(false);
@@ -320,6 +321,10 @@ export default function Race({ backButtonText }) {
         ? raceResults
         : [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))];
 
+    console.log("Editing " + editingRace);
+    console.log("Race is mutable" + raceIsMutable);
+    console.log(viewableRaceResults.length);
+
     if (editingRace) {
         return (
             <Wrapped>
@@ -340,7 +345,7 @@ export default function Race({ backButtonText }) {
             </Wrapped>
         );
     }
-    else if ((raceIsMutable && viewableRaceResults.length) || !raceIsMutable) {
+    else {
         return <Wrapped>
             {Boolean(viewableRaceResults.length) &&
                 <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >

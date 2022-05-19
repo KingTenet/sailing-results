@@ -7,6 +7,7 @@ import { Button, Box, Text, Spinner, Flex } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import { StoreFunctions } from "./store/Stores";
 import { tokenGenerator } from "./token.js";
+import { CheckIcon, SmallCloseIcon } from '@chakra-ui/icons'
 
 const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
 const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
@@ -25,14 +26,6 @@ async function initialiseServicesFromToken(token, refreshCache) {
         clientEmail,
     } = tokenParser(token);
 
-
-    // if (privateKey !== readOnlyAuth.privateKey) {
-    //     console.log(`Private key: ${privateKey}`);
-    //     console.log(`Private key: ${readOnlyAuth.privateKey}`);
-    //     console.log(`Client email: ${clientEmail}`);
-    // }
-
-    // debugger;
     return await StoreFunctions.create({ privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser, refreshCache);
 }
 
@@ -40,7 +33,7 @@ async function initialiseReadOnlyServices() {
     return await StoreFunctions.create(readOnlyAuth, sourceResultsSheetId, seriesResultsSheetId);
 }
 
-async function initialiseServices(token, urlToken) {
+async function initialiseServices(token) {
     console.log("Initialising services");
     const started = Date.now();
 
@@ -84,7 +77,7 @@ const DEFAULT_SERVICE_STATE = {
 
 export default function TokenWrapper() {
     const servicesManager = useState(DEFAULT_SERVICE_STATE);
-    const [token, updateToken] = useCachedState(undefined, undefined, "nhebscToken");
+    const [token, updateToken] = useCachedState(undefined, undefined, "token");
     const [urlToken, updateUrlToken] = useState();
     const [readOnly, updateReadOnly] = useState(false);
     let [searchParams, setSearchParams] = useSearchParams();
@@ -97,13 +90,10 @@ export default function TokenWrapper() {
                 setSearchParams();
             }
             else if (!token) {
-                console.log("Using read only token");
-                updateToken(tokenGenerator({
-                    //raceDate: "2019-11-03",
-                    // superUser: true,
-                    ...readOnlyAuth,
-                }));
-                // updateReadOnly(true);
+                updateReadOnly(true);
+            }
+            else {
+                updateUrlToken(token);
             }
         }
         else {
@@ -117,7 +107,7 @@ export default function TokenWrapper() {
         }
     }, [urlToken]);
 
-    if (!token) {
+    if (!readOnly && (!urlToken || token !== urlToken)) {
         return (
             <>
                 <p>Awaiting token...</p>
@@ -125,19 +115,21 @@ export default function TokenWrapper() {
         );
     }
 
+    // token should not change after this point!
+
     return (
         <>
             <Box bg="blue.50" minHeight="100vh" >
                 <ServicesContext.Provider value={servicesManager}>
-                    <ServicesWrapper token={token} urlToken={urlToken} />
+                    <ServicesWrapper token={token} />
                 </ServicesContext.Provider>
             </Box>
         </>
     )
 }
 
-function ServicesWrapper({ token, urlToken }) {
-    const services = useServices(async () => initialiseServices(token, urlToken))
+function ServicesWrapper({ token }) {
+    const services = useServices(async () => initialiseServices(token))
 
     console.log("Services Wrapper");
     if (services.error) {
@@ -172,6 +164,9 @@ function StateWrapper() {
     return (
         <>
             <CachedContext.Provider value={cachedStateManager}>
+                {!services.readOnly &&
+                    <StoresSync />
+                }
                 <StateOutlet />
             </CachedContext.Provider>
         </>
@@ -191,9 +186,6 @@ function StateOutlet() {
             <Debug />
             {!state &&
                 <p>Loading state...</p>
-            }
-            {state && state.readOnlyMode &&
-                <p>Read only mode...</p>
             }
             {!services.ready &&
                 <p>Initialising services...</p>
@@ -227,26 +219,96 @@ function StoreSync({ store }) {
     </>
 }
 
-function StoresSync() {
+function StoresSync({ verbose }) {
     const services = useServices();
+    const [storesStatus, updateStoresStatus] = useState();
+    const TIMEOUT = 5000;
+    const VERBOSE = verbose;
+    const [syncing, updateSyncing] = useState(false);
+    const [failed, updateFailed] = useState(false);
 
-    return <>
-        {Object.entries(services.getStoresStatus()).map(([store, synced], index) => (
-            <Box key={`StoreSync${index}`}>
-                {synced &&
-                    <Box>
-                        <GreenButton disabled={true}>{`Store: ${store} is in sync`}</GreenButton>
-                    </Box>
-                }
-                {!synced &&
-                    <Box>
-                        <StoreSync store={store} />
-                    </Box>
-                }
-            </Box>
-        ))
+    const handleUpdateStoreStatus = () => {
+        const newStoreStatus = services.getStoresStatus();
+        if (JSON.stringify(storesStatus) !== JSON.stringify(newStoreStatus)) {
+            updateStoresStatus(newStoreStatus);
         }
-    </>;
+    }
+
+    useEffect(() => {
+        const timerId = setInterval(() => handleUpdateStoreStatus(), TIMEOUT);
+        return function cleanup() {
+            clearInterval(timerId);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!syncing && storesStatus) {
+            if (Object.entries(storesStatus).some(([store, synced]) => !synced)) {
+                console.log("Stores are not synced");
+                updateSyncing(true);
+
+                const promiseSyncStores = Object.entries(storesStatus)
+                    .filter(([, synced]) => !synced)
+                    .map(([store]) => services.syncroniseStore(store));
+
+                Promise.all(promiseSyncStores)
+                    .then(() => {
+                        updateSyncing(false);
+                        updateFailed(false);
+                    })
+                    .catch(() => {
+                        updateSyncing(false);
+                        updateFailed(true);
+                    });
+            }
+        }
+    }, [storesStatus]);
+
+    if (!storesStatus) {
+        return <></>;
+    }
+
+    if (VERBOSE) {
+        return <>
+            {Object.entries(storesStatus).map(([store, synced], index) => (
+                <Box key={`StoreSync${index}`}>
+                    {synced &&
+                        <Box>
+                            <GreenButton disabled={true}>{`Store: ${store} is in sync`}</GreenButton>
+                        </Box>
+                    }
+                    {!synced &&
+                        <Box>
+                            <StoreSync store={store} />
+                        </Box>
+                    }
+                </Box>
+            ))}
+        </>;
+    }
+
+    return <Box position="absolute" height="10px" width="100%" bgColor={syncing ? "blue.500" :
+        failed ? "red.500" :
+            "green.100"
+    } />
+
+    // if (syncing) {
+    //     return <Box height="10px" width="10px">
+    //         <Spinner color='blue.500' size="xs" />
+    //     </Box>;
+    // }
+
+    // if (failed) {
+    //     return <Box height="10px" width="10px">
+    //         <SmallCloseIcon color="red.500" />
+    //     </Box>;
+    // }
+
+    // return <Box>
+    //     <Box height="10px" width="10px">
+    //         <CheckIcon color="green.500" />
+    //     </Box>
+    // </Box>;
 }
 
 function Debug() {
@@ -282,7 +344,7 @@ function Debug() {
                         : 1
             }))}
             >Update state</Button>
-            <StoresSync />
+            <StoresSync verbose={true} />
             <Box>
                 <Text>{`${JSON.stringify(state, null, 4)}`}</Text>
             </Box>

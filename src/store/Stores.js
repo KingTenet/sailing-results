@@ -441,7 +441,7 @@ class Indexes {
 }
 
 export class StoreFunctions {
-    constructor(stores, superUser, editableRaceDate) {
+    constructor(stores, superUser, editableRaceDate, readOnly) {
         this.stores = stores;
         this.getRaces = this.getRaces;
         this.getSeriesPoints = this.getSeriesPoints;
@@ -472,6 +472,7 @@ export class StoreFunctions {
         this.reprocessStoredResults = this.reprocessStoredResults;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
+        this.readOnly = readOnly;
         this.indexes = new Indexes(this.stores);
     }
 
@@ -486,7 +487,8 @@ export class StoreFunctions {
         return new StoreFunctions(
             stores,
             superUser,
-            editableRaceDateStr && parseURLDate(editableRaceDateStr)
+            editableRaceDateStr && parseURLDate(editableRaceDateStr),
+            !superUser && !editableRaceDateStr,
         );
     }
 
@@ -503,10 +505,7 @@ export class StoreFunctions {
     }
 
     getStoresStatus() {
-        if (!this.storesStatus) {
-            this.updateStoresStatus();
-        }
-        return this.storesStatus;
+        return this.stores.getStatus();
     }
 
     async commitNewHelmsForResults(race, results, oods, newHelms) {
@@ -551,8 +550,8 @@ export class StoreFunctions {
         for (let ood of raceOODs) {
             this.stores.oods.add(ood);
         }
-        await resultsStore.sync();
-        await this.stores.oods.sync();
+        // await resultsStore.sync();
+        // await this.stores.oods.sync();
     }
 
     getSeriesPoints() {
@@ -561,7 +560,7 @@ export class StoreFunctions {
     }
 
     isRaceEditableByUser(race) {
-        return this.editableRaceDate && race.getDate().getTime() === this.editableRaceDate.getTime();
+        return this.superUser || (this.editableRaceDate && race.getDate().getTime() === this.editableRaceDate.getTime());
     }
 
     isRaceMutable(raceDate, raceNumber) {
@@ -579,7 +578,10 @@ export class StoreFunctions {
         return this.isRaceEditableByUser(raceToCheck);
     }
 
-    getRaces() {
+    getRaces(exludeFutureMutableRaces) {
+        const now = new Date();
+        const tomorrowsRace = new Race(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1), 1);
+
         const storedPursuitResults = this.stores.pursuitResults.all();
         const storedFleetResults = this.stores.results.all();
         const immutableRaces = Race.groupResultsByRaceAsc([...storedPursuitResults, ...storedFleetResults])
@@ -588,7 +590,9 @@ export class StoreFunctions {
         const mutableRaces = this.stores.seriesRaces.all()
             .map((seriesRace) => seriesRace.getRace())
             .filter((race) => !immutableRaces.find((immutable) => Race.getId(race) === Race.getId(immutable)))
-            .sort((a, b) => a.sortByRaceAsc(b));
+            .sort((a, b) => a.sortByRaceAsc(b))
+            .filter((race) => !exludeFutureMutableRaces || !tomorrowsRace.isBefore(race));
+
         return [mutableRaces, immutableRaces];
     }
 

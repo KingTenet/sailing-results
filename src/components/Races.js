@@ -142,15 +142,23 @@ function ImmutableRacesView({ races, ...props }) {
 }
 
 
-export default function Races({ liveOnly = false }) {
+export default function Races({ editableOnly = false, StoresSync }) {
     const services = useServices();
-    const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces());
+    const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(true));
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
+
+    // Don't show editable races before the last race that was committed to the store
     const filterRace = new Race(latestImmutableRaceDate, 1);
+    console.log(filterRace);
 
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
         .filter((race) => !race.isBefore(filterRace));
+
+    const editedRaces = immutableRaces
+        .filter((race) => services.isRaceEditableByUser(race));
+
+    const immutableNotEdited = immutableRaces.filter((race) => !editedRaces.includes(race));
 
     return (
         <>
@@ -169,11 +177,19 @@ export default function Races({ liveOnly = false }) {
                         }
                     </Box>
                 </RacesCard>
-                {!liveOnly && immutableRaces.length &&
+                {editedRaces && Boolean(editedRaces.length) &&
+                    <RacesCard>
+                        <DroppableHeader heading="Edited results" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                            <ImmutableRacesView races={editedRaces} />
+                        </Box>
+                    </RacesCard>
+                }
+                {!editableOnly && Boolean(immutableNotEdited.length) &&
                     <RacesCard>
                         <DroppableHeader heading="Race results" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">
-                            <ImmutableRacesView races={immutableRaces} />
+                            <ImmutableRacesView races={immutableNotEdited} />
                         </Box>
                     </RacesCard>
                 }

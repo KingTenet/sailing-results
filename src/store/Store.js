@@ -1,6 +1,6 @@
 import LocalStore from "./LocalStore.js";
 import RemoteStore from "./RemoteStore.js";
-import { parseISOString, getISOStringFromDate } from "../common.js"
+import { parseISOString, getISOStringFromDate, isOnline } from "../common.js"
 
 export default class Store {
     constructor(storeName, sheetsDoc, toStore, fromStore, getKeyFromObj, services, createSheetIfMissing, headers) {
@@ -18,6 +18,9 @@ export default class Store {
     }
 
     async init() {
+        if (isOnline()) {
+            this.clear();
+        }
         let localStoreObjects = this.pullLocalState();
         let localStateEmpty = !localStoreObjects.length;
         if (localStateEmpty && this.hasRemoteStore) {
@@ -130,6 +133,11 @@ export default class Store {
 
     delete(obj) {
         return this.localStore.delete(this.getKeyFromObj(obj));
+    }
+
+    clear() {
+        const allValues = this.all();
+        allValues.forEach((value) => this.delete(value));
     }
 
     dump() {
