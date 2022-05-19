@@ -88,7 +88,6 @@ export default class LocalStore {
 
     get(key) {
         if (!this.cache.has(key)) {
-            // [...this.cache.keys()].forEach((key) => console.log(key));
             throw new Error(`Cannot get object with key ${key} from store as it doesn't exist`);
         }
         return this.cache.get(key);

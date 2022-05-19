@@ -65,7 +65,6 @@ export function parseIntOrUndefined(test) {
 
 export function assert(condition, message) {
     if (!condition) {
-        // console.log(message);
         throw new Error(message || "Assertion failed");
     }
 }

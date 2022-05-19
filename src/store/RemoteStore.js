@@ -18,8 +18,6 @@ export default class RemoteStore {
 
     async append(rows) {
         const sheet = await this.getSheet();
-        console.log("Adding rows");
-        // console.log(JSON.stringify(rows, null, 4));
         return await sheet.addRows(rows);
     }
 

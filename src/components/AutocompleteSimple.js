@@ -51,14 +51,12 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
     const setExactMatch = (value) => {
         setPartialMatch(false);
         setInputItems([]);
-        console.log("In set exact match");
         handleSelectedItemChange(value);
     };
 
     const setPartiaValue = (value) => {
         setPartialMatch(value);
         setInputItems(filterData(value));
-        console.log("In set partial match");
         handleSelectedItemChange();
     };
 
@@ -102,13 +100,9 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
 
     useEffect(() => {
         if (triggerExactMatchOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
-            console.log("From useEffect");
-            console.log(partialMatch);
             setExactMatch(partialMatch);
         }
     }, [isOpen]);
-
-    console.log("Rendering autocomplete");
 
     return (
         <>

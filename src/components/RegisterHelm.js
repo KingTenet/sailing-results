@@ -39,9 +39,6 @@ function RegisterHelm() {
     const [sailNumberIndex, setSailNumberIndex] = useState(null);
 
     const processHelmResult = () => {
-        console.log("in process helm result");
-        // event.preventDefault();
-        console.log("in process helm result");
         const newRegisteration = services.createRegisteredHelm(race, selectedHelm, selectedBoat, parseInt(sailNumber), appState.newHelms);
 
         updateAppState(({ registered, results, oods, ...state }) => {
@@ -123,8 +120,6 @@ function RegisterHelm() {
         setSelectedHelm(newHelm);
     };
 
-    console.log(sailNumber);
-
     return (
         <>
             {/* <Box height="100vh" /> */}
@@ -180,7 +175,6 @@ function RegisterHelm() {
                         <Spacer />
                         {sailNumber !== undefined &&
                             <Button backgroundColor="green.500" onClick={() => {
-                                console.log("Received click");
                                 processHelmResult();
                             }} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
                         }

@@ -184,11 +184,12 @@ export class Stores {
 
     static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
         await bootstrapLocalStorage();
-        const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
-        if (isOnline() && (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD)) {
-            console.log("Clearing app state");
-            localStorage.clear();
-        }
+        // TODO - find a better way to clear state
+        // const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
+        // if (isOnline() && (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD)) {            
+        //     console.log("Clearing app state");
+        //     localStorage.clear();
+        // }
         const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
         await stores.init();
         localStorage.setItem("lastStateRefreshDate", (new Date()).toISOString());
@@ -483,7 +484,6 @@ export class StoreFunctions {
             seriesResultsSheetId,
             forceRefresh
         );
-        console.log("Race date: " + editableRaceDateStr);
         return new StoreFunctions(
             stores,
             superUser,
