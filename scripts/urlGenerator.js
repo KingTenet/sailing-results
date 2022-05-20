@@ -1,10 +1,10 @@
 import { tokenGenerator } from "../src/token.js";
-import auth from "./auth.js";
+import { readWrite } from "./auth.js";
 
 async function run(
     date = (new Date(Date.now())).toISOString().slice(0, 10),
-    privateKey = auth.privateKey,
-    clientEmail = auth.clientEmail,
+    privateKey = readWrite.privateKey,
+    clientEmail = readWrite.clientEmail,
     baseUrl = "https://nhebsc.org.uk/results/app/#/races/"
 ) {
     const raceDate = [date, "T00:00:00.000Z"].join("");

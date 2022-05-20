@@ -149,6 +149,7 @@ export default function Races({ editableOnly = false, StoresSync }) {
 
     // Don't show editable races before the last race that was committed to the store
     const filterRace = new Race(latestImmutableRaceDate, 1);
+    // const filterRace = new Race(new Date(0), 1);
 
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
