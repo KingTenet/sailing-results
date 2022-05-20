@@ -1,10 +1,17 @@
 import cheerio from "cheerio";
 import fetch from "node-fetch";
-import auth from "./auth.js";
-import { parseISOString } from "../src/common.js"
-import { SheetsAPI } from "../src/SheetsAPI.js";
+import { devAuth } from "./auth.js";
+import { getSheetIdFromURL, getAllCellsFromSheet, getGoogleSheetDoc, parseISOString, mapGroupBy } from "../src/common.js"
+// import ClubMember from "../src/store/types/ClubMember.js";
+import StoreWrapper from "../src/store/StoreWrapper.js";
+import bootstrapLocalStorage from "../src/bootstrapLocalStorage.js";
+import Result from "../src/store/types/Result.js";
+import Helm from "../src/store/types/Helm.js";
+import Race from "../src/store/types/Race.js";
+import { StoreFunctions, Stores } from "../src/store/Stores.js";
+import BoatClass from "../src/store/types/BoatClass.js";
+import FinishCode from "../src/store/types/FinishCode.js";
 
-const outputSheetId = "1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw";
 const expectedColumnHeaders = [
     "Helm",
     "Boat",
@@ -113,7 +120,7 @@ function getRaceDateFromString(str) {
     if (str.includes("15/919")) {
         return ["15", "09", "19"];
     }
-    return str.match(/(\d\d?)\/(\d\d?)\/(\d\d)/).slice(1);
+    return str.match(/(\d\d?)\/(\d\d?)\/\d?\d?(\d\d)/).slice(1);
 }
 
 function mapRowToResult(row) {
@@ -204,6 +211,7 @@ async function scrapePage(page) {
         unused3,
         raceNumberString
     ] = getRowCellValues(dom, 3)
+
     const actualColumnHeaders = getRowCellValues(dom, 5);
     assert(deepEquals(actualColumnHeaders, expectedColumnHeaders), `Column mappings invalid for page ${page}`);
     const OODs = [];
@@ -212,8 +220,8 @@ async function scrapePage(page) {
     let totalRows = 0;
     let totalIgnoredRows = 0;
     let personalResults = false;
-
     getAllRowsValues(dom, 5).forEach((row) => {
+
         totalRows++;
         if (personalResults || row.find((value) => value.toLowerCase().includes("personal"))) {
             personalResults = true;
@@ -236,6 +244,7 @@ async function scrapePage(page) {
 
     let pursuit = results.every(({ couldBePursuit }) => couldBePursuit);
 
+    // console.log(raceDateString);
     const [raceDay, raceMonth, raceYear] = getRaceDateFromString(raceDateString);
     console.log(raceDay, raceMonth, raceYear);
     const raceDate = parseISOString(`20${raceYear}-${`0${raceMonth}`.slice(-2)}-${`0${raceDay}`.slice(-2)}T00:00:00.000Z`);
@@ -243,6 +252,7 @@ async function scrapePage(page) {
 
     let mappedResults = results.map((result) => ({ ...result, seriesName, raceDate, raceNumber, pursuit }))
     if (!mappedResults.length && (totalRows - OODs.length - 3 > 0)) {
+        return [];
         throw new Error("No results");
     }
     let mappedOODs = OODs.map((ood) => ({ name: ood, seriesName, raceDate, raceNumber }))
@@ -277,14 +287,14 @@ async function getURLSFromTabStrip(year, series) {
 }
 
 
-async function main() {
+async function scrape() {
     const allRegularSeries = [
-        "Icicle",
-        "Spring",
-        "Early Summer",
-        "Late Summer",
-        "Autumn",
-        "Frostbite",
+        // "Icicle",
+        // "Spring",
+        // "Early Summer",
+        // "Late Summer",
+        // "Autumn",
+        // "Frostbite",
         "Wednesday Evening",
         "Pursuit",
     ];
@@ -292,11 +302,12 @@ async function main() {
     const years = [
         // Mappings invalid // 2013,
         // Mappings invalid // 2014,
-        2015,
-        2016,
-        2017,
-        2018,
-        2019,
+        // 2015,
+        // 2016,
+        // 2017,
+        // 2018,
+        // 2019,
+        2021,
     ];
 
     // const allRegularSeries = [
@@ -320,6 +331,9 @@ async function main() {
         for (let series of allRegularSeries) {
             for (let url of (await getURLSFromTabStrip(year, series))) {
                 const [results, OODs, pursuit] = await scrapePage(url);
+                if (!results) {
+                    continue;
+                }
                 if (pursuit) {
                     allPursuits.push(...results);
                     allResults.push(...results);
@@ -349,19 +363,7 @@ async function main() {
 
     // await appendHelmsSheet(getHelms(allHelmResults), outputSheetId, auth.clientEmail, auth.privateKey);
 
-    let processedResults = allPursuits.map(mapScrapedResult);
-    console.log(JSON.stringify(processedResults.slice(0, 15), null, 4));
-    await appendResultsSheet(processedResults, outputSheetId, auth.clientEmail, auth.privateKey);
-}
-
-async function appendHelmsSheet(helms, sheetId, clientEmail, privateKey) {
-    let sheetsAPI = await SheetsAPI.initSheetsAPI(sheetId, clientEmail, privateKey);
-    return await sheetsAPI.appendHelms(helms);
-}
-
-async function appendResultsSheet(raceResults, sheetId, clientEmail, privateKey) {
-    let sheetsAPI = await SheetsAPI.initSheetsAPI(sheetId, clientEmail, privateKey);
-    return await sheetsAPI.appendRaceResults(raceResults);
+    return [allFleetResults.map(mapScrapedResult), allPursuits.map(mapScrapedResult), getHelms(allHelmResults), allOODs];
 }
 
 const getHelmId = ({ name }) => name;
@@ -373,14 +375,14 @@ function getHelms(results) {
 
     for (let result of results.sort(({ raceDate: a }, { raceDate: b }) => a - b)) {
         // Group results by helm, then type
-        console.log(result);
+        // console.log(result);
         helmsTypes.upsert(result, (types) => types.upsert(result))
         helms.upsert(result, (prev, obj) => prev || obj);
     }
 
     for (let [helm, helmTypes] of [...helmsTypes]) {
         if (helmTypes.size > 1) {
-            console.log(helm);
+            // console.log(helm);
             let lastLady, lastNovice, lastJunior, lastCadet;
             let ladyChangedDate, noviceChangedDate, juniorChangedDate, cadetChangedDate;
             for (let [helmType, { lady, novice, cadet, junior, raceDate }] of [...helmTypes]) {
@@ -393,19 +395,19 @@ function getHelms(results) {
                 lastNovice = novice;
                 lastCadet = cadet;
                 lastJunior = junior;
-                console.log(`${helmType} ${raceDate}`);
+                // console.log(`${helmType} ${raceDate}`);
             }
             if (ladyChangedDate) {
-                console.log(`lady: ${ladyChangedDate}`);
+                // console.log(`lady: ${ladyChangedDate}`);
             }
             if (cadetChangedDate) {
-                console.log(`cadet: ${cadetChangedDate}`);
+                // console.log(`cadet: ${cadetChangedDate}`);
             }
             if (juniorChangedDate) {
-                console.log(`junior: ${juniorChangedDate}`);
+                // console.log(`junior: ${juniorChangedDate}`);
             }
             if (noviceChangedDate) {
-                console.log(`novice: ${noviceChangedDate}`);
+                // console.log(`novice: ${noviceChangedDate}`);
             }
         }
     }
@@ -420,6 +422,111 @@ function getHelms(results) {
     }));
 }
 
-main()
+function mapClassName(boatClass) {
+    const mappedBoatClasses = {
+        "TOPAZ OMEGA (SPIN)": "OMEGA (SPIN)",
+        "TOPAZ OMEGA": "OMEGA (SPIN)",
+        "RS200": "RS 200",
+    };
+    return mappedBoatClasses[boatClass] || boatClass;
+}
+
+function mapHelmName(helmName) {
+    const mapNames = {
+        "Krzysztof Bonicki": "Krzys Bonicki",
+        "Andrew Russel": "Andrew Russell",
+        "James Wicken": "James Wickens",
+        "Mike Smith": "Michael Smith",
+        "Indi Martin": "Indiana Martin",
+        "Matt Lacey": "Matthew Lacey",
+    }
+    const reversed = helmName.split(" ").reverse().join(" ");
+    return mapNames[reversed] || reversed;
+}
+
+async function replacePursuitResults(results, outputDoc, sourceResultsURL, seriesResultsURL) {
+    const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
+    const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
+
+    // const pursuitResultsStore = await StoreWrapper.create("2021 All Pursuit", outputDoc, this, Result, undefined, undefined, true);
+    // const fleetResultsStore = await StoreWrapper.create("2021 Fleet", outputDoc, this, Result, undefined, undefined, true);
+    const storeFs = await StoreFunctions.create(devAuth, sourceResultsSheetId, seriesResultsSheetId);
+    for (let result of results) {
+        const {
+            lady,
+            novice,
+            DNF,
+            date,
+            raceNumber,
+            helm,
+            boat,
+            pursuit,
+            finishPosition,
+            finishTime,
+            finishCode,
+            laps
+        } = result;
+
+        const processedHelmName = mapHelmName(helm.name);
+
+        const processedBoatClassName = mapClassName(boat.className.toUpperCase());
+
+        const boatClassesByYear = mapGroupBy(
+            [...storeFs.stores.ryaClasses.all(), ...storeFs.stores.clubClasses.all()],
+            [BoatClass.getClassYear, (boat) => boat.getClassName()],
+            (boatClasses) => boatClasses[0]
+        );
+
+        let storedHelm;
+        let storedBoat;
+        try {
+            storedHelm = storeFs.stores.getHelmFromHelmId(processedHelmName);
+            storedBoat = boatClassesByYear.get(date.getUTCFullYear()).get(processedBoatClassName);
+            if (!storedBoat) {
+                throw new Error("Boat: " + storedBoat);
+            }
+        }
+        catch (err) {
+            console.log(result);
+            console.log(processedBoatClassName);
+            console.log(storedBoat);
+            console.log(helm.name);
+            console.log(processedHelmName);
+            console.log(err);
+            throw err;
+        }
+
+        const registered = storeFs.createRegisteredHelm(new Race(date, parseInt(raceNumber)), storedHelm, storedBoat, boat.sailNumber)
+        const outputResult = Result.fromMutableRaceResult(registered, laps, finishPosition, finishTime, finishCode ? new FinishCode("DNF") : new FinishCode());
+
+        if (pursuit) {
+            storeFs.stores.pursuitResults.add(outputResult);
+        }
+        else {
+            // pursuitResults.add(outputResult);
+        }
+    }
+
+    storeFs.stores.pursuitResults.sync();
+}
+
+async function scrapeAll(outputSheetURL) {
+    // dev URLS
+    const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
+    const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
+
+    await bootstrapLocalStorage();
+    const outputDoc = () => getGoogleSheetDoc(getSheetIdFromURL(outputSheetURL), devAuth.clientEmail, devAuth.privateKey);
+    const [fleetResults, pursuitResults, helms, oods] = (await scrape());
+
+    // console.log(fleetResults);
+    // console.log(pursuitResults);
+    // console.log(helms);
+    // console.log(oods);
+
+    await replacePursuitResults(pursuitResults, outputDoc, sourceResultsURL, seriesResultsURL);
+}
+
+scrapeAll(...process.argv.slice(2))
     .then(() => console.log("Finished"))
     .catch((err) => console.log(err));

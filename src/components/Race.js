@@ -5,6 +5,7 @@ import React, { useRef, useState } from "react";
 
 import { useAppState, useServices } from "../useAppState";
 import { getURLDate, parseURLDate, useBack } from "../common";
+import { useSortedResults } from "../common/hooks.js";
 import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
@@ -301,6 +302,12 @@ export default function Race({ backButtonText }) {
         }));
     }
 
+    const viewableRaceResults = !isPursuitRace
+        ? raceResults
+        : [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))];
+
+    const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isImmutablePursuitRace] = useSortedResults(viewableRaceResults, race);
+
     function Wrapped({ children }) {
         return (
             <Box minHeight="100vh" margin="0">
@@ -308,7 +315,7 @@ export default function Race({ backButtonText }) {
                     <Flex direction="row" marginTop="20px" marginBottom="20px">
                         <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
                         <Spacer width="50px" />
-                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
+                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(editingRace ? isPursuitRace : isImmutablePursuitRace)} race`}</Heading>
                     </Flex>
                     {children}
                     <BackButton disabled={committingResults}>{backButtonText}</BackButton>
@@ -316,10 +323,6 @@ export default function Race({ backButtonText }) {
             </Box>
         )
     }
-
-    const viewableRaceResults = !isPursuitRace
-        ? raceResults
-        : [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))];
 
     if (editingRace) {
         return (

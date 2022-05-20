@@ -10,12 +10,12 @@ export function useSortedResults(results, race) {
 
     return [
         raceFinish,
-        raceFinish && raceFinish.getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a)),
-        raceFinish && raceFinish.getClassCorrectedPointsByResult(),
-        raceFinish && raceFinish.getPersonalCorrectedPointsByResult(),
-        raceFinish && raceFinish.getMaxLaps(),
-        raceFinish && raceFinish.getSCT(),
-        raceFinish && raceFinish.isPursuitRace(),
+        raceFinish && raceFinish.hasResults() && raceFinish.getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a)),
+        raceFinish && raceFinish.hasResults() && raceFinish.getClassCorrectedPointsByResult(),
+        raceFinish && raceFinish.hasResults() && raceFinish.getPersonalCorrectedPointsByResult(),
+        raceFinish && raceFinish.hasResults() && raceFinish.getMaxLaps(),
+        raceFinish && raceFinish.hasResults() && raceFinish.getSCT(),
+        raceFinish && raceFinish.hasResults() && raceFinish.isPursuitRace(),
     ];
 }
 

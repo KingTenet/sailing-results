@@ -99,7 +99,7 @@ export class Stores {
         }
         const newHelm = newHelms.find((newHelm) => Helm.getId(newHelm) === helmId);
         if (!newHelm) {
-            throw new Error("Helm didn't exist in store or new helms");
+            throw new Error(`Helm ${helmId} didn't exist in store or new helms`);
         }
         return newHelm;
     }

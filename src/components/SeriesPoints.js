@@ -25,6 +25,10 @@ function formatRaceNumber(raceDate) {
     return `R${raceDate.getNumber()}`;
 }
 
+function round2sf(num) {
+    return `${parseFloat(num.toFixed(2))}`;
+}
+
 function formatPoints(points, showLabel) {
     if (!points) {
         return "";
@@ -51,8 +55,8 @@ function formatPoints(points, showLabel) {
     }
 
     return points.isCounted
-        ? points.getTotal()
-        : `[${points.getTotal()}]`;
+        ? round2sf(points.getTotal())
+        : `[${round2sf(points.getTotal())}]`;
 }
 
 const StyledTd = ({ children, ...props }) => {
@@ -86,8 +90,8 @@ function HelmRow({ helmId, index, totalPoints, racePoints, sortedRaces }) {
                                 <StyledTd key={index} borderRightColor={index === sortedRaces.length - 1 ? STRONG_EMPHASIS : LIGHT_EMPHASIS} isNumeric>{formatPoints(points, true)}</StyledTd>
                             );
                         })}
-                        <StyledTd borderRightColor={STRONG_EMPHASIS} isNumeric>{!Boolean(boatIndex) && totalPNS}</StyledTd>
-                        <StyledTd isNumeric>{!Boolean(boatIndex) && totalPoints}</StyledTd>
+                        <StyledTd borderRightColor={STRONG_EMPHASIS} isNumeric>{!Boolean(boatIndex) && (totalPNS || "")}</StyledTd>
+                        <StyledTd isNumeric>{!Boolean(boatIndex) && round2sf(totalPoints)}</StyledTd>
                     </Tr>
                 )
             })
@@ -117,7 +121,7 @@ export default function SeriesPoints() {
     const series = params["series"];
     const seriesPoints = services.getSeriesPoints().find((seriesPoints) => seriesPoints.getSeasonName() === season && seriesPoints.getSeriesName() === series);
 
-    const [sortedRaces, totalPointsByHelm, allPoints, pointsByRace] = seriesPoints.getAllRacePointsByClassHandicap();
+    const [sortedRaces, totalPointsByHelm, allPoints, numRaceStarters] = seriesPoints.getAllRacePointsByClassHandicap();
 
     return (
         <>
@@ -136,15 +140,15 @@ export default function SeriesPoints() {
                                             key={index}
                                             borderRightColor={index === sortedRaces.length - 1 ? STRONG_EMPHASIS : NORMAL_EMPHASIS}
                                         >
-                                            {(pointsByRace.has(Race.getId(race)) && pointsByRace.get(Race.getId(race)))
-                                                ? <Link to={`${getURLDate(race.getDate())}/${race.getNumber()}`}>{formatRaceDate(race)}</Link>
+                                            {(numRaceStarters.has(Race.getId(race)) && numRaceStarters.get(Race.getId(race)))
+                                                ? <Link to={`${getURLDate(race.getDate())} /${race.getNumber()}`}>{formatRaceDate(race)}</Link >
                                                 : formatRaceDate(race)
                                             }
-                                        </StyledTh>
+                                        </StyledTh >
                                     ))}
-                                    <StyledTh borderBottomWidth="0px" paddingLeft="3px" paddingRight="3px" borderRightColor={STRONG_EMPHASIS}>PNS</StyledTh>
-                                    <StyledTh borderBottomWidth="0px" paddingLeft="3px" paddingRight="3px">Pts</StyledTh>
-                                </Tr>
+                                    <StyledTh borderBottomWidth="0px" paddingLeft="3px" paddingRight="3px" minWidth="45px" borderRightColor={STRONG_EMPHASIS}>PNS</StyledTh>
+                                    <StyledTh borderBottomWidth="0px" paddingLeft="3px" paddingRight="3px" minWidth="45px">Pts</StyledTh>
+                                </Tr >
                                 <Tr>
                                     <StyledTh borderTopWidth="0px"></StyledTh>
                                     <StyledTh borderRightColor={STRONG_EMPHASIS} borderTopWidth="0px"></StyledTh>
@@ -153,7 +157,7 @@ export default function SeriesPoints() {
                                             key={index}
                                             borderRightColor={index === sortedRaces.length - 1 ? STRONG_EMPHASIS : NORMAL_EMPHASIS}
                                         >
-                                            {(pointsByRace.has(Race.getId(race)) && pointsByRace.get(Race.getId(race)))
+                                            {(numRaceStarters.has(Race.getId(race)) && numRaceStarters.get(Race.getId(race)))
                                                 ? <Link to={`${getURLDate(race.getDate())}/${race.getNumber()}`}>{formatRaceNumber(race)}</Link>
                                                 : formatRaceNumber(race)
                                             }
@@ -163,7 +167,7 @@ export default function SeriesPoints() {
                                     <StyledTh borderTopWidth="0px" borderRightColor={STRONG_EMPHASIS}></StyledTh>
                                     <StyledTh borderTopWidth="0px"></StyledTh>
                                 </Tr>
-                            </Thead>
+                            </Thead >
                             <Tbody>
                                 {totalPointsByHelm.map(([helmId, totalPoints], index) => (
                                     <HelmRow key={index} index={index} helmId={helmId} totalPoints={totalPoints} racePoints={allPoints.get(helmId)} sortedRaces={sortedRaces} />
@@ -171,10 +175,10 @@ export default function SeriesPoints() {
                             </Tbody>
                             <Tfoot>
                             </Tfoot>
-                        </Table>
-                    </Box>
-                </RacesCard>
-            </Flex>
+                        </Table >
+                    </Box >
+                </RacesCard >
+            </Flex >
         </>
     );
 }

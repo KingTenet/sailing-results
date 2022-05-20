@@ -23,22 +23,24 @@ function SeriesDimension({ children, ...props }) {
     );
 }
 
-function SeriesPointsListItem({ seasonName, seriesName, seriesPoints, wonBy = [], onClick }) {
+function SeriesPointsListItem({ seasonName, seriesName, seriesPoints, wonBy = [] }) {
     const numRaces = 20;
     const racesToQualify = 10;
 
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} onClick={onClick}>
-            <Flex>
-                <Grid
-                    templateColumns={`repeat(${2 + wonBy.length}, 1fr)`}
-                    gap={5}
-                    width={"100%"}>
-                    <SeriesDimension colSpan={1}>{`${seasonName}`}</SeriesDimension>
-                    <SeriesDimension colSpan={1}>{`${seriesName}`}</SeriesDimension>
-                </Grid>
-            </Flex>
-        </Box>
+        <Link to={`${seasonName}/${seriesName}`} >
+            <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} >
+                <Flex>
+                    <Grid
+                        templateColumns={`repeat(${2 + wonBy.length}, 1fr)`}
+                        gap={5}
+                        width={"100%"}>
+                        <SeriesDimension colSpan={1}>{`${seasonName}`}</SeriesDimension>
+                        <SeriesDimension colSpan={1}>{`${seriesName}`}</SeriesDimension>
+                    </Grid>
+                </Flex>
+            </Box>
+        </Link>
     </>
 }
 
@@ -79,7 +81,7 @@ function SeriesPointsView({ seriesPoints }) {
             seriesName={seriesPoints.getSeriesName()}
             seriesPoints={seriesPoints}
             wonBy={wonBy}
-            onClick={() => navigateTo(`${seriesPoints.getSeasonName()}/${seriesPoints.getSeriesName()}`)}
+        // onClick={() => navigateTo(`${seriesPoints.getSeasonName()}/${seriesPoints.getSeriesName()}`)}
         />
     </ListItem>
 }

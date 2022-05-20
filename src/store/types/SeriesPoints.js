@@ -292,9 +292,9 @@ export default class SeriesPoints extends Series {
 
         const helmPointsMap = mapGroupBy(allResultPoints, [HelmResult.getHelmId, HelmResult.getRaceId, ResultPoints.getBoatClassName]);
 
-        const pointsByRace = mapGroupBy(allResultPoints, [HelmResult.getRaceId], ResultPoints.aggregate);
+        const numRaceEntrants = mapGroupBy(allResultPoints, [HelmResult.getRaceId], (allPoints) => allPoints.reduce((acc, points) => acc + Boolean(points.racePoints), 0));
 
-        return [sortedRaces, totalPointsByHelmDesc, helmPointsMap, pointsByRace];
+        return [sortedRaces, totalPointsByHelmDesc, helmPointsMap, numRaceEntrants];
     }
 
     summarizeByClassHandicap(date = new Date()) {
