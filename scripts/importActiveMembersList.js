@@ -75,7 +75,7 @@ function processMembershipRow(row) {
 // }
 
 async function replaceActiveMembersSheet(members, outputDoc) {
-    const outputMembersStore = await StoreWrapper.create("Active Membership", outputDoc, this, ClubMember, undefined, undefined, true);
+    const outputMembersStore = await StoreWrapper.create(false, "Active Membership", outputDoc, this, ClubMember, undefined, undefined, true);
     for (let member of members) {
         const {
             fullName,

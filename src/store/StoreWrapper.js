@@ -74,7 +74,7 @@ export default class StoreWrapper {
         return await this.store.syncRemoteStateToLocalState(force);
     }
 
-    static async create(storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), createSheetIfMissing = false, toStore = (obj) => obj.toStore(), getId = Type.getId, sheetHeaders = Type.sheetHeaders()) {
+    static async create(forceRefresh, storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), createSheetIfMissing = false, toStore = (obj) => obj.toStore(), getId = Type.getId, sheetHeaders = Type.sheetHeaders()) {
         let store = new Store(
             storeName,
             raceResultsDocument,
@@ -85,7 +85,7 @@ export default class StoreWrapper {
             createSheetIfMissing,
             sheetHeaders,
         );
-        await store.init();
+        await store.init(forceRefresh);
         return new StoreWrapper(store);
     }
 }

@@ -115,8 +115,6 @@ export default function TokenWrapper() {
         );
     }
 
-    // token should not change after this point!
-
     return (
         <>
             <Box bg="blue.50" minHeight="100vh" >
@@ -131,7 +129,6 @@ export default function TokenWrapper() {
 function ServicesWrapper({ token }) {
     const services = useServices(async () => initialiseServices(token))
 
-    console.log("Services Wrapper");
     if (services.error) {
         return (
             <>
@@ -142,7 +139,6 @@ function ServicesWrapper({ token }) {
     }
 
     if (!services.ready) {
-        console.log("Rendering spinner");
         return (
             <>
                 <Flex width="100vw" height="100vh" align={"center"} justify={"center"} direction="column">

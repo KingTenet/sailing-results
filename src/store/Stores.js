@@ -15,10 +15,7 @@ import MutableRaceFinish from "./types/MutableRaceFinish.js";
 import MutableRaceResult from "./types/MutableRaceResult.js";
 import SearchIndex from "../SearchIndex.js";
 import ClubMember from "./types/ClubMember.js";
-
-// const REFRESH_BACKEND_THRESHOLD = 8640000 * 1000; // 100 DAY
-const REFRESH_BACKEND_THRESHOLD = 86400 * 1000; // 1 DAY
-// const REFRESH_BACKEND_THRESHOLD = 10 * 1000; // 10 SECONDS
+import RemoteStore from "./RemoteStore.js";
 
 export class Stores {
     constructor(auth, raceResultsSheetId, seriesResultsSheetId) {
@@ -27,16 +24,47 @@ export class Stores {
         this.auth = auth;
     }
 
+    async getStoreLastUpdated() {
+        if (this.metaStore) {
+            try {
+                return parseISOString((await this.metaStore.getAllRows())[0]["Last Updated"]);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        }
+        return new Date(0); // If we have no meta store assume the remote store has not been updated.. ever
+    }
+
+    async writeStoreLastUpdated(lastUpdated = new Date()) {
+        return await this.metaStore.replace([{ "Last Updated": lastUpdated.toISOString() }]);
+    }
+
     async init() {
         await promiseSleep(10); // Required to get spinner to render!?
         const started = Date.now();
         console.log(`Started loading`);
-        const promiseClubMembers = StoreWrapper.create("Active Membership", this.raceResultsDocument, this, ClubMember);;
-        const promiseHelms = StoreWrapper.create("Helms", this.raceResultsDocument, this, Helm);
 
-        const promiseRYAClasses = StoreWrapper.create("RYA Full List", this.raceResultsDocument, this, BoatClass);
-        const promiseClubClasses = StoreWrapper.create("Club Handicaps", this.raceResultsDocument, this, BoatClass);
-        const promiseSeriesRaces = StoreWrapper.create("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
+        try {
+            this.metaStore = await RemoteStore.createRemoteStore(this.raceResultsDocument, "Meta Data", true, ["Last Updated"]);
+        }
+        catch (err) {
+            console.log("Failed to get metadata store");
+            console.log(err);
+        }
+
+        this.promiseStoresLastUpdated = this.getStoreLastUpdated();
+        const forceCacheRefresh = localStorage.getItem("forceRefreshCaches");
+        localStorage.removeItem("forceRefreshCaches");
+
+        const createStoreWrapper = (...args) => StoreWrapper.create(forceCacheRefresh, ...args);
+
+        const promiseClubMembers = createStoreWrapper("Active Membership", this.raceResultsDocument, this, ClubMember);
+        const promiseHelms = createStoreWrapper("Helms", this.raceResultsDocument, this, Helm);
+
+        const promiseRYAClasses = createStoreWrapper("RYA Full List", this.raceResultsDocument, this, BoatClass);
+        const promiseClubClasses = createStoreWrapper("Club Handicaps", this.raceResultsDocument, this, BoatClass);
+        const promiseSeriesRaces = createStoreWrapper("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
 
         const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces]);
         this.clubMembers = clubMembers;
@@ -50,18 +78,18 @@ export class Stores {
             (helmId) => this.helms.get(helmId),
         );
 
-        const promiseOODs = StoreWrapper.create("OODs", this.raceResultsDocument, this, HelmResult, getOODsFromStore);
-        const promisePursuitResults = StoreWrapper.create("Pursuit Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
-        const promiseFleetResults = StoreWrapper.create("Fleet Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
+        const promiseOODs = createStoreWrapper("OODs", this.raceResultsDocument, this, HelmResult, getOODsFromStore);
+        const promisePursuitResults = createStoreWrapper("Pursuit Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
+        const promiseFleetResults = createStoreWrapper("Fleet Race Results", this.raceResultsDocument, this, Result, (storeResult) => this.deserialiseResult(storeResult));
         const [oods, pursuitResults, fleetResults] = await Promise.all([promiseOODs, promisePursuitResults, promiseFleetResults]);
         this.oods = oods;
         this.pursuitResults = pursuitResults;
         this.results = fleetResults;
 
-        const clubMembersByName = mapGroupBy(this.clubMembers.all(), [ClubMember.getId]);
-        this.helms.all()
-            .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
-            .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
+        // const clubMembersByName = mapGroupBy(this.clubMembers.all(), [ClubMember.getId]);
+        // this.helms.all()
+        //     .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
+        //     .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
 
 
         console.log(`Loaded results in ${Math.round(Date.now() - started)} ms`);
@@ -157,11 +185,17 @@ export class Stores {
         }
 
         const allCorrectedResults = [...previousCorrectedResults];
+        const allResultsByRaceAsc = previousCorrectedResults.sort(Result.sortByRaceAsc);
+
+        const initialResultsByHelm = new mapGroupBy(allResultsByRaceAsc, [Result.getHelmId]);
+        const helmResultsByRaceAsc = new AutoMap(Result.getHelmId, (result, helmId) => initialResultsByHelm.get(helmId) || []);
+
         for (let [race, raceResults] of Race.groupResultsByRaceAsc(transformResults(allFleetResults))) {
-            const raceFinish = MutableRaceFinish.fromResults(raceResults, [...allCorrectedResults], oodsByRace.get(Race.getId(race)) || []);
+            const raceFinish = MutableRaceFinish.fromResults(raceResults, (helmId) => helmResultsByRaceAsc.get(helmId) || [], oodsByRace.get(Race.getId(race)) || []);
 
             raceFinishes.upsert(raceFinish);
-            allCorrectedResults.push(...raceFinish.getCorrectedResults());
+            raceFinish.getCorrectedResults().forEach((result) => helmResultsByRaceAsc.upsert(result, (arr) => [...arr, result]));
+            // allResultsByRaceAsc.push(...raceFinish.getCorrectedResults());
         }
 
         const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);
@@ -184,15 +218,8 @@ export class Stores {
 
     static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
         await bootstrapLocalStorage();
-        // TODO - find a better way to clear state
-        // const lastRefreshDate = parseISOString(localStorage.getItem("lastStateRefreshDate"));
-        // if (isOnline() && (forceRefresh || !lastRefreshDate || lastRefreshDate < (new Date()) - REFRESH_BACKEND_THRESHOLD)) {            
-        //     console.log("Clearing app state");
-        //     localStorage.clear();
-        // }
         const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
         await stores.init();
-        localStorage.setItem("lastStateRefreshDate", (new Date()).toISOString());
         return stores;
     }
 }

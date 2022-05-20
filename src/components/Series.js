@@ -24,9 +24,6 @@ function SeriesDimension({ children, ...props }) {
 }
 
 function SeriesPointsListItem({ seasonName, seriesName, seriesPoints, wonBy = [] }) {
-    const numRaces = 20;
-    const racesToQualify = 10;
-
     return <>
         <Link to={`${seasonName}/${seriesName}`} >
             <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} >
@@ -35,8 +32,8 @@ function SeriesPointsListItem({ seasonName, seriesName, seriesPoints, wonBy = []
                         templateColumns={`repeat(${2 + wonBy.length}, 1fr)`}
                         gap={5}
                         width={"100%"}>
-                        <SeriesDimension colSpan={1}>{`${seasonName}`}</SeriesDimension>
-                        <SeriesDimension colSpan={1}>{`${seriesName}`}</SeriesDimension>
+                        <SeriesDimension colSpan={1}>{`${seasonName} ${seriesName}`}</SeriesDimension>
+                        <SeriesDimension colSpan={1}></SeriesDimension>
                     </Grid>
                 </Flex>
             </Box>
@@ -73,15 +70,11 @@ function SeriesPointsView({ seriesPoints }) {
     // const classWinners = getWinners(resultsByClass);
     // const phWinners = !isPursuitRace ? getWinners(resultsByPH) : [];
 
-    const wonBy = ["felix"];
-
     return <ListItem>
         <SeriesPointsListItem
             seasonName={seriesPoints.getSeasonName()}
             seriesName={seriesPoints.getSeriesName()}
             seriesPoints={seriesPoints}
-            wonBy={wonBy}
-        // onClick={() => navigateTo(`${seriesPoints.getSeasonName()}/${seriesPoints.getSeriesName()}`)}
         />
     </ListItem>
 }
@@ -109,7 +102,6 @@ export default function Series({ liveOnly = false }) {
     return (
         <>
             <Flex direction="column" padding="5px">
-
                 <Flex direction="row" marginTop="20px">
                     <Heading size={"lg"} marginLeft="10px">{`Race Results`}</Heading>
                 </Flex>

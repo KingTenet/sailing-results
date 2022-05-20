@@ -43,7 +43,7 @@ async function run(forceRefresh = "true") {
 async function outputCorrectedResults(stores, sheetName, sheetDoc, tranformResults) {
     stores.processResults(tranformResults);
     const allCorrectedResults = stores.allCorrectedResults;
-    const correctedResultsStore = await StoreWrapper.create(sheetName, sheetDoc, stores, CorrectedResult, (storeResult) => stores.deserialiseResult(storeResult), undefined, true);
+    const correctedResultsStore = await StoreWrapper.create(false, sheetName, sheetDoc, stores, CorrectedResult, (storeResult) => stores.deserialiseResult(storeResult), undefined, true);
 
     for (let result of allCorrectedResults) {
         correctedResultsStore.add(result);
@@ -63,7 +63,7 @@ async function outputClassAnalysis(stores, sheetName, sheetDoc, tranformResults)
         )
             .map(([, analysesByRace]) => flatten(analysesByRace.map(([, classAnalysis]) => classAnalysis))));
 
-    const classAnalysisStore = await StoreWrapper.create(sheetName, sheetDoc, stores, ClassAnalysis, (storeResult) => storeResult, undefined, true);
+    const classAnalysisStore = await StoreWrapper.create(false, sheetName, sheetDoc, stores, ClassAnalysis, (storeResult) => storeResult, undefined, true);
     for (let classAnalysis of classAnalyses) {
         classAnalysisStore.add(classAnalysis);
     }

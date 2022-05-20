@@ -12,18 +12,38 @@ export default class Store {
         this.metadataKey = `metadata::${this.storeName}`;
         this.getLastSyncDate();
         this.localStore = new LocalStore(storeName, toStore, fromStore, this);
-        this.hasRemoteStore = Boolean(sheetsDoc !== undefined);
-        this.promiseRemoteStore = this.hasRemoteStore && RemoteStore.retryCreateRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
+        this.promiseRemoteStore = RemoteStore.retryCreateRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 
-    async init() {
-        if (isOnline()) {
-            this.clear();
+    async handleStaleStatus() {
+        const localStoreIsStale = (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
+        console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
+        if (localStoreIsStale) {
+            localStorage.setItem("forceRefreshCaches", true);
+            window.location.reload();
         }
+    }
+
+    async init(forceRefresh) {
         let localStoreObjects = this.pullLocalState();
+        // await this.handleStaleStatus();
+
+        if (!isOnline()) {
+            return;
+        }
+
+        if (!forceRefresh) {
+            this.handleStaleStatus().catch((err) => console.log(err));
+        }
+
+        // const localStoreIsStale = (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
+        // console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
+
         let localStateEmpty = !localStoreObjects.length;
-        if (localStateEmpty && this.hasRemoteStore) {
+
+        if (localStateEmpty || forceRefresh) {
+            this.clear();
             await this.promiseRemoteStore;
             let remoteStoreObjects = await this.pullRemoteState();
             this.syncLocalStateToRemoteState(remoteStoreObjects);
@@ -50,10 +70,6 @@ export default class Store {
     }
 
     storesInSync() {
-        if (!this.hasRemoteStore) {
-            throw new Error(`Cannot sync local store as no remote store exists for ${this.storeName}`);
-        }
-
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
         let created = allLocal
@@ -67,9 +83,6 @@ export default class Store {
     }
 
     async syncRemoteStateToLocalState(force = false) {
-        if (!this.hasRemoteStore) {
-            throw new Error(`Cannot sync local store as no remote store exists for ${this.storeName}`);
-        }
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
         let created = allLocal
@@ -97,6 +110,7 @@ export default class Store {
         if (created.length) {
             await this.remoteStore.append(created.map((obj) => this.toStore(obj)));
         }
+        await this.services.writeStoreLastUpdated();
         this.setLastSyncDate();
         console.log("Successfully updated remote state");
     }

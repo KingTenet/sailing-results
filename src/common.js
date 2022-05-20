@@ -25,7 +25,7 @@ export class AutoMap extends Map {
     upsert(obj, transform = (prev, obj, key) => obj) {
         let key = this.getKey(obj);
         if (!this.has(key) && this.getDefaultValue !== undefined) {
-            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
+            return this.set(key, transform(this.getDefaultValue(obj, key), obj, key));
         }
         return this.set(key, transform(super.get(key), obj, key))
     }

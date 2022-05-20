@@ -44,6 +44,7 @@ export class MultiValueWrapper {
 
     async store(createSheetIfMissing = true) {
         const store = await StoreWrapper.create(
+            false, 
             this.storeName,
             this.sheetDoc,
             this.stores,

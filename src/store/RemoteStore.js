@@ -21,6 +21,13 @@ export default class RemoteStore {
         return await sheet.addRows(rows);
     }
 
+    async replace(newRows) {
+        const sheet = await this.getSheet();
+        const rows = await sheet.getRows();
+        await Promise.all(rows.map((row) => row.delete()));
+        await this.append(newRows);
+    }
+
     async getSheet() {
         const sheet = this.sheetsDoc.sheetsByTitle[this.sheetName];
         if (!sheet) {

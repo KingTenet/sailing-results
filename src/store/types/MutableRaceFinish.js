@@ -6,16 +6,17 @@ import CorrectedResult from "./CorrectedResult.js";
 import HelmResult from "./HelmResult.js";
 
 export default class MutableRaceFinish extends Race {
-    constructor(raceDate, raceNumber, results = [], previousResults, oods) {
+    constructor(raceDate, raceNumber, results = [], getHelmResults, oods) {
         super(raceDate, raceNumber);
         results.forEach((result) => assertType(result, Result));
-        (previousResults || []).forEach((result) => assertType(result, CorrectedResult));
+        // (previousResults || []).forEach((result) => assertType(result, CorrectedResult));
         (oods || []).forEach((ood) => assertType(ood, HelmResult));
         (results || []).forEach((result) => assert(HelmResult.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race."));
         (oods || []).forEach((ood) => assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race."));
 
         this.results = results;
-        this.previousResults = previousResults;
+        // this.previousResults = previousResults;
+        this.getHelmResults = getHelmResults;
         this.oods = oods;
         this.processResults();
     }
@@ -25,7 +26,7 @@ export default class MutableRaceFinish extends Race {
             this.calculateSCT();
             this.validateRaceType();
             if (!this.isPursuitRace()) {
-                if (!this.previousResults) {
+                if (!this.getHelmResults) {
                     throw new Error("Cannot process race results without previous results");
                 }
                 this.setCorrectedResults();
@@ -87,12 +88,12 @@ export default class MutableRaceFinish extends Race {
     }
 
     setCorrectedResults() {
-        const allResultsByRaceAsc = this.previousResults.sort(Result.sortByRaceAsc);
-        const helmResultsByRaceAsc = new Map(groupBy(allResultsByRaceAsc, Result.getHelmId));
-        const getHelmResults = (helmId) => helmResultsByRaceAsc.get(helmId) || [];
+        // const allResultsByRaceAsc = this.previousResults.sort(Result.sortByRaceAsc);
+        // const helmResultsByRaceAsc = new Map(groupBy(allResultsByRaceAsc, Result.getHelmId));
+        // const getHelmResults = (helmId) => helmResultsByRaceAsc.get(helmId) || [];
 
         this.correctedResults = this.results
-            .map((result) => CorrectedResult.fromResult(result, getHelmResults(Result.getHelmId(result)), this));
+            .map((result) => CorrectedResult.fromResult(result, this.getHelmResults(Result.getHelmId(result)), this));
     }
 
     getSCT() {
@@ -190,11 +191,11 @@ export default class MutableRaceFinish extends Race {
         return [classAdjustedPoints, personalAdjustedPoints];
     }
 
-    static fromResults(results, previousResults, oods) {
+    static fromResults(results, getHelmResults, oods) {
         assert(results.length, "Minimum number of results to create a race finish is 1");
         assertType(results.at(0), Result);
         const race = results.at(0).getRace();
-        return new MutableRaceFinish(race.getDate(), race.getNumber(), results, previousResults, oods);
+        return new MutableRaceFinish(race.getDate(), race.getNumber(), results, getHelmResults, oods);
     }
 
     static fromOODs(oods) {
