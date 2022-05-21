@@ -142,7 +142,7 @@ function ImmutableRacesView({ races, ...props }) {
 }
 
 
-export default function Races({ editableOnly = false, StoresSync }) {
+export default function Races({ editableOnly = false }) {
     const services = useServices();
     const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(true));
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();

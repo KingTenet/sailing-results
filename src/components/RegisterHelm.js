@@ -17,6 +17,7 @@ function RegisterHelm() {
     const [selectedClubMember, setSelectedClubMember] = useState(null);
     const [selectedBoat, setSelectedBoat] = useState(null);
     const [sailNumber, setSailNumber] = useState();
+    const [showCommit, setShowCommit] = useState();
 
     const [appState, updateAppState] = useAppState();
     const services = useServices();
@@ -156,8 +157,22 @@ function RegisterHelm() {
                                         heading={"Sail Number"}
                                         data={sailNumberIndex.data}
                                         itemToString={({ sailNumber }) => (sailNumber !== undefined ? sailNumber : "")}
-                                        filterData={(inputValue) => sailNumberIndex.search(inputValue)}
-                                        handleSelectedItemChange={(item) => item !== undefined ? setSailNumber(!isNaN(parseInt(item)) ? parseInt(item) : item.sailNumber) : ""}
+                                        filterData={(inputValue) => {
+                                            const matches = sailNumberIndex.search(inputValue);
+                                            if (!matches.length && !isNaN(parseInt(inputValue))) {
+                                                setShowCommit(true);
+                                            }
+                                            else if (showCommit) {
+                                                setShowCommit(false);
+                                            }
+                                            return matches;
+                                        }}
+                                        handleSelectedItemChange={(item) => {
+                                            if (item !== undefined) {
+                                                const sailNumber = !isNaN(parseInt(item)) ? parseInt(item) : item.sailNumber;
+                                                setSailNumber(sailNumber);
+                                            }
+                                        }}
                                         placeholder={"Enter boat sail number here..."}
                                         type={"number"}
                                         triggerExactMatchOnBlur={true}
@@ -173,10 +188,10 @@ function RegisterHelm() {
                             }
                         </Flex>
                         <Spacer />
-                        {sailNumber !== undefined &&
+                        {(sailNumber !== undefined || showCommit) &&
                             <Button backgroundColor="green.500" onClick={() => {
                                 processHelmResult();
-                            }} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
+                            }} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus={sailNumber}><Text fontSize={"lg"}>Add to race results</Text></Button>
                         }
                         <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
                     </Flex>

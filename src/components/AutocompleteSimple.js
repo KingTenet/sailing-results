@@ -76,7 +76,8 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
         onInputValueChange: ({ inputValue }) => {
             let exactMatch = data.find((item) => itemToString(item).toLowerCase() === inputValue.toLowerCase());
             if (exactMatch) {
-                setExactMatch(exactMatch);
+                // Re-enable to automatically force blur on any match (which is annoying due to subsets being valid)
+                // setExactMatch(exactMatch);
             }
             else {
                 setPartiaValue(inputValue);
