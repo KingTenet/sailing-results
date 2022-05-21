@@ -306,6 +306,7 @@ export default function Race({ backButtonText }) {
         ? raceResults
         : [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))];
 
+    // TODO - this is probably not a very efficient way to get isImmutablePursuitRace
     const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isImmutablePursuitRace] = useSortedResults(viewableRaceResults, race);
 
     function Wrapped({ children }) {

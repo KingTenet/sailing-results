@@ -1,5 +1,5 @@
-import { Box, Flex, Table, Thead, Tr, Th, Tbody, Td, Tfoot } from "@chakra-ui/react";
-import React from "react";
+import { Box, Flex, Table, Thead, Tr, Th, Tbody, Td, Tfoot, Center } from "@chakra-ui/react";
+import React, { useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 
 import { useServices } from "../useAppState";
@@ -7,6 +7,7 @@ import { RacesCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
 import { flatten, getURLDate } from "../common";
 import Race from "../store/types/Race";
+import { BackButton, GreenButton } from "./Buttons";
 
 const STRONG_EMPHASIS = "blackAlpha.500";
 const NORMAL_EMPHASIS = "blackAlpha.300";
@@ -119,15 +120,21 @@ export default function SeriesPoints() {
     const params = useParams();
     const season = params["season"];
     const series = params["series"];
+    const [resultsByPersonalHandicap, updateResultsByPersonalHandicap] = useState(false);
     const seriesPoints = services.getSeriesPoints().find((seriesPoints) => seriesPoints.getSeasonName() === season && seriesPoints.getSeriesName() === series);
 
-    const [sortedRaces, totalPointsByHelm, allPoints, numRaceStarters] = seriesPoints.getAllRacePointsByClassHandicap();
+    const personalHandicapRaces = seriesPoints.getPersonalHandicapRacesToCount(new Date()) - 1;
+
+    const [sortedRaces, totalPointsByHelm, allPoints, numRaceStarters] = resultsByPersonalHandicap && personalHandicapRaces
+        ? seriesPoints.getAllRacePointsByPersonalHandicap()
+        : seriesPoints.getAllRacePointsByClassHandicap();
 
     return (
         <>
+            {/* <Center> */}
             <Flex direction="column" style={{ display: "inline-block" }}>
                 <RacesCard display="inline-block" >
-                    <DroppableHeader heading={`${series} ${season} series points`} />
+                    <DroppableHeader heading={`${series} ${season} series points by ${resultsByPersonalHandicap && personalHandicapRaces ? "personal handicap" : "class handicap"}`} />
                     <Box padding="10px">
                         <Table size="sm" variant='simple'>
                             <Thead>
@@ -173,12 +180,18 @@ export default function SeriesPoints() {
                                     <HelmRow key={index} index={index} helmId={helmId} totalPoints={totalPoints} racePoints={allPoints.get(helmId)} sortedRaces={sortedRaces} />
                                 ))}
                             </Tbody>
-                            <Tfoot>
-                            </Tfoot>
                         </Table >
                     </Box >
                 </RacesCard >
+
+                <Flex direction="column" width="100%" marginTop="20px">
+                    {Boolean(personalHandicapRaces) &&
+                        <GreenButton maxWidth="100vw" onClick={() => updateResultsByPersonalHandicap(!resultsByPersonalHandicap)} autoFocus>{resultsByPersonalHandicap ? "Show points by class handicap" : "Show points by personal handicap"}</GreenButton>
+                    }
+                    <BackButton maxWidth="100vw">{"Back to series"}</BackButton>
+                </Flex>
             </Flex >
+            {/* </Center> */}
         </>
     );
 }
