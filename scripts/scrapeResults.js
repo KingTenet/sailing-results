@@ -450,7 +450,7 @@ async function replacePursuitResults(results, outputDoc, sourceResultsURL, serie
 
     // const pursuitResultsStore = await StoreWrapper.create(false, "2021 All Pursuit", outputDoc, this, Result, undefined, undefined, true);
     // const fleetResultsStore = await StoreWrapper.create(false, "2021 Fleet", outputDoc, this, Result, undefined, undefined, true);
-    const storeFs = await StoreFunctions.create(devAuth, sourceResultsSheetId, seriesResultsSheetId);
+    const storeFs = await StoreFunctions.create(false, devAuth, sourceResultsSheetId, seriesResultsSheetId);
     for (let result of results) {
         const {
             lady,

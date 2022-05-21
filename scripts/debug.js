@@ -1,7 +1,7 @@
 import { getSheetIdFromURL } from "../src/common.js";
 import { Stores } from "../src/store/Stores.js";
 import Race from "../src/store/types/Race.js";
-import auth from "./auth.js";
+import { readOnly } from "./auth.js";
 import { calculateSCTFromRaceResults } from "../src/common/personalHandicapHelpers.js";
 
 global.DEBUG = true;
@@ -18,7 +18,7 @@ const parseBoolean = (str) => str && str.toLowerCase() !== "false" ? str : undef
 async function run(seriesSearchStr, raceSearchStr, personalHandicapStr = false, forceRefresh = false) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
-    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId, parseBoolean(forceRefresh));
+    const stores = await Stores.create(readOnly, sourceResultsSheetId, seriesResultsSheetId, parseBoolean(forceRefresh));
     stores.processResults();
     const personalHandicap = parseBoolean(personalHandicapStr);
 

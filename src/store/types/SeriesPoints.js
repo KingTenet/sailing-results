@@ -9,7 +9,7 @@ import Series from "./Series.js";
 import SeriesRace from "./SeriesRace.js";
 import StoreObject from "./StoreObject.js";
 
-const USE_PH_FROM_SERIES_START = true;
+const USE_PH_FROM_SERIES_START = false;
 
 class AsciiTable {
     constructor(columnHeaders, rowHeaders, cells) {
@@ -349,6 +349,7 @@ export default class SeriesPoints extends Series {
 
     seriesTable(allResultPoints) {
         const allResultsPointsSortedByRace = allResultPoints.sort(HelmResult.sortByRaceAsc);
+        // debugger;
         const firstRacePointsOfSeries = allResultsPointsSortedByRace.at(0).getRace();
         const allResultsByHelm = mapGroupBy(allResultPoints, [HelmResult.getHelmId], ResultPoints.aggregate);
         // const allBoatsByHelm = groupBy(this.allResultPoints, [HelmResult.getHelmId, ResultPoints.getBoatClassName]);

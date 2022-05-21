@@ -1,6 +1,7 @@
 import LocalStore from "./LocalStore.js";
 import RemoteStore from "./RemoteStore.js";
 import { parseISOString, getISOStringFromDate, isOnline } from "../common.js"
+import inBrowser from "../inBrowser.js";
 
 export default class Store {
     constructor(storeName, sheetsDoc, toStore, fromStore, getKeyFromObj, services, createSheetIfMissing, headers) {
@@ -19,7 +20,7 @@ export default class Store {
     async handleStaleStatus() {
         const localStoreIsStale = (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
         console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
-        if (localStoreIsStale) {
+        if (inBrowser && localStoreIsStale) {
             localStorage.setItem("forceRefreshCaches", true);
             window.location.reload();
         }

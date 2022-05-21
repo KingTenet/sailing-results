@@ -26,24 +26,23 @@ async function initialiseServicesFromToken(token, refreshCache) {
         clientEmail,
     } = tokenParser(token);
 
-    return await StoreFunctions.create({ privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser, refreshCache);
+    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser);
 }
 
-async function initialiseReadOnlyServices() {
-    return await StoreFunctions.create(readOnlyAuth, sourceResultsSheetId, seriesResultsSheetId);
+async function initialiseReadOnlyServices(refreshCache) {
+    return await StoreFunctions.create(refreshCache, readOnlyAuth, sourceResultsSheetId, seriesResultsSheetId);
 }
 
 async function initialiseServices(token) {
     console.log("Initialising services");
     const started = Date.now();
 
-    // TODO - this is causing issues at present - possibly beacuse it's nuking the token??
-    // const refreshCache = Boolean(urlToken);
-    const refreshCache = false;
+    const refreshCache = localStorage.getItem("forceRefreshCaches");
+    localStorage.removeItem("forceRefreshCaches");
 
     const storeFunctions = token
         ? await initialiseServicesFromToken(token, refreshCache)
-        : await initialiseReadOnlyServices();
+        : await initialiseReadOnlyServices(refreshCache);
 
     console.log(`Finished initialising services in ${Math.round(Date.now() - started)}ms`);
     return {

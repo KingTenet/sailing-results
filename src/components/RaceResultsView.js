@@ -62,6 +62,7 @@ const COLUMN_3_DIMENSIONS = {
     ],
     "CLASS_HANDICAP": [
         "CLASS_CORRECTED_TIME",
+        "RAW_CLASS_CORRECTED_TIME"
     ],
     "FINISH_TIME": [
         "FINISH_TIME",
@@ -83,6 +84,7 @@ const DIMENSION_LABELS = {
     "PERSONAL_INTERVAL": "PI (%)",
     "PERSONAL_INTERVAL_FROM_PH": "PY/PH (%)",
     "CLASS_CORRECTED_TIME": "Time",
+    "RAW_CLASS_CORRECTED_TIME": "Seconds",
     "FINISH_TIME": "Time",
     "LAPS": "Laps",
 };
@@ -142,7 +144,7 @@ function HeadingRow({ toggleDimension1, toggleDimension2, toggleDimension3, dime
     </>
 }
 
-function getDimensionValue(dimension, result) {
+function getDimensionValue(dimension, result, sct, correctedLaps) {
     switch (dimension) {
         case "NAME":
             return Result.getHelmId(result);
@@ -172,6 +174,10 @@ function getDimensionValue(dimension, result) {
             return result.isValidFinish()
                 ? formatMinutesSeconds(secondsToMinutesSeconds(result.getClassCorrectedTime()))
                 : "DNF"
+        case "RAW_CLASS_CORRECTED_TIME":
+            return result.isValidFinish()
+                ? `${result.getClassCorrectedTime() / correctedLaps}`
+                : "DNF"
         case "FINISH_TIME":
             return result.isValidFinish()
                 ? formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()))
@@ -183,7 +189,7 @@ function getDimensionValue(dimension, result) {
     }
 }
 
-function ResultListItem({ result, position, toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3 }) {
+function ResultListItem({ result, position, toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3, sct, correctedLaps }) {
     return <>
         <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} marginBottom={"5px"} backgroundColor="white">
             <Flex>
@@ -192,9 +198,9 @@ function ResultListItem({ result, position, toggleDimension1, toggleDimension2, 
                     gap={3}
                     width={"100%"}>
                     <ResultDimension colSpan={1}>{position}</ResultDimension>
-                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{getDimensionValue(dimension1, result)}</ResultDimension>
-                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{getDimensionValue(dimension2, result)}</ResultDimension>
-                    <ResultDimension colSpan={3} onClick={toggleDimension3}>{getDimensionValue(dimension3, result)}</ResultDimension>
+                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{getDimensionValue(dimension1, result, sct, correctedLaps)}</ResultDimension>
+                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{getDimensionValue(dimension2, result, sct, correctedLaps)}</ResultDimension>
+                    <ResultDimension colSpan={3} onClick={toggleDimension3}>{getDimensionValue(dimension3, result, sct, correctedLaps)}</ResultDimension>
                 </Grid>
             </Flex>
         </Box>
@@ -309,7 +315,7 @@ export default function RaceResultsView({ results, oods, race, raceIsMutable, ..
 
     return (
         <>
-            <Heading marginBottom="20px" marginLeft="20px" size={"md"}>{`${heading}`}</Heading>
+            <Heading marginBottom="20px" marginLeft="20px" size={"md"}>{`${heading} `}</Heading>
             <ResultsList marginBottom="20px" >
                 <>
                     <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
@@ -324,11 +330,15 @@ export default function RaceResultsView({ results, oods, race, raceIsMutable, ..
                                 dimension3={dimension3}
                                 toggleDimension1={toggleDimension1}
                                 toggleDimension2={toggleDimension2}
-                                toggleDimension3={toggleDimension3} />
+                                toggleDimension3={toggleDimension3}
+                                sct={SCT}
+                                correctedLaps={correctedLaps}
+                            />
                         </ListItem>
                     )}
                 </>
             </ResultsList>
+            {/* <Box>{`SCT: ${SCT / correctedLaps} `}</Box> */}
             {Boolean(oods.length) &&
                 <>
                     <Heading size={"lg"} marginBottom="10px">OODs</Heading>

@@ -40,7 +40,7 @@ export class Stores {
         return await this.metaStore.replace([{ "Last Updated": lastUpdated.toISOString() }]);
     }
 
-    async init() {
+    async init(forceCacheRefresh) {
         await promiseSleep(10); // Required to get spinner to render!?
         const started = Date.now();
         console.log(`Started loading`);
@@ -54,9 +54,6 @@ export class Stores {
         }
 
         this.promiseStoresLastUpdated = this.getStoreLastUpdated();
-        const forceCacheRefresh = localStorage.getItem("forceRefreshCaches");
-        localStorage.removeItem("forceRefreshCaches");
-
         const createStoreWrapper = (...args) => StoreWrapper.create(forceCacheRefresh, ...args);
 
         const promiseClubMembers = createStoreWrapper("Active Membership", this.raceResultsDocument, this, ClubMember);
@@ -216,10 +213,10 @@ export class Stores {
         return allProcesssed;
     }
 
-    static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceRefresh) {
+    static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceCacheRefresh) {
         await bootstrapLocalStorage();
         const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
-        await stores.init();
+        await stores.init(forceCacheRefresh);
         return stores;
     }
 }
@@ -504,7 +501,7 @@ export class StoreFunctions {
         this.indexes = new Indexes(this.stores);
     }
 
-    static async create(auth, raceResultsSheetId, seriesResultsSheetId, editableRaceDateStr, superUser, forceRefresh) {
+    static async create(forceRefresh, auth, raceResultsSheetId, seriesResultsSheetId, editableRaceDateStr, superUser) {
         const stores = await Stores.create(
             auth,
             raceResultsSheetId,
