@@ -10,6 +10,9 @@ export function logDebug(msg, debug) {
     }
 }
 
+export function round2sf(num) {
+    return `${parseFloat(num.toFixed(2))}`;
+}
 
 export function average(arr, mapItem = (item) => item) {
     return arr.map(mapItem).reduce((acc, value) => acc + value, 0) / arr.length;

@@ -6,6 +6,7 @@ import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
 import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpers.js";
 import { useDimensionsToggle, useSortedResults } from "../common/hooks.js";
+import { round2sf } from "../common";
 
 import { GreenButton } from "./Buttons";
 import { RegisteredCard } from "./Cards";
@@ -176,7 +177,7 @@ function getDimensionValue(dimension, result, sct, correctedLaps) {
                 : "DNF"
         case "RAW_CLASS_CORRECTED_TIME":
             return result.isValidFinish()
-                ? `${result.getClassCorrectedTime() / correctedLaps}`
+                ? `${round2sf(result.getClassCorrectedTime() / correctedLaps)}`
                 : "DNF"
         case "FINISH_TIME":
             return result.isValidFinish()

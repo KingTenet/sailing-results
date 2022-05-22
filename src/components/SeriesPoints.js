@@ -5,7 +5,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { useServices } from "../useAppState";
 import { RacesCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
-import { flatten, getURLDate } from "../common";
+import { flatten, getURLDate, round2sf } from "../common";
 import Race from "../store/types/Race";
 import { BackButton, GreenButton } from "./Buttons";
 
@@ -24,10 +24,6 @@ function formatRaceDate(raceDate) {
 
 function formatRaceNumber(raceDate) {
     return `R${raceDate.getNumber()}`;
-}
-
-function round2sf(num) {
-    return `${parseFloat(num.toFixed(2))}`;
 }
 
 function formatPoints(points, showLabel) {
