@@ -15,14 +15,23 @@ import RegisterOOD from "./components/RegisterOOD";
 import Series from "./components/Series";
 import { useNavigate } from "react-router-dom";
 import SeriesPoints from "./components/SeriesPoints";
+import { useServices } from "./useAppState";
 
 function Home() {
     const [appState] = useAppState();
+    const services = useServices();
+
     let navigate = useNavigate();
 
     useEffect(() => {
         if (appState) {
-            navigate("races/");
+            console.log(services.readOnly);
+            if (!services.readOnly) {
+                navigate("races/");
+            }
+            else {
+                navigate("series/");
+            }
         }
     }, [appState]);
 

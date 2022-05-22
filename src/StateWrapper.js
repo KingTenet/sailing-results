@@ -9,6 +9,7 @@ import { StoreFunctions } from "./store/Stores";
 import { tokenGenerator } from "./token.js";
 import { CheckIcon, SmallCloseIcon } from '@chakra-ui/icons'
 
+const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
 const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
 const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
 const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
@@ -18,13 +19,20 @@ const readOnlyAuth = {
     clientEmail: "read-only@nhebsc-results.iam.gserviceaccount.com",
 };
 
+function getTokenExpiry(token) {
+    return tokenParser(token).expiry;
+}
+
 async function initialiseServicesFromToken(token, refreshCache) {
+    const parsedToken = tokenParser(token);
     let {
         raceDate: raceDateString,
         superUser,
         privateKey,
         clientEmail,
-    } = tokenParser(token);
+    } = parsedToken;
+
+    // console.log(parsedToken);
 
     return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser);
 }
@@ -68,6 +76,7 @@ const DEFAULT_STATE = {
     oods: [],
     newHelms: [],
     isPursuitRace: false,
+    expiry: Date.now() + REACT_STATE_EXPIRY_PERIOD,
 };
 
 const DEFAULT_SERVICE_STATE = {
@@ -92,21 +101,25 @@ export default function TokenWrapper() {
                 updateReadOnly(true);
             }
             else {
-                updateUrlToken(token);
+                updateUrlToken(token.body);
             }
         }
         else {
-            if (token === urlToken) {
+            if (token && token.body === urlToken) {
                 console.log("Not updating token as it's unchanged.");
                 return;
             }
 
+            const tokenExpiry = getTokenExpiry(urlToken);
             console.log("Replacing token");
-            updateToken(urlToken);
+            updateToken({
+                expiry: tokenExpiry,
+                body: urlToken,
+            });
         }
     }, [urlToken]);
 
-    if (!readOnly && (!urlToken || token !== urlToken)) {
+    if (!readOnly && (!urlToken || !token || token.body !== urlToken)) {
         return (
             <>
                 <p>Awaiting token...</p>
@@ -118,7 +131,7 @@ export default function TokenWrapper() {
         <>
             <Box bg="blue.50" minHeight="100vh" >
                 <ServicesContext.Provider value={servicesManager}>
-                    <ServicesWrapper token={token} />
+                    <ServicesWrapper token={token && token.body} />
                 </ServicesContext.Provider>
             </Box>
         </>

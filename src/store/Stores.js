@@ -181,18 +181,18 @@ export class Stores {
             raceFinishes.upsert(MutableRaceFinish.fromResults(raceResults, undefined, oodsByRace.get(Race.getId(race)) || []));
         }
 
-        const allCorrectedResults = [...previousCorrectedResults];
-        const allResultsByRaceAsc = previousCorrectedResults.sort(Result.sortByRaceAsc);
+        const allCorrectedResults = [...previousCorrectedResults.sort(Result.sortByRaceAsc)];
 
-        const initialResultsByHelm = new mapGroupBy(allResultsByRaceAsc, [Result.getHelmId]);
+        const initialResultsByHelm = new mapGroupBy(allCorrectedResults, [Result.getHelmId]);
         const helmResultsByRaceAsc = new AutoMap(Result.getHelmId, (result, helmId) => initialResultsByHelm.get(helmId) || []);
 
         for (let [race, raceResults] of Race.groupResultsByRaceAsc(transformResults(allFleetResults))) {
-            const raceFinish = MutableRaceFinish.fromResults(raceResults, (helmId) => helmResultsByRaceAsc.get(helmId) || [], oodsByRace.get(Race.getId(race)) || []);
+            const raceFinish = MutableRaceFinish.fromResults(raceResults, (helmId) => helmResultsByRaceAsc.get(helmId) || initialResultsByHelm.get(helmId) || [], oodsByRace.get(Race.getId(race)) || []);
 
             raceFinishes.upsert(raceFinish);
-            raceFinish.getCorrectedResults().forEach((result) => helmResultsByRaceAsc.upsert(result, (arr) => [...arr, result]));
-            // allResultsByRaceAsc.push(...raceFinish.getCorrectedResults());
+            const correctedResults = raceFinish.getCorrectedResults();
+            correctedResults.forEach((result) => helmResultsByRaceAsc.upsert(result, (arr) => [...arr, result]));
+            allCorrectedResults.push(...correctedResults);
         }
 
         const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);

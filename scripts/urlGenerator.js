@@ -1,25 +1,33 @@
 import { tokenGenerator } from "../src/token.js";
-import { readWrite } from "./auth.js";
+import { readWrite, readOnly } from "./auth.js";
+
+const parseBoolean = (str) => str && str.toLowerCase() !== "false" ? str : undefined;
 
 async function run(
-    date = (new Date(Date.now())).toISOString().slice(0, 10),
-    privateKey = readWrite.privateKey,
-    clientEmail = readWrite.clientEmail,
+    date,
+    isReadOnlyStr = "true",
+    isSuperUserStr = "false",
     baseUrl = "https://nhebsc.org.uk/results/app/#/races/"
 ) {
     const raceDate = [date, "T00:00:00.000Z"].join("");
-    const token = tokenGenerator(
-        {
-            superUser: true,
-            // raceDate,
-            privateKey,
-            clientEmail,
-        }
-    );
+    const isSuperUser = parseBoolean(isSuperUserStr);
+
+    const isReadOnly = parseBoolean(isReadOnlyStr);
+    const auth = isReadOnly ? readOnly : readWrite;
+
+    const params = {
+        superUser: isSuperUser,
+        raceDate: !isSuperUser ? raceDate : undefined,
+        privateKey: auth.privateKey,
+        clientEmail: auth.clientEmail,
+        expiry: Date.now() + 86400000 * 7, // 7 days until expiry
+    };
+
+    const token = tokenGenerator(params);
 
     console.log("Creating token:");
-    console.log(`Race dates: ${raceDate}`);
-    console.log(`Client email: ${clientEmail}`);
+    console.log(`Race dates: ${params.raceDate}`);
+    console.log(`Client email: ${params.clientEmail}`);
     console.log("");
     console.log("Token:");
     console.log("");

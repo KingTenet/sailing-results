@@ -153,7 +153,7 @@ export default function Races({ editableOnly = false }) {
 
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
-        .filter((race) => !race.isBefore(filterRace));
+        .filter((race) => services.superUser || !race.isBefore(filterRace));
 
     const editedRaces = immutableRaces
         .filter((race) => services.isRaceEditableByUser(race));
