@@ -18,7 +18,7 @@ export default class BoatClass extends StoreObject {
     }
 
     static generateBoatClassId(className, validYear) {
-        return generateId(BoatClass, [className, validYear]);
+        return generateId("BoatClass", [className, validYear]);
     }
 
     static getId(boatClass) {

@@ -13,7 +13,7 @@ export default class SeriesRace extends StoreObject {
 
     static getId(seriesRace) {
         assertType(seriesRace, SeriesRace);
-        return generateId(SeriesRace, [Series.getId(seriesRace.series), Race.getId(seriesRace.race)]);
+        return generateId("SeriesRace", [Series.getId(seriesRace.series), Race.getId(seriesRace.race)]);
     }
 
     static getRaceId(seriesRace) {

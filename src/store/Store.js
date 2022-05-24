@@ -151,8 +151,9 @@ export default class Store {
     }
 
     clear() {
-        const allValues = this.all();
-        allValues.forEach((value) => this.delete(value));
+        // const allValues = this.all();
+        // allValues.forEach((value) => this.delete(value));
+        this.localStore.clearCache();
     }
 
     dump() {

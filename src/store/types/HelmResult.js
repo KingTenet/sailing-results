@@ -12,7 +12,7 @@ export default class HelmResult extends StoreObject {
 
     static getId(result) {
         assertType(result, HelmResult);
-        return generateId(HelmResult, [Helm.getId(result.helm), Race.getId(result.race)]);
+        return generateId("HelmResult", [Helm.getId(result.helm), Race.getId(result.race)]);
     }
 
     static getRaceId(result) {

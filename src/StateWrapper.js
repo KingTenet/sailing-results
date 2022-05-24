@@ -142,6 +142,7 @@ function ServicesWrapper({ token }) {
     const services = useServices(async () => initialiseServices(token))
 
     if (services.error) {
+        console.log(services.error);
         return (
             <>
                 <Text>{`${services.error}`}</Text>

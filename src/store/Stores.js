@@ -210,6 +210,7 @@ export class Stores {
         const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults];
         console.log(`Finished processing results in ${Math.round(Date.now() - started)} ms`);
 
+
         return allProcesssed;
     }
 

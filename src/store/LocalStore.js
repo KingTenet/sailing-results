@@ -105,6 +105,25 @@ export default class LocalStore {
         return [...this.cache.values()];
     }
 
+    clearCache() {
+        const keys = inBrowser
+            ? Object.keys(this.localStorage)
+            : this.localStorage._keys
+
+        let i = keys.length;
+
+        while (i--) {
+            let key = this.storeKeyToKey(keys[i]);
+            if (!key) {
+                continue;
+            }
+
+            this.localStorage.removeItem(keys[i]);
+        }
+
+        this.cache = new Map();
+    }
+
     fillCache() {
         const keys = inBrowser
             ? Object.keys(this.localStorage)

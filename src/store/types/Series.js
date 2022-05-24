@@ -9,7 +9,7 @@ export default class Series {
 
     static getId(series) {
         assertType(series, Series);
-        return generateId(Series, [series.season, series.series]);
+        return generateId("Series", [series.season, series.series]);
     }
 
     static fromSeriesRace(seriesRace) {

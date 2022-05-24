@@ -10,7 +10,7 @@ export default class Race {
 
     static getId(race) {
         assertType(race, Race);
-        return generateId(Race, [race.date.toISOString(), race.raceNumber]);
+        return generateId("Race", [race.date.toISOString(), race.raceNumber]);
     }
 
     static fromId(id) {

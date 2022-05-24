@@ -103,11 +103,11 @@ export default function Series({ liveOnly = false }) {
         <>
             <Flex direction="column" padding="5px">
                 <Flex direction="row" marginTop="20px">
-                    <Heading size={"lg"} marginLeft="10px">{`Race Results`}</Heading>
+                    <Heading size={"lg"} marginLeft="10px">{`Series Results`}</Heading>
                 </Flex>
                 <Box marginTop="20px" />
                 <RacesCard>
-                    <DroppableHeader heading="Series points" />
+                    {/* <DroppableHeader heading="Series points" /> */}
                     <Box marginBottom="20px" padding="10px" paddingTop="20px">
                         <AllSeriesView series={allSeries} />
                     </Box>

@@ -72,9 +72,9 @@ export function assert(condition, message) {
     }
 }
 
-export function generateId(Type, obj) {
+export function generateId(name, obj) {
     assertType(obj, Array);
-    return [Type.name, ...obj].join(KEY_SEP);
+    return [name, ...obj].join(KEY_SEP);
 }
 
 export function fromId(id) {

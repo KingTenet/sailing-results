@@ -51,7 +51,6 @@ function Home() {
             <Box>
                 <Link to="races/">Update Races</Link>
             </Box>
-            <Text>Version 2</Text>
         </>
     )
 }
