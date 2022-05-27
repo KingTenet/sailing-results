@@ -10,7 +10,7 @@ serviceWorker.register();
 initArrayAtPolyfill();
 
 const rootElement = document.getElementById("root");
-console.log("Version 12");
+console.log("Version 14");
 
 const colors = {
     brand: {

@@ -349,7 +349,6 @@ export default class SeriesPoints extends Series {
 
     seriesTable(allResultPoints) {
         const allResultsPointsSortedByRace = allResultPoints.sort(HelmResult.sortByRaceAsc);
-        // debugger;
         const firstRacePointsOfSeries = allResultsPointsSortedByRace.at(0).getRace();
         const allResultsByHelm = mapGroupBy(allResultPoints, [HelmResult.getHelmId], ResultPoints.aggregate);
         // const allBoatsByHelm = groupBy(this.allResultPoints, [HelmResult.getHelmId, ResultPoints.getBoatClassName]);
@@ -393,21 +392,6 @@ export default class SeriesPoints extends Series {
 
         const rowHeadersHelm = rowHeaders.reduce((acc, [helmId]) => [...acc, helmId === acc.at(-1) ? "" : helmId], []);
         const rowHeadersBoat = rowHeaders
-            // .map((blah) => {
-            //     let [helmId, className, PHPI, classPY] = blah;
-            //     try {
-            //         className
-            //             ? [helmId, className, PHPI[0], classPY, PHPI[0] - classPY].join(", ")
-            //             : `${helmId}`
-            //     }
-            //     catch (err) {
-            //         console.log(helmId, className, PHPI, classPY);
-            //         console.log(this);
-            //         debugger;
-            //         throw err;
-            //     }
-            //     return blah;
-            // })
             .map(([helmId, className, PHPI = [], classPY]) => className
                 ? [helmId, className, PHPI[0], classPY, PHPI[0] - classPY].join(", ")
                 : `${helmId}`

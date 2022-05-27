@@ -1,11 +1,19 @@
-import auth from "./auth.js";
+import { devAuth } from "./auth.js";
 import { getSheetIdFromURL, getAllCellsFromSheet, getGoogleSheetDoc } from "../src/common.js"
 // import { SheetsAPI } from "../src/SheetsAPI.js";
 import ClubMember from "../src/store/types/ClubMember.js";
 import StoreWrapper from "../src/store/StoreWrapper.js";
 import bootstrapLocalStorage from "../src/bootstrapLocalStorage.js";
+// import { Stores } from "../src/store/Stores.js";
 
 const COLUMN_INDEXES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+const auth = devAuth;
+
+
+// Dev URLs
+// const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
+// const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
 
 function cleanName(str) {
     let name = str.replace(/\([\s]?[0-9]+[\s]?\)/, "");
@@ -26,8 +34,8 @@ function cleanName(str) {
         [" ", "-", "'", " Mc"]
             .reduce(
                 (acc, chars) => capitalizeAfterChars(acc, chars),
-                cleanName.toLowerCase())
-    );
+                ` ${cleanName}`.toLowerCase())
+    ).trim();
 
     if (capitalizedName !== cleanName) {
         console.log(`Capitalization was changed during processing from ${cleanName} to ${capitalizedName}`);
@@ -75,7 +83,7 @@ function processMembershipRow(row) {
 // }
 
 async function replaceActiveMembersSheet(members, outputDoc) {
-    const outputMembersStore = await StoreWrapper.create(false, "Active Membership", outputDoc, this, ClubMember, undefined, undefined, true);
+    const outputMembersStore = await StoreWrapper.create(false, "Active Membership", outputDoc, undefined, ClubMember, undefined, undefined, true);
     for (let member of members) {
         const {
             fullName,
@@ -100,8 +108,16 @@ async function replaceActiveMembersSheet(members, outputDoc) {
     await outputMembersStore.sync();
 }
 
-async function importActiveMembers(activeMembershipListURL, outputSheetURL, firstRowStr = "4", firstColumnStr = "C") {
+const parseStr = (str) => str && str.toLowerCase() !== "false" ? str : undefined;
+
+async function importActiveMembers(activeMembershipListURL, outputSheetURL, firstRowStr = "4", firstColumnStr = "D", forceRefresh = false) {
     await bootstrapLocalStorage();
+
+    if (!activeMembershipListURL || !outputSheetURL) {
+        console.log("Usage: node scripts/importActiveMembersList.js {sourceURL} {destinationURL} [firstRow=4] [firstColumn=A]");
+        return;
+    }
+
     const firstRow = parseInt(firstRowStr) - 1;
     if (Number.isNaN(firstRow)) {
         throw new Error("Invalid first row.\nScript usage: node scripts/importActiveMembersList.js {sourceURL} {outputURL} [firstRowInSheet] [firstColumnStr]");
@@ -115,7 +131,6 @@ async function importActiveMembers(activeMembershipListURL, outputSheetURL, firs
             .filter((content, columnIndex) => content && columnIndex >= firstColumn))
         .filter((row) => row.length)
         .forEach((row) => {
-            console.log(row);
             try {
                 allActiveMembers.push(...processMembershipRow(row));
             }
@@ -125,7 +140,7 @@ async function importActiveMembers(activeMembershipListURL, outputSheetURL, firs
             }
         });
 
-    allActiveMembers.forEach((member) => console.log(member));
+    // allActiveMembers.forEach((member) => console.log(member));
     await replaceActiveMembersSheet(allActiveMembers, outputDoc);
 }
 

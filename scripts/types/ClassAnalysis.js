@@ -20,7 +20,7 @@ export default class ClassAnalysis extends StoreObject {
 
     static getId(classAnalysis) {
         assertType(classAnalysis, ClassAnalysis);
-        return generateId(ClassAnalysis, [BoatClass.getId(classAnalysis.boatClass), MutableRaceFinish.getId(classAnalysis.raceFinish)]);
+        return generateId("ClassAnalysis", [BoatClass.getId(classAnalysis.boatClass), MutableRaceFinish.getId(classAnalysis.raceFinish)]);
     }
 
     getPIForResult(result) {
@@ -66,9 +66,6 @@ export default class ClassAnalysis extends StoreObject {
 
     toStore() {
         const totalPH = ClassAnalysis.getTotalPH(this.finishers);
-        // if (this.finishers.length && !totalPH) {
-        //     debugger;
-        // }
         const finishersWithin105 = this.getFinishersWithin105SCT();
         const totalPHWithin105 = ClassAnalysis.getTotalPH(finishersWithin105);
 

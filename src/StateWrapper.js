@@ -1,19 +1,16 @@
-import { Outlet, useParams, useSearchParams } from "react-router-dom";
+import { Outlet, useSearchParams } from "react-router-dom";
 import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState";
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
 import { getSheetIdFromURL } from "./common";
-import { Button, Box, Text, Spinner, Flex } from "@chakra-ui/react";
+import { Button, Box, Text, Spinner, Flex, Spacer } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import { StoreFunctions } from "./store/Stores";
-import { tokenGenerator } from "./token.js";
-import { CheckIcon, SmallCloseIcon } from '@chakra-ui/icons'
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
-const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
-const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
-const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
-const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
+const liveSourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
+const liveSourceResultsSheetId = getSheetIdFromURL(liveSourceResultsURL);
+
 const readOnlyAuth = {
     privateKey: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDdBV/YE3Csc2aR\nL3a7uJQmxsID0YBCEGeXo6ZEK6jGbNTl+PtGDgtPYEV9yLqmIhnZwi8J9l7rUYFb\nmxJ7jcwWob7C9OZfvML7uxVUaZ7hMRr2z2H4hOi3/KGRD85dRAbbcjokCpTdnpp4\nc3WoaI3kjct8SRyuYoAKQU/Wdp9Gkq3QRNfb+HmoCrVQ6NlrO1du1oRxouT05Kq/\nfos73+M0ayY0fhb/srIFZ6I7DZ+rVZIfjBEsqcvJlSBRu08dNY5lkn3kgEvNSs61\nBJWuiQz4EBi6kt3j0cjE4rex4HPvOfc7t7ZIGaBAx3JdDy657bWXat/AnRYiEmeV\nx59ALPS7AgMBAAECggEAAhwyucIYJ/7wD0AxqE6PISTYcsEVmH8S/7hUKYyn9cEE\n2IjW6U8DN6F9K47DjW6zUK6eB8Cegy09IjrdFpxLdjnagH6Zeaq4ZKV46VxN/bg1\nmctwE+qjVPWOzoik/6OOVAEHe6zOlnEU6EQXiJSUkKAnJBghZt7RrYdjGj9gSB2w\n1/SiNm+Z7mOvufLXI59NQkZUYPJ/pR1EaP7krC7yQ3OYUQNeyR9jyKH1exrqY8xT\nhZyUZ08eSkntbSdBsYQQ39owMiyxFsPyUP7Dkq8HZPNZBwJpPnuExpKTRpQeqmaT\nqlmH0u/2TdJ5cGVMhaa2ZY1ASlXftuOyY6JgKiRKOQKBgQD1tDc3xatFBONwTPGT\ndYJ8SW9z9IpH0J7cWR96mQOcuE9CpnCCbsvEy3kT/5RObYh0nP2Q7ezOyN5Xc4ej\noYoHxCXW8Fr+QQEGD6nZfCQSef3uPzJDeGa0w1LP6nZ3U6ebpGDhMKrAK34THYDa\nFg22bYL94c98r1u1hC0OJ79fMwKBgQDmSF9ihhLLKhTFGnt41NnsIpWP3SwCpPvS\nyvpY5nFjaXgU5ODck/CUbvBuntChWIL4d5dKkf1Yur5Y+b549x/uQjt+liu9ywk6\niK5/3q7rXNTYOJb0zTfpYItDKMAswVvqNQYpD4BeoxqffuqgMCfSinwOY/PVcXtM\nBB3R5Xe0WQKBgQDkGhyxMFeiSbmERkp3pT4weFR6B+pgZXM2CZ9Jx8gstIcQz0fg\nL1AJMQUE5d8fOFzYNe7Jn7ia+KxB78VaydtE/npKovU22c5DfEMo3zD13j858X2O\nWbav1i2JTJgSi50sx1wRc4bxxO7UfC1lSdgNJnnXjM19aabwSvcxDwGBNQKBgQDc\na2Wxnneas5rR1zlcPRCib7AM1jzsAxNvfw4Fzf22lBt2lGWPfKOI0G+e0rEL3vbt\n8TqFDBwdtBHChLqGerS7j/X2grM3pYId3vp4NqPjcSXiGLiVdWERJ3HlRLo9nI7o\nLPzKjKXo7+HpzMezsKRNaHS6KX4ZTdgguMf6QtRDcQKBgAV/S0wydKkTwagpJdzs\nBcM5Aq0HvAaoxxeUuz4b3a8doHKckq3XQL+73T4KQ8NtZkS0tUfOmFTra5aayVfS\ni2eL70fmKmjjIrSrOg/Nqu5D0Jd8a9UaI18UqiKJZ/KXMUw9MDAj81eI4TdVS0ax\n0+x82ccIPGQ5cqIeTH139BwK\n-----END PRIVATE KEY-----\n",
     clientEmail: "read-only@nhebsc-results.iam.gserviceaccount.com",
@@ -30,15 +27,14 @@ async function initialiseServicesFromToken(token, refreshCache) {
         superUser,
         privateKey,
         clientEmail,
+        resultsSheetId,
     } = parsedToken;
 
-    // console.log(parsedToken);
-
-    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, sourceResultsSheetId, seriesResultsSheetId, raceDateString, superUser);
+    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId);
 }
 
 async function initialiseReadOnlyServices(refreshCache) {
-    return await StoreFunctions.create(refreshCache, readOnlyAuth, sourceResultsSheetId, seriesResultsSheetId);
+    return await StoreFunctions.create(refreshCache, readOnlyAuth, liveSourceResultsSheetId);
 }
 
 async function initialiseServices(token) {
@@ -296,10 +292,17 @@ function StoresSync({ verbose }) {
         </>;
     }
 
-    return <Box position="absolute" height="10px" width="100%" bgColor={syncing ? "blue.500" :
+    return <Flex position="absolute" height="10px" width="100%" bgColor={syncing ? "blue.500" :
         failed ? "red.500" :
             "green.100"
-    } />
+    } alignContent="flex-end" display="flex">
+        <Spacer />
+        {!Boolean(services.isLive) &&
+            <Box>
+                <Text bgColor="red">{"In practice version"}</Text>
+            </Box>
+        }
+    </Flex>
 
     // if (syncing) {
     //     return <Box height="10px" width="10px">

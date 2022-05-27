@@ -5,6 +5,7 @@ import StoreRace from "../store/types/Race";
 import Result from "../store/types/Result";
 import Helm from "../store/types/Helm";
 import AlertDialogWrapper from "./AlertDialogWrapper";
+import HelmResult from "../store/types/HelmResult";
 
 
 export default function CommitResultsDialog({ race, onSuccess, onFailed, onStarted, children }) {
@@ -12,35 +13,34 @@ export default function CommitResultsDialog({ race, onSuccess, onFailed, onStart
     const services = useServices();
     const [committing] = useState(false);
 
-    const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
+    const raceRegistered = appState.registered.filter((result) => HelmResult.getRaceId(result) === StoreRace.getId(race));
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
-    const raceOODs = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
+    const raceOODs = appState.oods.filter((ood) => HelmResult.getRaceId(ood) === StoreRace.getId(race));
     const allNewHelms = appState.newHelms;
+
+    const mappedRaceResults =
+        appState.isPursuitRace
+            ? [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))]
+            : raceResults;
 
     const asyncCommitNewHelms = async () => {
         if (committing) {
             return;
         }
         return services
-            .commitNewHelmsForResults(race, raceResults, raceOODs, allNewHelms)
+            .commitNewHelmsForResults(race, mappedRaceResults, raceOODs, allNewHelms)
             .then((helmIdsRemoved) =>
                 updateAppState(({ newHelms, ...state }) => ({
                     ...state,
                     newHelms: newHelms.filter((newHelm) => !helmIdsRemoved.includes(Helm.getId(newHelm))),
                 }))
-            )
-            .catch((err) => onFailed(err));
+            );
     };
 
     const asyncCommitResults = async () => {
         if (committing) {
             return;
         }
-
-        const mappedRaceResults =
-            appState.isPursuitRace
-                ? [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))]
-                : raceResults;
 
         return services
             .commitResultsForRace(race, mappedRaceResults, raceOODs)
@@ -55,7 +55,6 @@ export default function CommitResultsDialog({ race, onSuccess, onFailed, onStart
                 }))
             })
             .then(() => onSuccess())
-            .catch((err) => onFailed(err))
     };
 
 
@@ -65,7 +64,8 @@ export default function CommitResultsDialog({ race, onSuccess, onFailed, onStart
         }
         onStarted();
         asyncCommitNewHelms()
-            .then(() => asyncCommitResults());
+            .then(() => asyncCommitResults())
+            .catch((err) => onFailed(err));
     };
 
     return (

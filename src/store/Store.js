@@ -17,29 +17,24 @@ export default class Store {
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 
-    async handleStaleStatus() {
-        const localStoreIsStale = (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
+    async handleStaleStatus(forceRefresh) {
+        const localStoreIsStale = forceRefresh || (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
         console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
         if (inBrowser && localStoreIsStale) {
-            localStorage.setItem("forceRefreshCaches", true);
-            window.location.reload();
+            this.services.forceRefreshCaches();
         }
     }
 
     async init(forceRefresh) {
-        let localStoreObjects = this.pullLocalState();
-        // await this.handleStaleStatus();
+        const localStoreObjects = this.pullLocalState();
 
         if (!isOnline()) {
             return;
         }
 
-        if (!forceRefresh) {
+        if (!forceRefresh && this.services) {
             this.handleStaleStatus().catch((err) => console.log(err));
         }
-
-        // const localStoreIsStale = (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
-        // console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
 
         let localStateEmpty = !localStoreObjects.length;
 
@@ -111,7 +106,9 @@ export default class Store {
         if (created.length) {
             await this.remoteStore.append(created.map((obj) => this.toStore(obj)));
         }
-        await this.services.writeStoreLastUpdated();
+        if (this.services) {
+            await this.services.writeStoreLastUpdated();
+        }
         this.setLastSyncDate();
         console.log("Successfully updated remote state");
     }

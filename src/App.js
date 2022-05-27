@@ -35,7 +35,7 @@ function Home() {
         }
     }, [appState]);
 
-    if (!appState) {
+    if (!appState || !services) {
         return (
             <>
             </>

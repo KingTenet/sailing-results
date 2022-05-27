@@ -57,7 +57,6 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
     const setPartiaValue = (value) => {
         setPartialMatch(value);
         setInputItems(filterData(value));
-        handleSelectedItemChange();
     };
 
     const {
@@ -79,9 +78,7 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
                 // Re-enable to automatically force blur on any match (which is annoying due to subsets being valid)
                 // setExactMatch(exactMatch);
             }
-            else {
-                setPartiaValue(inputValue);
-            }
+            setPartiaValue(inputValue);
         }
     });
 

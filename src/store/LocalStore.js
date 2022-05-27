@@ -12,7 +12,14 @@ export default class LocalStore {
         this.cache = new Map();
         this.modifiedKeys = [];
         this.newKeys = [];
-        this.fillCache();
+        try {
+            this.fillCache();
+        }
+        catch (err) {
+            console.log(err);
+            this.clearCache();
+            this.fillCache();
+        }
     }
 
     dump() {

@@ -18,9 +18,8 @@ import ClubMember from "./types/ClubMember.js";
 import RemoteStore from "./RemoteStore.js";
 
 export class Stores {
-    constructor(auth, raceResultsSheetId, seriesResultsSheetId) {
+    constructor(auth, raceResultsSheetId) {
         this.raceResultsDocument = () => getGoogleSheetDoc(raceResultsSheetId, auth.clientEmail, auth.privateKey);
-        this.seriesResultsDocument = () => getGoogleSheetDoc(seriesResultsSheetId, auth.clientEmail, auth.privateKey);
         this.auth = auth;
     }
 
@@ -38,6 +37,11 @@ export class Stores {
 
     async writeStoreLastUpdated(lastUpdated = new Date()) {
         return await this.metaStore.replace([{ "Last Updated": lastUpdated.toISOString() }]);
+    }
+
+    async forceRefreshCaches() {
+        localStorage.setItem("forceRefreshCaches", true);
+        window.location.reload();
     }
 
     async init(forceCacheRefresh) {
@@ -61,7 +65,7 @@ export class Stores {
 
         const promiseRYAClasses = createStoreWrapper("RYA Full List", this.raceResultsDocument, this, BoatClass);
         const promiseClubClasses = createStoreWrapper("Club Handicaps", this.raceResultsDocument, this, BoatClass);
-        const promiseSeriesRaces = createStoreWrapper("Seasons/Series", this.seriesResultsDocument, this, SeriesRace);
+        const promiseSeriesRaces = createStoreWrapper("Seasons/Series", this.raceResultsDocument, this, SeriesRace);
 
         const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces]);
         this.clubMembers = clubMembers;
@@ -214,9 +218,9 @@ export class Stores {
         return allProcesssed;
     }
 
-    static async create(auth, raceResultsSheetId, seriesResultsSheetId, forceCacheRefresh) {
+    static async create(auth, raceResultsSheetId, forceCacheRefresh) {
         await bootstrapLocalStorage();
-        const stores = new Stores(auth, raceResultsSheetId, seriesResultsSheetId);
+        const stores = new Stores(auth, raceResultsSheetId);
         await stores.init(forceCacheRefresh);
         return stores;
     }
@@ -467,7 +471,7 @@ class Indexes {
 }
 
 export class StoreFunctions {
-    constructor(stores, superUser, editableRaceDate, readOnly) {
+    constructor(stores, superUser, editableRaceDate, readOnly, isLive) {
         this.stores = stores;
         this.getRaces = this.getRaces;
         this.getSeriesPoints = this.getSeriesPoints;
@@ -499,14 +503,14 @@ export class StoreFunctions {
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
         this.readOnly = readOnly;
+        this.isLive = isLive;
         this.indexes = new Indexes(this.stores);
     }
 
-    static async create(forceRefresh, auth, raceResultsSheetId, seriesResultsSheetId, editableRaceDateStr, superUser) {
+    static async create(forceRefresh, auth, raceResultsSheetId, editableRaceDateStr, superUser, isLive) {
         const stores = await Stores.create(
             auth,
             raceResultsSheetId,
-            seriesResultsSheetId,
             forceRefresh
         );
         return new StoreFunctions(
@@ -514,6 +518,7 @@ export class StoreFunctions {
             superUser,
             editableRaceDateStr && parseURLDate(editableRaceDateStr),
             !superUser && !editableRaceDateStr,
+            isLive,
         );
     }
 
@@ -551,7 +556,6 @@ export class StoreFunctions {
         for (let [, helm] of [...helmsToCommit]) {
             this.stores.helms.add(helm);
         }
-        await this.stores.helms.sync();
         return [...helmsToCommit].map(([helmId]) => helmId);
     }
 

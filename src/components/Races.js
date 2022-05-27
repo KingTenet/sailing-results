@@ -144,7 +144,7 @@ function ImmutableRacesView({ races, ...props }) {
 
 export default function Races({ editableOnly = false }) {
     const services = useServices();
-    const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(true));
+    const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(services.isLive));
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
 
     // Don't show editable races before the last race that was committed to the store
@@ -153,7 +153,7 @@ export default function Races({ editableOnly = false }) {
 
     const editableRaces = mutableRaces
         .filter((race) => services.isRaceEditableByUser(race))
-        .filter((race) => services.superUser || !race.isBefore(filterRace));
+        .filter((race) => !race.isBefore(filterRace));
 
     const editedRaces = immutableRaces
         .filter((race) => services.isRaceEditableByUser(race));
