@@ -92,8 +92,9 @@ const DIMENSION_LABELS = {
 
 function secondsToMinutesSeconds(totalSeconds) {
     const SECONDS_IN_MINUTE = 60;
-    var minutes = Math.floor(totalSeconds / SECONDS_IN_MINUTE);
-    var seconds = totalSeconds % SECONDS_IN_MINUTE;
+    const roundedSeconds = Math.round(totalSeconds);
+    var minutes = Math.floor(roundedSeconds / SECONDS_IN_MINUTE);
+    var seconds = roundedSeconds % SECONDS_IN_MINUTE;
     return [minutes, seconds];
 }
 
