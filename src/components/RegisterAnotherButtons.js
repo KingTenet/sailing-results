@@ -20,7 +20,7 @@ export default function RegisterAnotherButtons() {
     return (
         <Flex direction="column">
             <Button backgroundColor="green.500" onClick={() => registerAnother()} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus={true}><Text fontSize={"lg"}>Register Another Helm</Text></Button>
-            <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Back to race</Text></Button>
+            <Button backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Back to race</Text></Button>
         </Flex>
     );
 }
