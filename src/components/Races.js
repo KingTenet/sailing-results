@@ -159,7 +159,6 @@ export default function Races({ editableOnly = false }) {
         .filter((race) => services.isRaceEditableByUser(race));
 
     const immutableNotEdited = immutableRaces.filter((race) => !editedRaces.includes(race));
-
     return (
         <>
             <Flex direction="column" padding="5px">

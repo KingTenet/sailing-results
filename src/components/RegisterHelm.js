@@ -2,16 +2,16 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import Autocomplete from "./AutocompleteSimple";
 import { useAppState, useServices } from "../useAppState";
-import { parseURLDate, useBack } from "../common"
+import { parseURLDate, useBack, getURLDate } from "../common"
 import { Center, Text, Button, Flex, Spacer } from '@chakra-ui/react'
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Race from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import ClubMember from "../store/types/ClubMember";
 import NewHelm from "./NewHelm";
 import Helm from "../store/types/Helm";
 
-function RegisterHelm() {
+function RegisterHelm({ addAnotherHelmWorkflow }) {
     const navigateBack = useBack();
     const [selectedHelm, setSelectedHelm] = useState(null);
     const [selectedClubMember, setSelectedClubMember] = useState(null);
@@ -39,6 +39,8 @@ function RegisterHelm() {
     const [boatsIndex, setBoatsIndex] = useState(null);
     const [sailNumberIndex, setSailNumberIndex] = useState(null);
 
+    const navigateTo = useNavigate();
+
     const processHelmResult = () => {
         const newRegisteration = services.createRegisteredHelm(race, selectedHelm, selectedBoat, parseInt(sailNumber), appState.newHelms);
 
@@ -62,7 +64,12 @@ function RegisterHelm() {
             }
         });
 
-        navigateBack();
+        if (!addAnotherHelmWorkflow) {
+            navigateBack();
+        }
+        else {
+            navigateTo(`/races/${getURLDate(race.getDate())}/${race.getNumber()}/registerAnother/${HelmResult.getHelmId(newRegisteration)}`, { replace: true });
+        }
     };
 
     useEffect(() => {
@@ -125,8 +132,8 @@ function RegisterHelm() {
         <>
             {/* <Box height="100vh" /> */}
             <form onSubmit={(evt) => evt.preventDefault()}>
-                <Center height="80vh">
-                    <Flex direction={"column"} height="80vh" width="100%">
+                <Center minHeight="80vh">
+                    <Flex direction={"column"} minHeight="80vh" width="100%">
                         <Flex direction={"column"} height="100%" >
                             {helmsIndex && !selectedClubMember &&
                                 <Autocomplete
@@ -191,7 +198,7 @@ function RegisterHelm() {
                         {(sailNumber !== undefined || showCommit) &&
                             <Button backgroundColor="green.500" onClick={() => {
                                 processHelmResult();
-                            }} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus={sailNumber}><Text fontSize={"lg"}>Add to race results</Text></Button>
+                            }} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus={sailNumber}><Text fontSize={"lg"}>Register Helm</Text></Button>
                         }
                         <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
                     </Flex>

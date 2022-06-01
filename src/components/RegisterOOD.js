@@ -100,8 +100,8 @@ function RegisterHelm() {
     return (
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
-                <Center height="80vh">
-                    <Flex direction={"column"} height="80vh" width="100%">
+                <Center minHeight="80vh">
+                    <Flex direction={"column"} minHeight="80vh" width="100%">
                         <Flex direction={"column"} height="100%" >
                             {helmsIndex && !selectedClubMember && <Autocomplete
                                 heading={"OOD"}
