@@ -165,7 +165,15 @@ function ServicesWrapper({ token }) {
 
 function StateWrapper() {
     const services = useServices();
-    const cachedStateManager = useCachedState(DEFAULT_STATE, (value) => STATE_DESERIALISER(value, services));
+    const cachedStateManager = useCachedState(DEFAULT_STATE, (value) => {
+        try {
+            return STATE_DESERIALISER(value, services)
+        }
+        catch (err) {
+            console.log(err);
+            return DEFAULT_STATE;
+        }
+    });
     return (
         <>
             <CachedContext.Provider value={cachedStateManager}>
@@ -251,23 +259,33 @@ function StoresSync({ verbose }) {
             if (Object.entries(storesStatus).some(([store, synced]) => !synced)) {
                 console.log("Stores are not synced");
                 updateSyncing(true);
-
-                const promiseSyncStores = Object.entries(storesStatus)
-                    .filter(([, synced]) => !synced)
-                    .map(([store]) => services.syncroniseStore(store));
-
-                Promise.all(promiseSyncStores)
-                    .then(() => {
-                        updateSyncing(false);
-                        updateFailed(false);
-                    })
-                    .catch(() => {
-                        updateSyncing(false);
-                        updateFailed(true);
-                    });
             }
         }
     }, [storesStatus]);
+
+    useEffect(() => {
+        if (syncing) {
+            const storesToSync = Object.entries(storesStatus)
+                .filter(([, synced]) => !synced);
+
+            console.log(`Attempting to sync stores: ${storesToSync.map(([store]) => store)}`);
+            const promiseSyncStores = storesToSync
+                .map(([store]) => services.syncroniseStore(store));
+
+            Promise.all(promiseSyncStores)
+                .then(() => {
+                    console.log("All stores have synced successfully");
+                    updateSyncing(false);
+                    updateFailed(false);
+                })
+                .catch((err) => {
+                    console.log("Stores failed to sync successfully");
+                    console.log(err);
+                    updateSyncing(false);
+                    updateFailed(true);
+                });
+        }
+    }, [syncing]);
 
     if (!storesStatus) {
         return <></>;

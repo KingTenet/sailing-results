@@ -335,7 +335,7 @@ export default function Race({ backButtonText }) {
                 }
                 <Spacer />
                 <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
-                <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helm</GreenButton>
+                <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helms</GreenButton>
                 {!Boolean(raceResults.filter((result) => result.finishCode.validFinish()).length) &&
                     <>
                         {!isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}

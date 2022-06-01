@@ -21,22 +21,32 @@ export class Stores {
     constructor(auth, raceResultsSheetId) {
         this.raceResultsDocument = () => getGoogleSheetDoc(raceResultsSheetId, auth.clientEmail, auth.privateKey);
         this.auth = auth;
+        this.promiseMetaStore = RemoteStore.retryCreateRemoteStore(this.raceResultsDocument, "Meta Data", true, ["Last Updated"])
+            .then((remoteStore) => this.metaStore = remoteStore);
+        this.promiseStoresLastUpdated = this.getStoreLastUpdated();
     }
 
     async getStoreLastUpdated() {
-        if (this.metaStore) {
-            try {
-                return parseISOString((await this.metaStore.getAllRows())[0]["Last Updated"]);
-            }
-            catch (err) {
-                console.log(err);
-            }
+        try {
+            await this.promiseMetaStore;
+            return parseISOString((await this.metaStore.getAllRows())[0]["Last Updated"]);
+        }
+        catch (err) {
+            console.log(err);
+            console.log("Failed to get last updated time from store");
         }
         return new Date(0); // If we have no meta store assume the remote store has not been updated.. ever
     }
 
-    async writeStoreLastUpdated(lastUpdated = new Date()) {
-        return await this.metaStore.replace([{ "Last Updated": lastUpdated.toISOString() }]);
+    async writeStoreLastUpdated() {
+        try {
+            await this.promiseMetaStore;
+            return await this.metaStore.replace([{ "Last Updated": (new Date()).toISOString() }]);
+        }
+        catch (err) {
+            console.log(err);
+            console.log("Failed to write updated time to store");
+        }
     }
 
     async forceRefreshCaches() {
@@ -49,15 +59,6 @@ export class Stores {
         const started = Date.now();
         console.log(`Started loading`);
 
-        try {
-            this.metaStore = await RemoteStore.createRemoteStore(this.raceResultsDocument, "Meta Data", true, ["Last Updated"]);
-        }
-        catch (err) {
-            console.log("Failed to get metadata store");
-            console.log(err);
-        }
-
-        this.promiseStoresLastUpdated = this.getStoreLastUpdated();
         const createStoreWrapper = (...args) => StoreWrapper.create(forceCacheRefresh, ...args);
 
         const promiseClubMembers = createStoreWrapper("Active Membership", this.raceResultsDocument, this, ClubMember);
