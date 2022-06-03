@@ -48,7 +48,9 @@ function formatPoints(points, showLabel) {
     }
 
     if (isPNS) {
-        return "";
+        return points.isCounted
+            ? `${round2sf(points.getTotal())}*`
+            : "";
     }
 
     return points.isCounted

@@ -54,6 +54,18 @@ export default class HelmResult extends StoreObject {
         return new HelmResult(race, helm, StoreObject.fromStore({}));
     }
 
+    static debugResult(result, helmId, boatClassName, raceDate, raceNumber) {
+        assertType(result, HelmResult);
+        const helmMatch = !helmId || HelmResult.getHelmId(result) === helmId;
+        const boatClassMatch = !boatClassName || HelmResult.getBoatClassName(result) === boatClassName;
+        const raceDateMatch = !raceDate || result.getRace().getDate().toISOString() === raceDate.toISOString();
+        const raceNumberMatch = !raceNumber || result.getRace().getNumber() === raceNumber;
+        if (helmMatch && boatClassMatch && raceDateMatch && raceNumberMatch) {
+            debugger;
+        }
+    }
+
+
     getRace() {
         return this.race;
     }
