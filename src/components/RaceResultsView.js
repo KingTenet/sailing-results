@@ -12,7 +12,7 @@ import { GreenButton } from "./Buttons";
 import { RegisteredCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
 
-const FLEET_RACE_VIEWS = ["PERSONAL_HANDICAP", "CLASS_HANDICAP", "FINISH_TIME"];
+const FLEET_RACE_VIEWS = ["CLASS_HANDICAP", "PERSONAL_HANDICAP", "FINISH_TIME"];
 const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
 
 const COLUMN_1_DIMENSIONS = {
@@ -262,14 +262,16 @@ export default function RaceResultsView({ results, oods, race, raceIsMutable, ..
             : raceView === "CLASS_HANDICAP" ? `Corrected to ${correctedLaps} laps by class PY`
                 : `Corrected to ${correctedLaps} laps by personal PY`;
 
-    const buttonMsg =
-        raceView === "FINISH_TIME" ? "Show results by personal handicap"
-            : raceView === "CLASS_HANDICAP" ? "Show results by finish time"
-                : "Show results by class handicap";
+    const nextRaceView = RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length];
+
+    const fleetViewButtonMsg =
+        nextRaceView === "FINISH_TIME" ? "Show results by finish time"
+            : nextRaceView === "CLASS_HANDICAP" ? "Show results by class handicap"
+                : "Show results by personal handicap";
 
     const toggleResultsView = (event) => {
         event.preventDefault();
-        updateRaceView(RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length]);
+        updateRaceView(nextRaceView);
     }
 
     if (!raceFinish) {
@@ -347,7 +349,7 @@ export default function RaceResultsView({ results, oods, race, raceIsMutable, ..
                     <OODView marginBottom="20px" oods={oods} />
                 </>
             }
-            <GreenButton onClick={toggleResultsView} autoFocus {...props}>{buttonMsg}</GreenButton>
+            <GreenButton onClick={toggleResultsView} autoFocus {...props}>{fleetViewButtonMsg}</GreenButton>
         </>
     );
 }

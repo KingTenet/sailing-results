@@ -1,3 +1,4 @@
+import { EditIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
 import React from "react";
 import Result from "../store/types/Result";
@@ -28,8 +29,9 @@ function ResultDimension({ children, ...props }) {
     return (
         <GridItem
             height='20px'
+            maxWidth="100%"
             {...props}>
-            <Text isTruncated>{children}</Text>
+            <Text noOfLines={1}>{children}</Text>
         </GridItem>
     );
 }
@@ -37,10 +39,9 @@ function ResultDimension({ children, ...props }) {
 function ListItemWrapper({ children, ...props }) {
     return <>
         <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" {...props}>
-            <Flex>
+            <Flex direction={"row"} justifyContent="space-between">
                 {children}
             </Flex>
-
         </Box>
         <Box height={"3px"}></Box>
     </>
@@ -54,13 +55,15 @@ export function RegisteredListItem({ registered, onClick }) {
     return (
         <ListItemWrapper onClick={onClick}>
             <Grid
-                templateColumns='repeat(3, 1fr)'
+                templateColumns='repeat(16, 1fr)'
                 gap={5}
-                width={"100%"}>
-                <ResultDimension colSpan={1}>{helmName}</ResultDimension>
-                <ResultDimension colSpan={1}>{boatClass}</ResultDimension>
-                <ResultDimension colSpan={1}>{sailNumber}</ResultDimension>
+                width={"100%"}
+            >
+                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
+                <ResultDimension colSpan={4}>{sailNumber}</ResultDimension>
             </Grid>
+            <EditIcon boxSize={"5"} />
         </ListItemWrapper>
     );
 }
@@ -82,6 +85,7 @@ export function PursuitFinishListItem({ result, index }) {
                     <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                     <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
                 </Grid>
+                <HamburgerIcon boxSize={"5"} />
             </ListItemWrapper>
         </DeletePursuitFinish>
     )
@@ -96,6 +100,7 @@ export function OODListItem({ ood }) {
                 <Grid templateColumns='repeat(1, 1fr)'>
                     <ResultDimension colSpan={1}>{helmName}</ResultDimension>
                 </Grid>
+                <HamburgerIcon boxSize={"5"} />
             </ListItemWrapper>
         </DeleteOOD>
     )
