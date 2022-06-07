@@ -13,11 +13,12 @@ import RaceResultsView from "./RaceResultsView";
 
 import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
-import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem } from "./ListItems";
+import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem, DNFListItem } from "./ListItems";
 import { RegisteredCard, DeleteCard, DNFCard, FinishersCard, PlaceholderCard } from "./Cards";
 import { RegisteredDroppableHeader, DeleteDroppableHeader, DNFDroppableHeader, FinishedDroppableHeader, OODDroppableHeader } from "./CardHeaders";
 import MutableRaceResult from "../store/types/MutableRaceResult";
 import CommitResultsDialog from "./CommitResultsDialog";
+import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
@@ -32,6 +33,7 @@ function DraggableFinishView({
     RegisteredListItem,
     registered,
     FinishedListItem,
+    DNFListItem,
     finished = [],
     dnf,
     OODListItem,
@@ -120,7 +122,7 @@ function DraggableFinishView({
                         <WrappedDroppableList
                             droppableId={"pursuitDNF"}
                             listItems={dnf}
-                            DraggableListItem={FinishedListItem}
+                            DraggableListItem={DNFListItem}
                             DroppableContainer={DNFCard}
                             DroppableHeader={DNFDroppableHeader}
                         />
@@ -151,7 +153,7 @@ function DraggableFinishView({
                             <WrappedDroppableList
                                 droppableId={"dnf"}
                                 listItems={dnf}
-                                DraggableListItem={FinishedListItem}
+                                DraggableListItem={DNFListItem}
                                 DroppableContainer={DNFCard}
                                 DroppableHeader={DNFDroppableHeader}
                             />
@@ -222,6 +224,7 @@ function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateR
         />
 
     const WrappedFinisherListItem = ({ item }) => <FinisherListItem result={item} />
+    const WrappedDNFListItem = ({ item }) => <DNFListItem result={item} />
     const WrappedOODListItem = ({ item }) => <OODListItem ood={item} />
     const WrappedPursuitFinishListItem = ({ item, index }) => <PursuitFinishListItem result={item} index={index} />
 
@@ -232,7 +235,7 @@ function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateR
             registered={registered}
             FinishedListItem={WrappedFinisherListItem}
             finished={finished}
-            DNFListItem={WrappedFinisherListItem}
+            DNFListItem={WrappedDNFListItem}
             dnf={dnf}
             OODListItem={WrappedOODListItem}
             oods={oods}
@@ -289,16 +292,25 @@ export default function Race({ backButtonText }) {
     const dnf = raceResults.filter((result) => !result.finishCode.validFinish());
 
     const updateRaceResults = (newRegistered, newFinished, newDNF, newOODs) => {
-        updateAppState((state) => ({
+        updateAppState(({ registered, results, oods, ...state }) => ({
             ...state,
-            registered: newRegistered.map((result) => result instanceof Result ? MutableRaceResult.fromResult(result) : result),
-            results: newFinished !== finished || newDNF !== dnf
-                ? [
-                    ...newFinished,
-                    ...newDNF.map((helmResult) => Result.fromRegistered(helmResult)),
-                ]
-                : raceResults,
-            oods: newOODs,
+            registered: [
+                ...registered.filter((result) => Result.getRaceId(result) !== StoreRace.getId(race)),
+                ...newRegistered.map((result) => result instanceof Result ? MutableRaceResult.fromResult(result) : result),
+            ],
+            results: [
+                ...results.filter((result) => Result.getRaceId(result) !== StoreRace.getId(race)),
+                ...(newFinished !== finished || newDNF !== dnf
+                    ? [
+                        ...newFinished,
+                        ...newDNF.map((helmResult) => Result.fromRegistered(helmResult)),
+                    ]
+                    : raceResults),
+            ],
+            oods: [
+                ...oods.filter((result) => Result.getRaceId(result) !== StoreRace.getId(race)),
+                ...newOODs,
+            ],
         }));
     }
 
@@ -327,22 +339,28 @@ export default function Race({ backButtonText }) {
 
     if (editingRace) {
         return (
-            <Wrapped>
-                <DraggableView registered={raceRegistered} finished={finished} dnf={dnf} oods={oods} isPursuitRace={isPursuitRace} updateRaceResults={updateRaceResults} />
-                <Box marginTop="20px" />
-                {((isPursuitRace && (raceRegistered.length + raceResults.length) > 2) || (!raceRegistered.length && raceResults.length > 2)) &&
-                    <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View results</GreenButton>
+            <>
+                {!Boolean(raceRegistered.length || finished.length || dnf.length || oods.length || raceNumber === 1) &&
+                    <CopyFromPreviousRace race={race} previousRace={new StoreRace(race.getDate(), race.getNumber() - 1)}></CopyFromPreviousRace>
                 }
-                <Spacer />
-                <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
-                <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helms</GreenButton>
-                {!Boolean(raceResults.filter((result) => result.finishCode.validFinish()).length) &&
-                    <>
-                        {!isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
-                        {isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
-                    </>
-                }
-            </Wrapped>
+                <Wrapped>
+
+                    <DraggableView registered={raceRegistered} finished={finished} dnf={dnf} oods={oods} isPursuitRace={isPursuitRace} updateRaceResults={updateRaceResults} />
+                    <Box marginTop="20px" />
+                    {((isPursuitRace && (raceRegistered.length + raceResults.length) > 2) || (!raceRegistered.length && raceResults.length > 2)) &&
+                        <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View results</GreenButton>
+                    }
+                    <Spacer />
+                    <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
+                    <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helms</GreenButton>
+                    {!Boolean(raceResults.filter((result) => result.finishCode.validFinish()).length) &&
+                        <>
+                            {!isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
+                            {isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
+                        </>
+                    }
+                </Wrapped>
+            </>
         );
     }
     else {

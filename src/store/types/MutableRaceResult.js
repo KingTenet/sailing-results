@@ -46,6 +46,11 @@ export default class MutableRaceResult extends HelmResult {
         return MutableRaceResult.fromUser(result.getRace(), result.getHelm(), result.getBoatClass(), result.boatSailNumber);
     }
 
+    static fromPreviousResult(previousResult, race) {
+        assertType(previousResult, Result);
+        return MutableRaceResult.fromUser(race, previousResult.getHelm(), previousResult.getBoatClass(), previousResult.boatSailNumber);
+    }
+
     getSailNumber() {
         return this.boatSailNumber;
     }

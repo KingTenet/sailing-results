@@ -68,6 +68,27 @@ export function RegisteredListItem({ registered, onClick }) {
     );
 }
 
+export function DNFListItem({ result, onClick }) {
+    const helmName = Result.getHelmId(result);
+    const boatClass = formatBoatClass(result.getBoatClass().getClassName());
+    const sailNumber = result.getSailNumber();
+
+    return (
+        <ListItemWrapper onClick={onClick}>
+            <Grid
+                templateColumns='repeat(16, 1fr)'
+                gap={5}
+                width={"100%"}
+            >
+                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
+                <ResultDimension colSpan={4}>{sailNumber}</ResultDimension>
+            </Grid>
+            <HamburgerIcon boxSize={"5"} />
+        </ListItemWrapper>
+    );
+}
+
 export function PursuitFinishListItem({ result, index }) {
     const helmName = Result.getHelmId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());

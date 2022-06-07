@@ -54,6 +54,12 @@ export default class HelmResult extends StoreObject {
         return new HelmResult(race, helm, StoreObject.fromStore({}));
     }
 
+    static fromPreviousResult(result, race) {
+        assertType(result, HelmResult);
+        assertType(race, Race);
+        return new HelmResult(race, result.getHelm(), StoreObject.fromStore({}));
+    }
+
     getRace() {
         return this.race;
     }
