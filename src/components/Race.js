@@ -256,13 +256,13 @@ export default function Race({ backButtonText }) {
     const race = new StoreRace(raceDate, raceNumber);
     const services = useServices();
     const [raceIsMutable, setRaceIsMutable] = useState(() => services.isRaceMutable(raceDate, raceNumber));
+    const [isPursuitRace] = useState(() => services.isPursuitRace(race));
     const [editingRace, updateEditingRace] = useState(() => raceIsMutable)
     const [committingResults, setCommittingResults] = useState(false);
 
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const oods = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
-    const isPursuitRace = appState.isPursuitRace;
 
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
     const committingResultsStarted = () => {
@@ -280,13 +280,6 @@ export default function Race({ backButtonText }) {
         console.log(err);
         throw new Error("Failed to commit results to store");
     };
-
-    const setIsPursuitRace = (value) => {
-        updateAppState(({ isPursuitRace, ...state }) => ({
-            ...state,
-            isPursuitRace: value,
-        }))
-    }
 
     const finished = raceResults.filter((result) => result.finishCode.validFinish());
     const dnf = raceResults.filter((result) => !result.finishCode.validFinish());
@@ -318,9 +311,6 @@ export default function Race({ backButtonText }) {
         ? raceResults
         : [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))];
 
-    // TODO - this is probably not a very efficient way to get isImmutablePursuitRace
-    const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isImmutablePursuitRace] = useSortedResults(viewableRaceResults, race);
-
     function Wrapped({ children }) {
         return (
             <Box minHeight="100vh" margin="0">
@@ -328,7 +318,7 @@ export default function Race({ backButtonText }) {
                     <Flex direction="row" marginTop="20px" marginBottom="20px">
                         <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
                         <Spacer width="50px" />
-                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(editingRace ? isPursuitRace : isImmutablePursuitRace)} race`}</Heading>
+                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
                     </Flex>
                     {children}
                     <BackButton disabled={committingResults}>{backButtonText}</BackButton>
@@ -353,12 +343,6 @@ export default function Race({ backButtonText }) {
                     <Spacer />
                     <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
                     <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helms</GreenButton>
-                    {!Boolean(raceResults.filter((result) => result.finishCode.validFinish()).length) &&
-                        <>
-                            {!isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(true)}>Change to pursuit race</BlueButton>}
-                            {isPursuitRace && <BlueButton onClick={() => setIsPursuitRace(false)}>Change to fleet race</BlueButton>}
-                        </>
-                    }
                 </Wrapped>
             </>
         );

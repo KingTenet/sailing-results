@@ -88,6 +88,7 @@ export class Stores {
         this.pursuitResults = pursuitResults;
         this.results = fleetResults;
 
+
         // const clubMembersByName = mapGroupBy(this.clubMembers.all(), [ClubMember.getId]);
         // this.helms.all()
         //     .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
@@ -160,11 +161,11 @@ export class Stores {
     }
 
     processResults(tranformResults) {
-        const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(this.oods.all(), this.pursuitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
+        const [seriesPoints, raceFinishes, allCorrectedResults, allSeriesRacesByRace] = Stores.processResultsStatic(this.oods.all(), this.pursuitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
         this.raceFinishes = raceFinishes;
-        // this.raceFinishesMap = new Map(raceFinishes);
         this.allCorrectedResults = allCorrectedResults;
         this.seriesPoints = seriesPoints;
+        this.allSeriesRacesByRace = allSeriesRacesByRace;
     }
 
     static processResultsStatic(allOODs, allPursuitResults, allFleetResults, allSeriesRaces, transformResults = (results) => results, previousRaceFinishes = [], previousCorrectedResults = []) {
@@ -200,6 +201,18 @@ export class Stores {
             allCorrectedResults.push(...correctedResults);
         }
 
+        const allSeriesRacesByRace = mapGroupBy(allSeriesRaces, [(seriesRace) => Race.getId(seriesRace.getRace())]);
+        [...allSeriesRacesByRace].forEach(([, seriesRaces]) => {
+            const firstRace = seriesRaces.at(0);
+            if (seriesRaces.length > 1) {
+                console.log(`Duplicate series for race ${SeriesRace.getId(firstRace)}`)
+                const inconsistent = seriesRaces.find((seriesRace) => seriesRace.isPursuit() !== firstRace.isPursuit());
+                if (inconsistent) {
+                    throw new Error(`Series races: ${SeriesRace.getId(inconsistent)} and ${SeriesRace.getId(firstRace)} have inconsistent race types (fleet/pursuit)`);
+                }
+            }
+        });
+
         const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);
 
         const seriesPoints = allSeries.map(([seriesId, seriesRaces]) => [
@@ -212,9 +225,8 @@ export class Stores {
                     .filter(Boolean)
             )]);
 
-        const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults];
+        const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults, allSeriesRacesByRace];
         console.log(`Finished processing results in ${Math.round(Date.now() - started)} ms`);
-
 
         return allProcesssed;
     }
@@ -488,6 +500,7 @@ export class StoreFunctions {
         this.createHelmFinish = this.createHelmFinish;
         this.deserialiseRegistered = this.deserialiseRegistered;
         this.getRaceFinishForResults = this.getRaceFinishForResults;
+        this.isPursuitRace = this.isPursuitRace;
         this.isRaceMutable = this.isRaceMutable;
         this.isRaceEditableByUser = this.isRaceEditableByUser;
         this.getSailNumberIndexForHelmBoat = this.getSailNumberIndexForHelmBoat;
@@ -591,6 +604,12 @@ export class StoreFunctions {
 
     isRaceEditableByUser(race) {
         return this.superUser || (this.editableRaceDate && race.getDate().getTime() === this.editableRaceDate.getTime());
+    }
+
+    isPursuitRace(race) {
+        assertType(race, Race);
+        const seriesRacesForRace = this.stores.allSeriesRacesByRace.get(Race.getId(race));
+        return seriesRacesForRace && seriesRacesForRace.at(0).isPursuit();
     }
 
     isRaceMutable(raceDate, raceNumber) {

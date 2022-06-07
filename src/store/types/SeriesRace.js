@@ -1,13 +1,14 @@
 import StoreObject from "./StoreObject.js";
 import Race from "./Race.js";
-import { assertType, parseURLDate, getURLDate, generateId, parseISOString, getISOStringFromDate } from "../../common.js";
+import { assertType, parseURLDate, getURLDate, generateId, parseISOString, getISOStringFromDate, parseBoolean } from "../../common.js";
 import Series from "./Series.js";
 
 export default class SeriesRace extends StoreObject {
-    constructor(series, race, lastImported, metaData) {
+    constructor(series, race, lastImported, isPursuit, metaData) {
         super(metaData);
         this.series = assertType(series, Series);
         this.race = assertType(race, Race);
+        this.isPursuitRace = assertType(isPursuit, "boolean");
         // this.lastImported = assertType(lastImported, Date);
     }
 
@@ -33,6 +34,7 @@ export default class SeriesRace extends StoreObject {
             "Race Date",
             "Race Number",
             "Last Imported",
+            "Is Pursuit",
             ...StoreObject.sheetHeaders(),
         ];
     }
@@ -43,23 +45,19 @@ export default class SeriesRace extends StoreObject {
             Series: series,
             "Race Date": raceDate,
             "Race Number": raceNumber,
-            "Last Imported": lastImported
+            "Last Imported": lastImported,
+            "Is Pursuit": isPursuit,
         } = storeSeriesRace;
 
         const race = new Race(parseURLDate(raceDate), parseInt(raceNumber));
         const raceSeries = new Series(season, series);
-        return new SeriesRace(raceSeries, race, parseISOString(lastImported, new Date(0)), StoreObject.fromStore(storeSeriesRace));
+        return new SeriesRace(raceSeries, race, parseISOString(lastImported, new Date(0)), parseBoolean(isPursuit), StoreObject.fromStore(storeSeriesRace));
     }
 
-    static fromUser(season, series, raceDate, raceNumber, lastImported = new Date(0)) {
-        const race = new Race(raceDate, raceNumber);
-        const raceSeries = new Series(season, series);
-        return new SeriesRace(raceSeries, race, lastImported, StoreObject.fromStore({}))
-    }
 
-    // getLastImported() {
-    //     return this.lastImported;
-    // }
+    isPursuit() {
+        return this.isPursuitRace;
+    }
 
     getSeries() {
         return this.series;
@@ -76,6 +74,7 @@ export default class SeriesRace extends StoreObject {
             "Race Date": getURLDate(this.race.getDate()),
             "Race Number": this.race.getNumber(),
             "Last Imported": getISOStringFromDate(this.lastImported),
+            "Is Pursuit": this.isPursuit(),
             ...super.toStore(this),
         };
     }

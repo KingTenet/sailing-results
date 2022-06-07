@@ -17,9 +17,10 @@ export default function CommitResultsDialog({ race, onSuccess, onFailed, onStart
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const raceOODs = appState.oods.filter((ood) => HelmResult.getRaceId(ood) === StoreRace.getId(race));
     const allNewHelms = appState.newHelms;
+    const [isPursuitRace] = useState(() => services.isPursuitRace(race));
 
     const mappedRaceResults =
-        appState.isPursuitRace
+        isPursuitRace
             ? [...raceResults, ...raceRegistered.map((result, positionIndex) => Result.fromRegistered(result, positionIndex + 1))]
             : raceResults;
 

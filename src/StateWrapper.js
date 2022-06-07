@@ -54,7 +54,7 @@ async function initialiseServices(token) {
     };
 }
 
-const STATE_DESERIALISER = ({ registered, results, oods, newHelms, isPursuitRace }, services) => {
+const STATE_DESERIALISER = ({ registered, results, oods, newHelms }, services) => {
     const deserialisedHelms = newHelms.map((newHelm) => services.deserialiseHelm(newHelm));
 
     return {
@@ -62,7 +62,6 @@ const STATE_DESERIALISER = ({ registered, results, oods, newHelms, isPursuitRace
         results: results.map((result) => services.deserialiseResult(result, deserialisedHelms)),
         oods: oods.map((ood) => services.deserialiseOOD(ood, deserialisedHelms)),
         newHelms: deserialisedHelms,
-        isPursuitRace,
     };
 };
 
@@ -71,7 +70,6 @@ const DEFAULT_STATE = {
     registered: [],
     oods: [],
     newHelms: [],
-    isPursuitRace: false,
     expiry: Date.now() + REACT_STATE_EXPIRY_PERIOD,
 };
 

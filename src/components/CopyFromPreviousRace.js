@@ -17,9 +17,9 @@ export default function CopyFromPreviousRace({ race, previousRace }) {
     const raceResults = appState.results.filter((result) => HelmResult.getRaceId(result) === StoreRace.getId(previousRace));
     const raceRegistered = appState.registered.filter((result) => HelmResult.getRaceId(result) === StoreRace.getId(previousRace));
     const oods = appState.oods.filter((ood) => HelmResult.getRaceId(ood) === StoreRace.getId(previousRace));
+    const [isPursuitRace] = useState(() => services.isPursuitRace(race));
 
     const [[previousRaceResults, previousRaceOODs]] = useState(() => {
-        const isPursuitRace = appState.isPursuitRace;
 
         const viewableRaceResults = !isPursuitRace
             ? raceResults
