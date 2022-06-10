@@ -6,6 +6,7 @@ import { getSheetIdFromURL } from "./common";
 import { Button, Box, Text, Spinner, Flex, Spacer } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import { StoreFunctions } from "./store/Stores";
+import getVersion from "./version";
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
 const liveSourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
@@ -313,9 +314,9 @@ function StoresSync({ verbose }) {
             "green.100"
     } alignContent="flex-end" display="flex">
         <Spacer />
-        {!Boolean(services.isLive) &&
+        {!Boolean(services.readOnly) &&
             <Box>
-                <Text bgColor="red">{"In practice version"}</Text>
+                <Text bgColor="red">{`In ${services.isLive ? "live" : "practice"} version: ${getVersion()}`}</Text>
             </Box>
         }
     </Flex>

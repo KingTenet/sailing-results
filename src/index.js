@@ -6,11 +6,13 @@ import App from './App';
 import { ChakraProvider, extendTheme, withDefaultColorScheme } from "@chakra-ui/react";
 import * as serviceWorker from './serviceWorkerRegistration';
 import initArrayAtPolyfill from "./polyfills.js";
+import version from "./version.js";
 serviceWorker.register();
 initArrayAtPolyfill();
 
+
 const rootElement = document.getElementById("root");
-console.log("Version 16");
+console.log(`Version ${version()}`);
 
 const colors = {
     brand: {
