@@ -1,34 +1,25 @@
 import StoreObject from "./StoreObject.js";
-import { assertType, generateId, parseIntOrUndefined } from "../../common.js";
+import { assertType, generateId, parseIntOrUndefined, AutoMap, parseURLDate, parseBoolean } from "../../common.js";
 import BoatConfiguration from "./BoatConfiguration.js";
 import Race from "./Race.js";
 
-// Changeover date is 29th March (at least for 2020)
-// Might need to modify this each year (or pull from database)
-const CHANGEOVER_MONTH = 2; // March
-const CHANGEOVER_DATE = 29;
-
 export default class BoatClass extends StoreObject {
-    constructor(className, boatConfiguration, PY, validYear, metaData) {
+    constructor(className, boatConfiguration, PY, validFrom, deprecated, metaData) {
         super(metaData)
         this.className = assertType(className, "string");
         this.boatConfiguration = assertType(boatConfiguration, BoatConfiguration);
         this.PY = assertType(PY, "number");
-        this.validYear = assertType(validYear, "number");
+        this.validFrom = (validFrom && assertType(validFrom, Date)) || new Date(0);
+        this.deprecated = assertType(deprecated, "boolean");
     }
 
-    static generateBoatClassId(className, validYear) {
-        return generateId("BoatClass", [className, validYear]);
+    static generateBoatClassId(className, validFrom) {
+        return generateId("BoatClass", [className, validFrom]);
     }
 
     static getId(boatClass) {
         assertType(boatClass, BoatClass);
-        return BoatClass.generateBoatClassId(boatClass.className, boatClass.validYear);
-    }
-
-    static getIdFromClassRaceDate(className, raceDate) {
-        assertType(raceDate, Date);
-        return BoatClass.generateBoatClassId(className, BoatClass.getClassYearForRaceDate(raceDate));
+        return BoatClass.generateBoatClassId(boatClass.className, boatClass.validFrom);
     }
 
     static sheetHeaders() {
@@ -38,7 +29,8 @@ export default class BoatClass extends StoreObject {
             "Rig",
             "Spinnaker",
             "PY",
-            "Valid Year",
+            "Valid From",
+            "Deprecated",
             ...StoreObject.sheetHeaders()
         ];
     }
@@ -50,29 +42,17 @@ export default class BoatClass extends StoreObject {
             "Rig": rig,
             "Spinnaker": spinnaker,
             "PY": PY,
-            "Valid Year": validYear,
+            "Valid From": validFrom,
+            "Deprecated": deprecated,
         } = storeClass;
 
         let boatConfiguration = new BoatConfiguration(parseIntOrUndefined(crew), rig, spinnaker && spinnaker.trim());
-        return new BoatClass(className, boatConfiguration, parseInt(PY), parseInt(validYear), StoreObject.fromStore(storeClass));
+        return new BoatClass(className, boatConfiguration, parseInt(PY), parseURLDate(validFrom), parseBoolean(deprecated), StoreObject.fromStore(storeClass));
     }
 
-    static getClassYearForRaceDate(date) {
-        const raceDate = date.getUTCDate();
-        const raceYear = date.getUTCFullYear();
-        const raceMonth = date.getUTCMonth()
-        if (raceMonth < CHANGEOVER_MONTH) {
-            return raceYear - 1;
-        }
-        if (raceMonth === CHANGEOVER_MONTH && raceDate < CHANGEOVER_DATE) {
-            return raceYear - 1;
-        }
-        return raceYear;
-    }
-
-    static getClassYear(boatClass) {
+    static getClassName(boatClass) {
         assertType(boatClass, BoatClass);
-        return boatClass.validYear;
+        return boatClass.getClassName();
     }
 
     getClassName() {
@@ -83,9 +63,50 @@ export default class BoatClass extends StoreObject {
         return this.PY;
     }
 
-    filterForRace(race) {
+    sortByValidFromAsc(secondBoatClass) {
+        assertType(secondBoatClass, BoatClass);
+        if (secondBoatClass.validFrom.getTime() === this.validFrom.getTime()) {
+            return 0;
+        }
+        return this.isAfter(secondBoatClass.validFrom)
+            ? 1
+            : -1;
+    }
+
+    isAfter(date) {
+        assertType(date, Date);
+        return this.validFrom.getTime() > date.getTime();
+    }
+
+    isValidAtRace(race) {
         assertType(race, Race);
-        return this.validYear === BoatClass.getClassYearForRaceDate(race.getDate());
+        return !this.isAfter(race.getDate());
+    }
+
+    static getLatestValidClassAtRace(allClasses, race) {
+        return allClasses
+            .filter((boatClass) => boatClass.isValidAtRace(race))
+            .sort((classA, classB) => classA.sortByValidFromAsc(classB))
+            .at(-1)
+    }
+
+    static getBoatClassesForRace(race, ryaClasses = [], clubClasses = [], excludeDeprecated) {
+        const allClasses = new AutoMap(BoatClass.getClassName);
+        const validRYA = ryaClasses
+            .map((classes) => BoatClass.getLatestValidClassAtRace(classes, race));
+
+        const validClub = clubClasses
+            .map((classes) => BoatClass.getLatestValidClassAtRace(classes, race));
+
+        // Club classes will take precedent over rya classes with same className
+        [...validRYA, ...validClub]
+            .filter((boatClass) => boatClass && (!excludeDeprecated || !boatClass.deprecated))
+            .forEach((boatClass) => allClasses.upsert(
+                boatClass,
+                (prev, next) => prev && prev.isAfter(next.validFrom) ? prev : next
+            ));
+
+        return allClasses;
     }
 
     toStore() {
@@ -95,7 +116,8 @@ export default class BoatClass extends StoreObject {
             "Rig": this.boatConfiguration.rig,
             "Spinnaker": this.boatConfiguration.spinnaker,
             "PY": this.PY,
-            "Valid Year": this.validYear,
+            "Valid From": this.validFrom,
+            "Deprecated": this.deprecated,
             ...super.toStore(this),
         };
     }

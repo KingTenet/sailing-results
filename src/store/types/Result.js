@@ -52,7 +52,7 @@ export default class Result extends HelmResult {
         ];
     }
 
-    static fromStore(storeResult, getHelm, getBoatClassForDate) {
+    static fromStore(storeResult, getHelm, getBoatClassForRace) {
         let {
             "Date": dateString,
             "Race Number": raceNumber,
@@ -66,7 +66,7 @@ export default class Result extends HelmResult {
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
         const finishCode = new FinishCode(finishCodeString);
-        return new Result(race, getHelm(helmId), getBoatClassForDate(boatClassName, race.getDate()), parseInt(boatSailNumber), parseIntOrUndefined(laps), parseIntOrUndefined(pursuitFinishPosition), parseIntOrUndefined(finishTime), finishCode, StoreObject.fromStore(storeResult));
+        return new Result(race, getHelm(helmId), getBoatClassForRace(boatClassName, race), parseInt(boatSailNumber), parseIntOrUndefined(laps), parseIntOrUndefined(pursuitFinishPosition), parseIntOrUndefined(finishTime), finishCode, StoreObject.fromStore(storeResult));
     }
 
     static fromUser(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode = new FinishCode("")) {

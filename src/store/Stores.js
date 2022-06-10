@@ -71,8 +71,8 @@ export class Stores {
         const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces]);
         this.clubMembers = clubMembers;
         this.helms = helms;
-        this.ryaClasses = ryaClasses;
-        this.clubClasses = clubClasses;
+        this.ryaClasses = mapGroupBy(ryaClasses.all(), [BoatClass.getClassName]);
+        this.clubClasses = mapGroupBy(clubClasses.all(), [BoatClass.getClassName]);
         this.seriesRaces = seriesRaces;
 
         const getOODsFromStore = (result) => HelmResult.fromStore(
@@ -113,14 +113,19 @@ export class Stores {
         await store.sync();
     }
 
+
+    getBoatClassForRace(boatClassName, race) {
+        const clubClasses = this.clubClasses.get(boatClassName) || [];
+        const ryaClasses = this.ryaClasses.get(boatClassName) || [];
+
+        return BoatClass.getBoatClassesForRace(race, [ryaClasses], [clubClasses]).get(boatClassName);
+    }
+
     deserialiseResult(storeResult, newHelms = [], Type = Result) {
         return Type.fromStore(
             storeResult,
             (helmId) => this.getHelmFromHelmId(helmId, newHelms),
-            (boatClass, date) =>
-                this.clubClasses.has(BoatClass.getIdFromClassRaceDate(boatClass, date))
-                    ? this.clubClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
-                    : this.ryaClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
+            (boatClassName, race) => this.getBoatClassForRace(boatClassName, race)
         );
     }
 
@@ -138,17 +143,6 @@ export class Stores {
     deserialiseHelm(storeHelm) {
         return Helm.fromStore(storeHelm);
     }
-
-    // deserialiseOOD(oodResult) {
-    //     return HelmResult.fromStore(
-    //         storeResult,
-    //         (helmId) => this.helms.get(helmId),
-    //         (boatClass, date) =>
-    //             this.clubClasses.has(BoatClass.getIdFromClassRaceDate(boatClass, date))
-    //                 ? this.clubClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
-    //                 : this.ryaClasses.get(BoatClass.getIdFromClassRaceDate(boatClass, date))
-    //     );
-    // }
 
     getRaceFinishes() {
         return this.raceFinishes;
@@ -353,20 +347,11 @@ class Indexes {
     }
 
     getBoatIndexForHelmRace(helm, race) {
-        const boatsByYearByClassName = mapGroupBy(
-            [...this.stores.ryaClasses.all(), ...this.stores.clubClasses.all()],
-            [BoatClass.getClassYear, (boat) => boat.getClassName()],
-            (boatClasses) => boatClasses[0]
-        );
+        const ryaClasses = [...this.stores.ryaClasses].map(([, classes]) => classes);
+        const clubClasses = [...this.stores.clubClasses].map(([, classes]) => classes);
 
-        const boatsByYear = mapGroupBy(
-            [...this.stores.ryaClasses.all(), ...this.stores.clubClasses.all()],
-            [BoatClass.getClassYear]
-        );
-
-        const classYear = BoatClass.getClassYearForRaceDate(race.getDate());
-        const allClassesForYearByClassName = boatsByYearByClassName.get(classYear);
-        const allClassesForYear = boatsByYear.get(classYear);
+        const allClassesForYearByClassName = BoatClass.getBoatClassesForRace(race, ryaClasses, clubClasses, true);
+        const allClassesForYear = [...allClassesForYearByClassName].map(([, boatClass]) => boatClass);
 
         const getScore = (count, time) => {
             if (count > 2) {
@@ -664,9 +649,7 @@ export class StoreFunctions {
         const result = MutableRaceResult.fromUser(
             race,
             this.stores.getHelmFromHelmId(Helm.getId(helm), newHelms),
-            this.stores.clubClasses.has(BoatClass.getId(boatClass))
-                ? this.stores.clubClasses.get(BoatClass.getId(boatClass))
-                : this.stores.ryaClasses.get(BoatClass.getId(boatClass)),
+            this.stores.getBoatClassForRace(boatClass.getClassName(), race),
             boatSailNumber,
         );
         this.assertResultNotStored(result);

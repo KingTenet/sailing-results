@@ -25,7 +25,7 @@ export default class MutableRaceResult extends HelmResult {
         ];
     }
 
-    static fromStore(storeResult, getHelm, getBoatClassForDate) {
+    static fromStore(storeResult, getHelm, getBoatClassForRace) {
         let {
             "Date": dateString,
             "Race Number": raceNumber,
@@ -34,7 +34,7 @@ export default class MutableRaceResult extends HelmResult {
             "Class": boatClassName,
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
-        return new MutableRaceResult(race, getHelm(helmId), getBoatClassForDate(boatClassName, race.getDate()), parseInt(boatSailNumber), StoreObject.fromStore(storeResult));
+        return new MutableRaceResult(race, getHelm(helmId), getBoatClassForRace(boatClassName, race), parseInt(boatSailNumber), StoreObject.fromStore(storeResult));
     }
 
     static fromUser(race, helm, boatClass, boatSailNumber) {
