@@ -1,5 +1,5 @@
 import { Stores } from "../src/store/Stores.js";
-import auth from "./auth.js";
+import { devAuth } from "./auth.js";
 import StoreWrapper from "../src/store/StoreWrapper.js";
 import ClassAnalysis from "./types/ClassAnalysis.js";
 import { HeadToHead, MultiValueWrapper } from "./types/HeadToHead.js";
@@ -12,22 +12,24 @@ import Race from "../src/store/types/Race.js";
 
 global.DEBUG = true;
 
+const auth = devAuth;
+
 const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
 
 // debug source results
 // const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1nzKraj79TDf0GlFQJSS4TUMQ1o07RrwPqIzzR3b7wr8/edit#gid=51306302";
-const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
-const analysisSheetURL = "https://docs.google.com/spreadsheets/d/1TU2VmtmuYOezR_l0KPEpw3Y2YrbduxmPBtZOuKbmJqE/edit#gid=1748778425";
+// const analysisSheetURL = "https://docs.google.com/spreadsheets/d/1TU2VmtmuYOezR_l0KPEpw3Y2YrbduxmPBtZOuKbmJqE/edit#gid=1748778425";
+const analysisSheetURL = "https://docs.google.com/spreadsheets/d/1IIDTZuA5qt67rjftgJe3Cs2oVwkJ6Tn0Hste9YYOGks/edit#gid=1997904671";
+
 
 const parseBoolean = (str) => str && str.toLowerCase() !== "false" ? str : undefined;
 
 async function run(forceRefresh = "true") {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
-    const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
     const analysisSheetId = getSheetIdFromURL(analysisSheetURL);
     const analysisDocument = () => getGoogleSheetDoc(analysisSheetId, auth.clientEmail, auth.privateKey);
 
-    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId, parseBoolean(forceRefresh));
+    const stores = await Stores.create(auth, sourceResultsSheetId, parseBoolean(forceRefresh));
 
 
     // await outputHeadToHead(stores, "Head To Head", analysisDocument, "Robert Powell", "Mike Clarke");

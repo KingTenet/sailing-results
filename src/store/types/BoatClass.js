@@ -1,5 +1,5 @@
 import StoreObject from "./StoreObject.js";
-import { assertType, generateId, parseIntOrUndefined, AutoMap, parseURLDate, parseBoolean } from "../../common.js";
+import { assertType, generateId, parseIntOrUndefined, AutoMap, parseURLDate, parseBoolean, getURLDate } from "../../common.js";
 import BoatConfiguration from "./BoatConfiguration.js";
 import Race from "./Race.js";
 
@@ -9,12 +9,12 @@ export default class BoatClass extends StoreObject {
         this.className = assertType(className, "string");
         this.boatConfiguration = assertType(boatConfiguration, BoatConfiguration);
         this.PY = assertType(PY, "number");
-        this.validFrom = (validFrom && assertType(validFrom, Date)) || new Date(0);
+        this.validFrom = assertType(validFrom, Date);
         this.deprecated = assertType(deprecated, "boolean");
     }
 
     static generateBoatClassId(className, validFrom) {
-        return generateId("BoatClass", [className, validFrom]);
+        return generateId("BoatClass", [className, getURLDate(validFrom)]);
     }
 
     static getId(boatClass) {
@@ -116,7 +116,7 @@ export default class BoatClass extends StoreObject {
             "Rig": this.boatConfiguration.rig,
             "Spinnaker": this.boatConfiguration.spinnaker,
             "PY": this.PY,
-            "Valid From": this.validFrom,
+            "Valid From": getURLDate(this.validFrom),
             "Deprecated": this.deprecated,
             ...super.toStore(this),
         };
