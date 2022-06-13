@@ -28,31 +28,28 @@ async function run(forceRefresh = "true") {
 
 async function outputClassHandicaps(stores, sheetName, sheetDoc) {
     const allCorrectedResults = flatten(stores.raceFinishes.map((raceFinish) => raceFinish.hasResults() ? raceFinish.getCorrectedResults() : []));
-    const todaysRace = new Race(new Date(), 1);
+
+    const getClassesCountFromDate = (date) => {
+        const raceDate = new Race(date, 1);
+        const results = allCorrectedResults
+            .filter((result) => !result.getRace().isBefore(raceDate));
+        return mapGroupBy(results, [(result) => result.getBoatClass().getClassName()], (results) => results.length);
+    }
+
     const now = new Date();
-    const lastYearsRace = new Race(new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()), 1);
-
-    const lastYearRaces = allCorrectedResults
-        .filter((result) => !result.getRace().isBefore(lastYearsRace));
-
-    const classesCount = mapGroupBy(lastYearRaces, [(result) => result.getBoatClass().getClassName()], (results) => results.length);
+    const classesCount12Month = getClassesCountFromDate(new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()));
+    const classesCount48Month = getClassesCountFromDate(new Date(now.getFullYear() - 4, now.getMonth(), now.getDate()));
 
     const clubClasses = [...stores.clubClasses].map(([, classes]) => classes);
     const ryaClasses = [...stores.ryaClasses].map(([, classes]) => classes);
 
+    const todaysRace = new Race(new Date(), 1);
     const allCurrentClasses = BoatClass.getBoatClassesForRace(todaysRace, ryaClasses, clubClasses, EXCLUDE_DEPRECATED);
 
-    // const classHandicapsStore = await StoreWrapper.create(false, sheetName, sheetDoc, stores, BoatClass, (storeResult) => storeResult, undefined, true);
     const classHandicapsStore = await StoreWrapper.create(false, sheetName, sheetDoc, stores, BoatClassRaces, (storeResult) => storeResult, undefined, true);
     for (let [className, boatClass] of [...allCurrentClasses]) {
-        if (className === "SOLO") {
-            debugger;
-        }
-        classHandicapsStore.add(BoatClassRaces.fromBoatClassRaces(boatClass, classesCount.get(className) || 0));
-        // classHandicapsStore.add(boatClass);
+        classHandicapsStore.add(BoatClassRaces.fromBoatClassRaces(boatClass, classesCount12Month.get(className) || 0, classesCount48Month.get(className) || 0));
     }
-
-    console.log(classHandicapsStore.all().length);
 
     await classHandicapsStore.sync();
 }
