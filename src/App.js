@@ -18,7 +18,7 @@ import { useServices } from "./useAppState";
 import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
 
 const ADD_ANOTHER_HELM_WORKFLOW = true;
-const BOOTSTRAP_HISTORY = false;
+const BOOTSTRAP_HISTORY = true;
 
 function Home() {
     const [appState] = useAppState();
@@ -52,13 +52,21 @@ const ROUTES = [
     {
         path: ROOT_PATHNAME, element: <StateWrapper />, children: [
             { path: ROOT_PATHNAME, element: <Home />, index: true },
-            { path: '/races/', element: <Races liveOnly={true} /> },
-            { path: '/races/:raceDate/:raceNumber', element: <Race backButtonText="Back to races" /> },
-            { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} /> },
-            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <RegisteredHelm><RegisterAnotherButtons /></RegisteredHelm> },
-            { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },
-            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <RegisteredHelm><FinishHelm /></RegisteredHelm> },
-            { path: '/races/:raceDate/:raceNumber/pursuitFinish/:registered', element: <RegisteredHelm><FinishHelm /></RegisteredHelm> },
+            {
+                path: '/races/', element: <NavWrapper />, children: [
+                    { path: '/races/', element: <Races liveOnly={true} />, index: true },
+                    {
+                        path: '/races/:raceDate/:raceNumber', element: <NavWrapper />, children: [
+                            { path: '/races/:raceDate/:raceNumber', element: <Race backButtonText="Back to races" />, index: true },
+                            { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} /> },
+                            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <RegisteredHelm><RegisterAnotherButtons /></RegisteredHelm> },
+                            { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },
+                            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <RegisteredHelm><FinishHelm /></RegisteredHelm> },
+                            { path: '/races/:raceDate/:raceNumber/pursuitFinish/:registered', element: <RegisteredHelm><FinishHelm /></RegisteredHelm> },
+                        ]
+                    }
+                ]
+            },
             {
                 path: '/series/', element: <NavWrapper />, children: [
                     { path: '/series/', element: <Series />, index: true },
@@ -70,7 +78,6 @@ const ROUTES = [
                     }
                 ]
             },
-
         ]
     },
     { path: '/*', element: <Navigate to="/" /> },
