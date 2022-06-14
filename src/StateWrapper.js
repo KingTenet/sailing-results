@@ -7,6 +7,7 @@ import { Button, Box, Text, Spinner, Flex, Spacer } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import { StoreFunctions } from "./store/Stores";
 import getVersion from "./version";
+import { useStoreStatus } from "./common/hooks";
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
 const liveSourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
@@ -231,27 +232,13 @@ function StoreSync({ store }) {
     </>
 }
 
+
 function StoresSync({ verbose }) {
     const services = useServices();
-    const [storesStatus, updateStoresStatus] = useState();
-    const TIMEOUT = 5000;
+    const storesStatus = useStoreStatus();
     const VERBOSE = verbose;
     const [syncing, updateSyncing] = useState(false);
     const [failed, updateFailed] = useState(false);
-
-    const handleUpdateStoreStatus = () => {
-        const newStoreStatus = services.getStoresStatus();
-        if (JSON.stringify(storesStatus) !== JSON.stringify(newStoreStatus)) {
-            updateStoresStatus(newStoreStatus);
-        }
-    }
-
-    useEffect(() => {
-        const timerId = setInterval(() => handleUpdateStoreStatus(), TIMEOUT);
-        return function cleanup() {
-            clearInterval(timerId);
-        };
-    }, []);
 
     useEffect(() => {
         if (!syncing && storesStatus) {

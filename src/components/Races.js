@@ -1,17 +1,20 @@
-import { Button, List, ListItem, Text, Grid, GridItem } from "@chakra-ui/react";
+import { List, ListItem, Text, Grid, GridItem } from "@chakra-ui/react";
 import { Box, Flex, Heading, Spacer } from "@chakra-ui/react";
-import { Link } from "react-router-dom";
 import React, { useState } from "react";
 
 import { useServices, useAppState } from "../useAppState";
-import { getURLDate, parseURLDate, mapGroupBy } from "../common"
-import { BackButton } from "./Buttons";
+import { getURLDate, mapGroupBy, groupBy } from "../common"
 import Race from "../store/types/Race";
 import { useNavigate } from "react-router-dom";
 import HelmResult from "../store/types/HelmResult";
-import { useSortedResults } from "../common/hooks";
+import { useSortedResults, useStoreStatus } from "../common/hooks";
 import { RacesCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
+import {
+    Alert,
+    AlertIcon,
+    AlertTitle,
+} from '@chakra-ui/react'
 
 function RaceDimension({ children, ...props }) {
     return (
@@ -129,7 +132,6 @@ function ImmutableRace({ race }) {
     </ListItem>
 }
 
-
 function ImmutableRacesView({ races, ...props }) {
 
     return (
@@ -141,9 +143,38 @@ function ImmutableRacesView({ races, ...props }) {
     );
 }
 
+function StatusWrapper() {
+    const storesStatus = useStoreStatus();
+    const storesToSync = Object.entries(storesStatus || [])
+        .filter(([, synced]) => !synced);
+
+    return (
+        <>
+            {Boolean(storesToSync.length) &&
+                <Box margin="10px">
+                    <Alert status='warning'>
+                        <AlertIcon />
+                        <AlertTitle mr={2}>Completed races have not yet been uploaded.</AlertTitle>
+                    </Alert>
+                </Box>
+            }
+            {!Boolean(storesToSync.length) &&
+                <Box margin="10px">
+                    <Alert status='success'>
+                        <AlertIcon />
+                        <AlertTitle mr={2}>All edited races have been uploaded successfully.</AlertTitle>
+                    </Alert>
+                </Box>
+            }
+        </>
+    )
+}
 
 export default function Races({ editableOnly = false }) {
     const services = useServices();
+    const [appState] = useAppState();
+    const activeRaces = groupBy([...appState.results, ...appState.oods, ...appState.registered], [HelmResult.getRaceId]).map(([id]) => Race.fromId(id));
+
     const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(services.isLive));
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
 
@@ -155,8 +186,25 @@ export default function Races({ editableOnly = false }) {
         .filter((race) => services.isRaceEditableByUser(race))
         .filter((race) => !race.isBefore(filterRace));
 
+    // const now = new Date();
+    const midnightUTC = new Date();
+    midnightUTC.setUTCHours(0, 0, 0, 0);
+    const firstRaceToday = new Race(midnightUTC, 1);
+    const nextEditableRace = editableRaces
+        .filter((race) => !race.isBefore(firstRaceToday))
+        .sort((raceA, raceB) => raceA.sortByRaceAsc(raceB))
+        .at(0);
+
     const editedRaces = immutableRaces
         .filter((race) => services.isRaceEditableByUser(race));
+
+    const todaysFinishedRaces = immutableRaces
+        .filter((race) => services.isRaceEditableByUser(race))
+        .filter((race) => race.getDate().getTime() === firstRaceToday.getDate().getTime());
+
+
+    console.log(todaysFinishedRaces[0].getDate());
+    console.log(firstRaceToday.getDate());
 
     const immutableNotEdited = immutableRaces.filter((race) => !editedRaces.includes(race));
     return (
@@ -164,23 +212,37 @@ export default function Races({ editableOnly = false }) {
             <Flex direction="column" padding="5px">
 
                 <Flex direction="row" marginTop="20px">
-                    <Heading size={"lg"} marginLeft="10px">{`Race Results`}</Heading>
+                    <Heading size={"lg"} marginLeft="10px">{`Races`}</Heading>
                 </Flex>
                 <Box marginTop="20px" />
-                <RacesCard>
-                    <DroppableHeader heading="Active races" />
-                    <Box marginBottom="20px" padding="10px" paddingTop="20px">
-                        {Boolean(editableRaces.length)
-                            ? <RacesView races={editableRaces} />
-                            : <Text style={{ marginLeft: "20px" }}>No races can be edited by the current user.</Text>
-                        }
-                    </Box>
-                </RacesCard>
-                {editedRaces && Boolean(editedRaces.length) &&
+                {Boolean(activeRaces.length) &&
                     <RacesCard>
-                        <DroppableHeader heading="Edited results" />
+                        <DroppableHeader heading="Active races" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">
-                            <ImmutableRacesView races={editedRaces} />
+                            <RacesView races={activeRaces} />
+                        </Box>
+                        <Spacer />
+                        <Box margin="10px">
+                            <Alert status='warning'>
+                                <AlertIcon />
+                                <AlertTitle mr={2}>Active race results have not been committed.</AlertTitle>
+                            </Alert>
+                        </Box>
+                    </RacesCard>
+                }
+                {Boolean(nextEditableRace) && !Boolean(activeRaces.length) &&
+                    <RacesCard>
+                        <DroppableHeader heading="Next race" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                            <RacesView races={[nextEditableRace]} />
+                        </Box>
+                    </RacesCard>
+                }
+                {todaysFinishedRaces && Boolean(todaysFinishedRaces.length) &&
+                    <RacesCard>
+                        <DroppableHeader heading="Completed races" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                            <ImmutableRacesView races={todaysFinishedRaces} />
                         </Box>
                     </RacesCard>
                 }
@@ -192,8 +254,9 @@ export default function Races({ editableOnly = false }) {
                         </Box>
                     </RacesCard>
                 }
-
-                {/* <BackButton>Back</BackButton> */}
+                {!Boolean(activeRaces.length) &&
+                    <StatusWrapper />
+                }
             </Flex>
         </>
     );

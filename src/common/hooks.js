@@ -1,5 +1,5 @@
 import { useServices } from "../useAppState";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function useSortedResults(results, race) {
     const services = useServices();
@@ -22,4 +22,26 @@ export function useSortedResults(results, race) {
 export function useDimensionsToggle(dimensions) {
     const [dimensionCounter, updateDimensionCounter] = useState(0);
     return [dimensions[dimensionCounter % dimensions.length], () => updateDimensionCounter(dimensionCounter + 1)];
+}
+
+export function useStoreStatus() {
+    const services = useServices();
+    const [storesStatus, updateStoresStatus] = useState(() => services.getStoresStatus());
+    const TIMEOUT = 5000;
+
+    const handleUpdateStoreStatus = () => {
+        const newStoreStatus = services.getStoresStatus();
+        if (JSON.stringify(storesStatus) !== JSON.stringify(newStoreStatus)) {
+            updateStoresStatus(newStoreStatus);
+        }
+    }
+
+    useEffect(() => {
+        const timerId = setInterval(() => handleUpdateStoreStatus(), TIMEOUT);
+        return function cleanup() {
+            clearInterval(timerId);
+        };
+    }, []);
+
+    return storesStatus;
 }

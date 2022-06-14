@@ -274,6 +274,7 @@ export default function Race({ backButtonText }) {
         updateEditingRace(false);
         setRaceIsMutable(services.isRaceMutable(raceDate, raceNumber));
         setCommittingResults(false);
+        navigateTo("/races/");
     };
 
     const committingResultsFailed = (err) => {
@@ -321,7 +322,9 @@ export default function Race({ backButtonText }) {
                         <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
                     </Flex>
                     {children}
-                    <BackButton disabled={committingResults}>{backButtonText}</BackButton>
+                    {!raceIsMutable &&
+                        <BackButton disabled={committingResults}>{backButtonText}</BackButton>
+                    }
                 </Flex>
             </Box>
         )
