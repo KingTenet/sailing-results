@@ -54,7 +54,7 @@ const ROUTES = [
             { path: ROOT_PATHNAME, element: <Home />, index: true },
             {
                 path: '/races/', element: <NavWrapper />, children: [
-                    { path: '/races/', element: <Races liveOnly={true} />, index: true },
+                    { path: '/races/', element: <Races editableOnly={true} />, index: true },
                     {
                         path: '/races/:raceDate/:raceNumber', element: <NavWrapper />, children: [
                             { path: '/races/:raceDate/:raceNumber', element: <Race backButtonText="Back to races" />, index: true },

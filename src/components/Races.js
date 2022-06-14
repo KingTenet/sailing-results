@@ -226,7 +226,7 @@ export default function Races({ editableOnly = false }) {
                         </Box>
                     </RacesCard>
                 }
-                {Boolean(nextEditableRace) && !Boolean(activeRaces.length) &&
+                {!Boolean(activeRaces.length) && Boolean(nextEditableRace) &&
                     <RacesCard>
                         <DroppableHeader heading="Next race" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">

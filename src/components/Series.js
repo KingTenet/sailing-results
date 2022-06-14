@@ -91,7 +91,7 @@ function AllSeriesView({ series, ...props }) {
 }
 
 
-export default function Series({ liveOnly = false }) {
+export default function Series() {
     const services = useServices();
     const [allSeries] = useState(() => services.getSeriesPoints()
         .sort((seriesA, seriesB) => seriesA.sortBySeriesAsc(seriesB))
