@@ -132,7 +132,6 @@ function NavigationWrapper({ navStack, updateNavStack, updateTargetPath, targetP
         if (navStack && navStack.length && navStack.at(-1).pathnameBase === location.pathname) {
             updateNavStack((prev) => {
                 const newNavStack = [...prev].slice(0, -1);
-                console.log(newNavStack);
                 return newNavStack;
             });
         }

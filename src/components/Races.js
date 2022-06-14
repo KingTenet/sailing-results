@@ -202,10 +202,6 @@ export default function Races({ editableOnly = false }) {
         .filter((race) => services.isRaceEditableByUser(race))
         .filter((race) => race.getDate().getTime() === firstRaceToday.getDate().getTime());
 
-
-    console.log(todaysFinishedRaces[0].getDate());
-    console.log(firstRaceToday.getDate());
-
     const immutableNotEdited = immutableRaces.filter((race) => !editedRaces.includes(race));
     return (
         <>
