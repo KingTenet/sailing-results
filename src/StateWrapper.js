@@ -307,24 +307,6 @@ function StoresSync({ verbose }) {
             </Box>
         }
     </Flex>
-
-    // if (syncing) {
-    //     return <Box height="10px" width="10px">
-    //         <Spinner color='blue.500' size="xs" />
-    //     </Box>;
-    // }
-
-    // if (failed) {
-    //     return <Box height="10px" width="10px">
-    //         <SmallCloseIcon color="red.500" />
-    //     </Box>;
-    // }
-
-    // return <Box>
-    //     <Box height="10px" width="10px">
-    //         <CheckIcon color="green.500" />
-    //     </Box>
-    // </Box>;
 }
 
 function Debug() {

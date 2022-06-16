@@ -12,6 +12,9 @@ import HelmResult from "../store/types/HelmResult";
 import { useSortedResults } from "../common/hooks";
 import { RacesCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
+import SeriesArchive from "./SeriesArchive";
+
+const DISPLAY_SERIES_ARCHIVE = true;
 
 function SeriesDimension({ children, ...props }) {
     return (
@@ -112,7 +115,16 @@ export default function Series() {
                         <AllSeriesView series={allSeries} />
                     </Box>
                 </RacesCard>
-                {/* <BackButton>Back</BackButton> */}
+                {DISPLAY_SERIES_ARCHIVE &&
+                    <RacesCard>
+                        <DroppableHeader heading="Results Archive" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                            <RacesList>
+                                <SeriesArchive />
+                            </RacesList>
+                        </Box>
+                    </RacesCard>
+                }
             </Flex>
         </>
     );

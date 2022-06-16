@@ -93,67 +93,42 @@ function MyRoutes() {
  * This component pushes each required URL into the history stack to allow navigation to be hierarchical.
  * State must be passed in from outside Router due to re-mounting on location updates
  */
-function NavigationWrapper({ navStack, updateNavStack, updateTargetPath, targetPath, isReady, updateIsReady }) {
+function NavigationWrapper({ navStack, updateNavStack, next, index }) {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const stripTrailingSlash = (str) => str.at(-1) === "/" ? str.slice(0, -1) : str;
+    const isReady = navStack && index >= navStack.length;
+
     useEffect(() => {
         if (isReady) {
-            return;
-        }
-
-        if (!targetPath) {
-            updateTargetPath(location);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (isReady || !targetPath) {
             return;
         }
         if (navStack === undefined) {
             const targetMatches = matchRoutes(ROUTES, location);
             const targetMatchParents = targetMatches && targetMatches
                 .filter((match) => match?.route?.children)
-                .filter((match) => match.pathnameBase !== targetPath.pathname);
-            if (targetMatchParents.length) {
-                updateNavStack(targetMatchParents.reverse());
-            }
-            else {
-                updateIsReady(true);
-            }
+                .filter((match) => stripTrailingSlash(match.pathname) !== stripTrailingSlash(location.pathname)) // Exclude current location
+                .filter((match) => match.pathname !== ROOT_PATHNAME); // Exclude root path from navigation because it redirects and confuses things
+
+            updateNavStack([...targetMatchParents, location]);
         }
-    }, [targetPath]);
+    }, []);
 
     useEffect(() => {
-        if (isReady) {
+        if (isReady || !navStack) {
             return;
         }
-        if (navStack && navStack.length && navStack.at(-1).pathnameBase === location.pathname) {
-            updateNavStack((prev) => {
-                const newNavStack = [...prev].slice(0, -1);
-                return newNavStack;
-            });
+        const nextLocation = navStack[index];
+        navigate(nextLocation, { replace: !index });
+    }, [navStack, index]);
+
+    useEffect(() => {
+        if (isReady || !navStack) {
+            return;
         }
-        else if (targetPath && navStack && !navStack.length && targetPath.pathname === location.pathname) {
-            updateIsReady(true);
-        }
+        next();
     }, [location]);
-
-    useEffect(() => {
-        if (isReady) {
-            return;
-        }
-        if (navStack) {
-            if (navStack.length) {
-                const nextLocation = [...navStack].pop();
-                navigate(nextLocation, { replace: nextLocation.pathname === ROOT_PATHNAME });
-            }
-            else {
-                navigate(targetPath);
-            }
-        }
-    }, [navStack]);
 
     if (!isReady) {
         return <></>
@@ -165,13 +140,12 @@ function NavigationWrapper({ navStack, updateNavStack, updateTargetPath, targetP
 
 function App() {
     const [navStack, updateNavStack] = useState();
-    const [targetPath, updateTargetPath] = useState();
-    const [isReady, updateIsReady] = useState(false);
+    const [index, updateIndex] = useState(0);
 
     if (BOOTSTRAP_HISTORY) {
         return (
             <Router>
-                <NavigationWrapper navStack={navStack} updateNavStack={updateNavStack} targetPath={targetPath} updateTargetPath={updateTargetPath} isReady={isReady} updateIsReady={updateIsReady} />
+                <NavigationWrapper navStack={navStack} updateNavStack={updateNavStack} next={() => updateIndex((prev) => prev + 1)} index={index} />
             </Router>
         )
     }

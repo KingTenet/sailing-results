@@ -1,4 +1,4 @@
-const VERSION = "1.1.1";
+const VERSION = "1.3.0";
 
 export default function getVersion() {
     return VERSION;
