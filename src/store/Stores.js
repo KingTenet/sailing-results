@@ -19,7 +19,7 @@ import RemoteStore from "./RemoteStore.js";
 
 export class Stores {
     constructor(auth, raceResultsSheetId) {
-        this.raceResultsDocument = () => getGoogleSheetDoc(raceResultsSheetId, auth.clientEmail, auth.privateKey);
+        this.raceResultsDocument = RemoteStore.retryCreateSheetsDoc(raceResultsSheetId, auth);
         this.auth = auth;
         this.promiseMetaStore = RemoteStore.retryCreateRemoteStore(this.raceResultsDocument, "Meta Data", true, ["Last Updated"])
             .then((remoteStore) => this.metaStore = remoteStore);
@@ -56,8 +56,6 @@ export class Stores {
 
     async init(forceCacheRefresh) {
         await promiseSleep(10); // Required to get spinner to render!?
-        const started = Date.now();
-        console.log(`Started loading`);
 
         const createStoreWrapper = (...args) => StoreWrapper.create(forceCacheRefresh, ...args);
 
@@ -95,7 +93,6 @@ export class Stores {
         //     .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
 
 
-        console.log(`Loaded results in ${Math.round(Date.now() - started)} ms`);
         this.processResults();
     }
 
@@ -228,7 +225,10 @@ export class Stores {
     static async create(auth, raceResultsSheetId, forceCacheRefresh) {
         await bootstrapLocalStorage();
         const stores = new Stores(auth, raceResultsSheetId);
+        const started = Date.now();
+        console.log(`Started loading`);
         await stores.init(forceCacheRefresh);
+        console.log(`Loaded results in ${Math.round(Date.now() - started)} ms`);
         return stores;
     }
 }

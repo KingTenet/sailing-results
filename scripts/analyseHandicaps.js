@@ -27,7 +27,7 @@ const parseBoolean = (str) => str && str.toLowerCase() !== "false" ? str : undef
 async function run(forceRefresh = "true") {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const analysisSheetId = getSheetIdFromURL(analysisSheetURL);
-    const analysisDocument = () => getGoogleSheetDoc(analysisSheetId, auth.clientEmail, auth.privateKey);
+    const analysisDocument = getGoogleSheetDoc(analysisSheetId, auth.clientEmail, auth.privateKey);
 
     const stores = await Stores.create(auth, sourceResultsSheetId, parseBoolean(forceRefresh));
 

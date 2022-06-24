@@ -17,9 +17,16 @@ export default class Store {
             .then((remoteStore) => this.remoteStore = remoteStore);
     }
 
-    async handleStaleStatus(forceRefresh) {
-        const localStoreIsStale = forceRefresh || (await this.services.promiseStoresLastUpdated) > this.getLastSyncDate();
+    async handleStaleStatus() {
+        const storeLastUpdated = await this.services.promiseStoresLastUpdated;
+        const localStoreIsStale = storeLastUpdated > this.getLastSyncDate();
         console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
+
+        // if (localStoreIsStale) {
+        //     console.log(`${this.storeName}: Remote last updated ${storeLastUpdated}`);
+        //     console.log(`${this.storeName}: Local last synced ${this.getLastSyncDate()}`);
+        // }
+
         if (inBrowser && localStoreIsStale) {
             this.services.forceRefreshCaches();
         }
@@ -38,9 +45,17 @@ export default class Store {
 
         let localStateEmpty = !localStoreObjects.length;
 
+        if (forceRefresh) {
+            console.log("Forcing refresh of " + this.storeName);
+        }
+
+        if (localStateEmpty) {
+            console.log("Local state is empty of " + this.storeName);
+        }
+
         if (localStateEmpty || forceRefresh) {
+
             this.clear();
-            await this.promiseRemoteStore;
             let remoteStoreObjects = await this.pullRemoteState();
             this.syncLocalStateToRemoteState(remoteStoreObjects);
         }

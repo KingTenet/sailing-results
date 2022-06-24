@@ -1,4 +1,4 @@
-import { isOnline, promiseSleep } from "../common.js";
+import { isOnline, promiseSleep, getGoogleSheetDoc } from "../common.js";
 
 class RemoteStoreNoNetwork extends Error { }
 class RemoteStoreNoAccess extends Error { }
@@ -55,9 +55,26 @@ export default class RemoteStore {
         return isOnline();
     }
 
+    static async retryCreateSheetsDoc(sheetId, auth) {
+        while (true) {
+            try {
+                return await getGoogleSheetDoc(sheetId, auth.clientEmail, auth.privateKey);
+            }
+            catch (err) {
+                if (err?.code === "ENOTFOUND" || (err.request && err.response)) {
+                    throw err;
+                }
+                console.log(err);
+                console.log("Network error in store creation.. will sleep a bit and retry.")
+                await promiseSleep(20000);
+                return RemoteStore.retryCreateRemoteStore(sheetId, auth);
+            }
+        }
+    }
+
     static async retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers) {
         try {
-            return await this.createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
+            return await RemoteStore.createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
         }
         catch (err) {
             if (err instanceof RemoteStoreNoNetwork) {
@@ -65,7 +82,7 @@ export default class RemoteStore {
                 do {
                     await promiseSleep(20000);
                 } while (!isOnline());
-                return await this.retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
+                return await RemoteStore.retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
             }
             throw err;
         }
@@ -73,7 +90,8 @@ export default class RemoteStore {
 
     static async createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers) {
         try {
-            let sheetsDoc = await promiseSheetsDoc();
+
+            let sheetsDoc = await promiseSheetsDoc;
             const remoteStore = new RemoteStore(sheetsDoc, sheetName);
             if (createSheetIfMissing) {
                 await remoteStore.createSheetIfMissing(headers);

@@ -123,7 +123,7 @@ async function importActiveMembers(activeMembershipListURL, outputSheetURL, firs
         throw new Error("Invalid first row.\nScript usage: node scripts/importActiveMembersList.js {sourceURL} {outputURL} [firstRowInSheet] [firstColumnStr]");
     }
     const firstColumn = COLUMN_INDEXES.findIndex((letter) => letter === firstColumnStr);
-    const outputDoc = () => getGoogleSheetDoc(getSheetIdFromURL(outputSheetURL), auth.clientEmail, auth.privateKey);
+    const outputDoc = getGoogleSheetDoc(getSheetIdFromURL(outputSheetURL), auth.clientEmail, auth.privateKey);
     const allActiveMembers = [];
     (await getAllCellsFromSheet(getSheetIdFromURL(activeMembershipListURL), auth, undefined, false))
         .filter((row, rowIndex) => rowIndex >= firstRow)

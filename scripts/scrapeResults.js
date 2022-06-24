@@ -516,7 +516,7 @@ async function scrapeAll(outputSheetURL) {
     const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
 
     await bootstrapLocalStorage();
-    const outputDoc = () => getGoogleSheetDoc(getSheetIdFromURL(outputSheetURL), devAuth.clientEmail, devAuth.privateKey);
+    const outputDoc = getGoogleSheetDoc(getSheetIdFromURL(outputSheetURL), devAuth.clientEmail, devAuth.privateKey);
     const [fleetResults, pursuitResults, helms, oods] = (await scrape());
 
     // console.log(fleetResults);
