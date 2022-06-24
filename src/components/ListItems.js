@@ -2,7 +2,6 @@ import { EditIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
 import React from "react";
 import Result from "../store/types/Result";
-import { DeleteFinisher, DeleteOOD, DeletePursuitFinish } from "./DeleteItems";
 
 
 
@@ -95,20 +94,18 @@ export function PursuitFinishListItem({ result, index }) {
     const sailNumber = result.getSailNumber();
 
     return (
-        <DeletePursuitFinish registeredToDelete={result} >
-            <ListItemWrapper>
-                <Grid
-                    templateColumns='repeat(16, 1fr)'
-                    gap={3}
-                    width={"100%"}>
-                    <ResultDimension colSpan={1}>{index + 1}</ResultDimension>
-                    <ResultDimension colSpan={6}>{helmName}</ResultDimension>
-                    <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
-                    <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
-                </Grid>
-                <HamburgerIcon boxSize={"5"} />
-            </ListItemWrapper>
-        </DeletePursuitFinish>
+        <ListItemWrapper>
+            <Grid
+                templateColumns='repeat(16, 1fr)'
+                gap={3}
+                width={"100%"}>
+                <ResultDimension colSpan={1}>{index + 1}</ResultDimension>
+                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
+                <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
+            </Grid>
+            <HamburgerIcon boxSize={"5"} />
+        </ListItemWrapper>
     )
 }
 
@@ -116,14 +113,12 @@ export function OODListItem({ ood }) {
     const helmName = Result.getHelmId(ood);
 
     return (
-        <DeleteOOD ood={ood} >
-            <ListItemWrapper>
-                <Grid templateColumns='repeat(1, 1fr)'>
-                    <ResultDimension colSpan={1}>{helmName}</ResultDimension>
-                </Grid>
-                <HamburgerIcon boxSize={"5"} />
-            </ListItemWrapper>
-        </DeleteOOD>
+        <ListItemWrapper>
+            <Grid templateColumns='repeat(1, 1fr)'>
+                <ResultDimension colSpan={1}>{helmName}</ResultDimension>
+            </Grid>
+            <HamburgerIcon boxSize={"5"} />
+        </ListItemWrapper>
     )
 }
 
@@ -136,18 +131,16 @@ export function FinisherListItem({ result }) {
     const validFinish = result.isValidFinish();
 
     return <>
-        <DeleteFinisher finisher={result} >
-            <ListItemWrapper>
-                <Grid
-                    templateColumns='repeat(17, 1fr)'
-                    gap={3}
-                    width={"100%"}>
-                    <ResultDimension colSpan={6}>{helmName}</ResultDimension>
-                    <ResultDimension colSpan={5}>{`${sailNumber}, ${boatClass}`}</ResultDimension>
-                    {validFinish && <ResultDimension colSpan={6}>{`${laps} lap${laps > 1 ? "s" : ""} in ${finishTime}`}</ResultDimension>}
-                    {!validFinish && <ResultDimension colSpan={6}>{"DNF"}</ResultDimension>}
-                </Grid>
-            </ListItemWrapper>
-        </DeleteFinisher>
+        <ListItemWrapper>
+            <Grid
+                templateColumns='repeat(17, 1fr)'
+                gap={3}
+                width={"100%"}>
+                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={5}>{`${sailNumber}, ${boatClass}`}</ResultDimension>
+                {validFinish && <ResultDimension colSpan={6}>{`${laps} lap${laps > 1 ? "s" : ""} in ${finishTime}`}</ResultDimension>}
+                {!validFinish && <ResultDimension colSpan={6}>{"DNF"}</ResultDimension>}
+            </Grid>
+        </ListItemWrapper>
     </>
 }

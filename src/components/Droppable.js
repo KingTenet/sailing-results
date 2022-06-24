@@ -56,6 +56,7 @@ const DroppableWrapper = ({ droppableId, children, isDropDisabled }) => {
         >
             {(droppableProvided, snapshot) =>
                 <Box
+                    width="100%"
                     ref={droppableProvided.innerRef}
                     {...droppableProvided.droppableProps}
                 >

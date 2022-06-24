@@ -1,17 +1,16 @@
-import { Alert, AlertIcon, AlertTitle, Box, Collapse, Flex, Heading, Spacer, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, Spacer } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 
 import { useAppState, useServices } from "../useAppState";
 import { getURLDate, parseURLDate, useBack } from "../common";
-import { useSortedResults } from "../common/hooks.js";
 import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
 import RaceResultsView from "./RaceResultsView";
 
-import { BackButton, GreenButton, RedButton, BlueButton } from "./Buttons";
+import { BackButton, GreenButton, BlueButton, YellowButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
 import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem, DNFListItem } from "./ListItems";
 import { RegisteredCard, DeleteCard, DNFCard, FinishersCard, PlaceholderCard } from "./Cards";
@@ -315,10 +314,10 @@ export default function Race({ backButtonText }) {
     function Wrapped({ children }) {
         return (
             <Box minHeight="100vh" margin="0">
-                <Flex direction="column" minHeight="80vh" alignItems>
-                    <Flex direction="row" marginTop="20px" marginBottom="20px">
+                <Flex direction="column" minHeight="80vh" alignItems={"center"}>
+                    <Flex direction="row" marginTop="20px" marginBottom="20px" width="100%">
                         <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
-                        <Spacer width="50px" />
+                        <Spacer />
                         <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
                     </Flex>
                     {children}
@@ -352,22 +351,20 @@ export default function Race({ backButtonText }) {
     }
     else {
         return <Wrapped>
-            {Boolean(viewableRaceResults.length) &&
-                <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
-                    <BlueButton
-                        onClick={(event) => event.preventDefault()}
-                        isLoading={committingResults}
-                        loadingText='Committing Results'
-                        style={{ width: "100%" }}
-                    >Commit results</BlueButton>
-                </CommitResultsDialog>
-            }
             <RaceResultsView results={viewableRaceResults} oods={oods} race={race} isDisabled={committingResults} raceIsMutable={raceIsMutable} />
             <Spacer />
             {raceIsMutable &&
-                <RedButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</RedButton>
+                <BlueButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</BlueButton>
             }
-
+            {Boolean(viewableRaceResults.length) &&
+                <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
+                    <YellowButton
+                        onClick={(event) => event.preventDefault()}
+                        isLoading={committingResults}
+                        loadingText='Committing Results'
+                    >Commit results</YellowButton>
+                </CommitResultsDialog>
+            }
         </Wrapped>
     }
 }
