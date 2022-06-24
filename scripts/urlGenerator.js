@@ -15,6 +15,7 @@ async function run(
     date,
     isLiveStr = "false",
     isSuperUserStr = "false",
+    isPersistentStr = "false",
     resultsURLOverride,
 ) {
     if (!date) {
@@ -25,6 +26,8 @@ async function run(
     const isSuperUser = parseBoolean(isSuperUserStr);
     const isReadOnly = false;
     const isLive = parseBoolean(isLiveStr);
+    const isPersistent = parseBoolean(isPersistentStr);
+    const daysUntilExpiry = !isPersistent ? 7 : 365 * 100;
     const auth = isReadOnly ? readOnly : readWrite;
 
     const params = {
@@ -35,7 +38,7 @@ async function run(
         resultsSheetId: resultsURLOverride ? getSheetIdFromURL(resultsURLOverride)
             : isLive ? liveSourceResultsSheetId
                 : devSourceResultsSheetId,
-        expiry: Date.now() + 86400000 * 7, // 7 days until expiry
+        expiry: Date.now() + 86400000 * daysUntilExpiry,
     };
 
     const token = tokenGenerator(params);
@@ -43,6 +46,7 @@ async function run(
     console.log("Creating token:");
     console.log("");
     console.log(`Read only token: ${isReadOnly}`);
+    console.log(`Expiry: ${new Date(params.expiry)}`);
     console.log(`Live backend: ${params.resultsSheetId === liveSourceResultsSheetId}`);
     console.log(`Race date: ${params.raceDate}`);
     console.log(`Client email: ${params.clientEmail}`);
