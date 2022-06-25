@@ -354,16 +354,18 @@ export default function Race({ backButtonText }) {
             <RaceResultsView results={viewableRaceResults} oods={oods} race={race} isDisabled={committingResults} raceIsMutable={raceIsMutable} />
             <Spacer />
             {raceIsMutable &&
-                <BlueButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</BlueButton>
-            }
-            {Boolean(viewableRaceResults.length) &&
-                <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
-                    <YellowButton
-                        onClick={(event) => event.preventDefault()}
-                        isLoading={committingResults}
-                        loadingText='Committing Results'
-                    >Commit results</YellowButton>
-                </CommitResultsDialog>
+                <>
+                    <BlueButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</BlueButton>
+                    {Boolean(viewableRaceResults.length) &&
+                        <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
+                            <YellowButton
+                                onClick={(event) => event.preventDefault()}
+                                isLoading={committingResults}
+                                loadingText='Committing Results'
+                            >Commit results</YellowButton>
+                        </CommitResultsDialog>
+                    }
+                </>
             }
         </Wrapped>
     }

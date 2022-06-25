@@ -173,7 +173,6 @@ function StatusWrapper() {
 export default function Races({ editableOnly = false }) {
     const services = useServices();
     const [appState] = useAppState();
-    const activeRaces = groupBy([...appState.results, ...appState.oods, ...appState.registered], [HelmResult.getRaceId]).map(([id]) => Race.fromId(id));
 
     const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(services.isLive));
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
@@ -203,6 +202,11 @@ export default function Races({ editableOnly = false }) {
         .filter((race) => race.getDate().getTime() === firstRaceToday.getDate().getTime());
 
     const immutableNotEdited = immutableRaces.filter((race) => !editedRaces.includes(race));
+
+    const activeRaces = groupBy([...appState.results, ...appState.oods, ...appState.registered], [HelmResult.getRaceId])
+        .map(([id]) => Race.fromId(id))
+        .filter((race) => services.isRaceMutable(race.getDate(), race.getNumber()));
+
     return (
         <>
             <Flex direction="column" padding="5px">
