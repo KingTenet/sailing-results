@@ -254,11 +254,9 @@ function StoresSync({ verbose }) {
             const storesToSync = Object.entries(storesStatus)
                 .filter(([, synced]) => !synced);
 
-            console.log(`Attempting to sync stores: ${storesToSync.map(([store]) => store)}`);
-            const promiseSyncStores = storesToSync
-                .map(([store]) => services.syncroniseStore(store));
+            console.log(`Attempting to sync all stores`);
 
-            Promise.all(promiseSyncStores)
+            services.syncroniseStores()
                 .then(() => {
                     console.log("All stores have synced successfully");
                     updateSyncing(false);

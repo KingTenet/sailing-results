@@ -69,6 +69,8 @@ export class Stores {
         const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces]);
         this.clubMembers = clubMembers;
         this.helms = helms;
+        this.ryaClassesStore = ryaClasses;
+        this.clubClassesStore = clubClasses;
         this.ryaClasses = mapGroupBy(ryaClasses.all(), [BoatClass.getClassName]);
         this.clubClasses = mapGroupBy(clubClasses.all(), [BoatClass.getClassName]);
         this.seriesRaces = seriesRaces;
@@ -92,24 +94,39 @@ export class Stores {
         //     .filter((helm) => !clubMembersByName.has(Helm.getId(helm)))
         //     .forEach((helm) => console.log(`Helm not current member ${Helm.getId(helm)}`));
 
-
         this.processResults();
     }
 
-    getStatus() {
+    getStores() {
         return Object.entries(this)
-            .filter(([, store]) => store instanceof StoreWrapper)
-            .reduce((acc, [, { store }]) => ({ ...acc, [store.storeName]: store.storesInSync() }), {});
+            .filter(([, storeWrapper]) => storeWrapper instanceof StoreWrapper)
+            .map(([, storeWrapper]) => storeWrapper.store);
+    }
+
+    getStoresNames() {
+        return this.getStores()
+            .map((store) => store.storeName);
+    }
+
+    getStatus() {
+        return this.getStores()
+            .reduce((acc, store) => ({ ...acc, [store.storeName]: store.storesInSync() }), {});
     }
 
     async syncroniseStore(storeName) {
-        const [, store] = Object.entries(this)
-            .filter(([, store]) => store instanceof StoreWrapper)
-            .find(([, { store }]) => store.storeName === storeName);
+        const store = this.getStores()
+            .find((store) => store.storeName === storeName);
 
-        await store.sync();
+        await store.syncRemoteStateToLocalState();
     }
 
+    async syncroniseStores(storeNames = this.getStoresNames()) {
+        console.log(`Syncronising stores ${storeNames.join()}`);
+        await this.writeStoreLastUpdated();
+        for (let storeName of storeNames) {
+            await this.syncroniseStore(storeName);
+        }
+    }
 
     getBoatClassForRace(boatClassName, race) {
         const clubClasses = this.clubClasses.get(boatClassName) || [];
@@ -498,6 +515,7 @@ export class StoreFunctions {
         this.getStoresStatus = this.getStoresStatus;
         this.updateStoresStatus = this.updateStoresStatus;
         this.syncroniseStore = this.syncroniseStore;
+        this.syncroniseStores = this.syncroniseStores;
         this.reprocessStoredResults = this.reprocessStoredResults;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
@@ -531,6 +549,10 @@ export class StoreFunctions {
 
     syncroniseStore(storeName) {
         return this.stores.syncroniseStore(storeName);
+    }
+
+    syncroniseStores(storeNames) {
+        return this.stores.syncroniseStores(storeNames);
     }
 
     getStoresStatus() {
@@ -578,8 +600,6 @@ export class StoreFunctions {
         for (let ood of raceOODs) {
             this.stores.oods.add(ood);
         }
-        // await resultsStore.sync();
-        // await this.stores.oods.sync();
     }
 
     getSeriesPoints() {

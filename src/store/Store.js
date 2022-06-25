@@ -94,6 +94,7 @@ export default class Store {
     }
 
     async syncRemoteStateToLocalState(force = false) {
+        console.log(`Syncing store ${this.storeName}`);
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
         let created = allLocal
@@ -103,29 +104,25 @@ export default class Store {
             .filter((obj) => obj.updatedAfterDate(syncDate))
             .filter((obj) => !created.includes(obj));
 
-
         if (!updated.length && !created.length) {
-            console.log("No items require updates");
-            return;
+            console.log(`No items require updates ${this.storeName}`);
         }
+        else {
+            const objUpdatedAfterSync = (await this.pullRemoteState()).find((obj) => obj.updatedAfterDate(syncDate))
+            if (objUpdatedAfterSync) {
+                throw new Error(`Cannot sync store ${this.storeName} because remote state was updated at ${objUpdatedAfterSync.lastUpdated.toISOString()} and was last pulled at ${syncDate.toISOString()}`);
+            }
 
-        const objUpdatedAfterSync = (await this.pullRemoteState()).find((obj) => obj.updatedAfterDate(syncDate))
-        if (objUpdatedAfterSync) {
-            throw new Error(`Cannot sync because remote state was updated at ${objUpdatedAfterSync.lastUpdated.toISOString()} and was last pulled at ${syncDate.toISOString()}`);
-        }
-
-        if (updated.length && force) {
-            // TODO: Implement handling of updating remote state
-            // await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
-        }
-        if (created.length) {
-            await this.remoteStore.append(created.map((obj) => this.toStore(obj)));
-        }
-        if (this.services) {
-            await this.services.writeStoreLastUpdated();
+            if (updated.length && force) {
+                // TODO: Implement handling of updating remote state
+                // await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
+            }
+            if (created.length) {
+                await this.remoteStore.append(created.map((obj) => this.toStore(obj)));
+            }
+            console.log(`Successfully updated remote state for store: ${this.storeName}`);
         }
         this.setLastSyncDate();
-        console.log("Successfully updated remote state");
     }
 
     pullLocalState() {
