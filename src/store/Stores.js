@@ -18,7 +18,8 @@ import ClubMember from "./types/ClubMember.js";
 import RemoteStore from "./RemoteStore.js";
 
 export class Stores {
-    constructor(auth, raceResultsSheetId) {
+    constructor(auth, raceResultsSheetId, readOnly) {
+        this.readOnly = readOnly;
         this.raceResultsDocument = RemoteStore.retryCreateSheetsDoc(raceResultsSheetId, auth);
         this.auth = auth;
         this.promiseMetaStore = RemoteStore.retryCreateRemoteStore(this.raceResultsDocument, "Meta Data", true, ["Last Updated"])
@@ -239,9 +240,9 @@ export class Stores {
         return allProcesssed;
     }
 
-    static async create(auth, raceResultsSheetId, forceCacheRefresh) {
+    static async create(auth, raceResultsSheetId, forceCacheRefresh, readOnly) {
         await bootstrapLocalStorage();
-        const stores = new Stores(auth, raceResultsSheetId);
+        const stores = new Stores(auth, raceResultsSheetId, readOnly);
         const started = Date.now();
         console.log(`Started loading`);
         await stores.init(forceCacheRefresh);
@@ -524,17 +525,19 @@ export class StoreFunctions {
         this.indexes = new Indexes(this.stores);
     }
 
-    static async create(forceRefresh, auth, raceResultsSheetId, editableRaceDateStr, superUser, isLive) {
+    static async create(forceRefresh, auth, raceResultsSheetId, editableRaceDateStr, superUser, isLive, hasToken) {
+        const readOnly = Boolean(!hasToken);
         const stores = await Stores.create(
             auth,
             raceResultsSheetId,
-            forceRefresh
+            forceRefresh,
+            readOnly
         );
         return new StoreFunctions(
             stores,
             superUser,
             editableRaceDateStr && parseURLDate(editableRaceDateStr),
-            !superUser && !editableRaceDateStr,
+            readOnly,
             isLive,
         );
     }

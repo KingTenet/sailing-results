@@ -34,6 +34,7 @@ export default class Store {
 
     async init(forceRefresh) {
         const localStoreObjects = this.pullLocalState();
+        let shouldForceRefresh = false;
 
         if (!isOnline()) {
             return;
@@ -46,15 +47,21 @@ export default class Store {
         let localStateEmpty = !localStoreObjects.length;
 
         if (forceRefresh) {
-            console.log("Forcing refresh of " + this.storeName);
+            if (this.services.readOnly || this.storesInSync()) {
+                console.log("Forcing refresh of " + this.storeName);
+                shouldForceRefresh = true;
+            }
+            else {
+                // not read only and local state has changes
+                console.log("Ignoring forced refresh, local state has changes: " + this.storeName);
+            }
         }
 
         if (localStateEmpty) {
             console.log("Local state is empty of " + this.storeName);
         }
 
-        if (localStateEmpty || forceRefresh) {
-
+        if (localStateEmpty || shouldForceRefresh) {
             this.clear();
             let remoteStoreObjects = await this.pullRemoteState();
             this.syncLocalStateToRemoteState(remoteStoreObjects);
@@ -80,6 +87,7 @@ export default class Store {
         return this.lastSyncDate;
     }
 
+    // Should perhaps be called localStoreIsUnchanged
     storesInSync() {
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();

@@ -32,7 +32,7 @@ async function initialiseServicesFromToken(token, refreshCache) {
         resultsSheetId,
     } = parsedToken;
 
-    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId);
+    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId, true);
 }
 
 async function initialiseReadOnlyServices(refreshCache) {
