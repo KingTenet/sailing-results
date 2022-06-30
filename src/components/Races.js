@@ -194,6 +194,15 @@ export default function Races({ editableOnly = false }) {
         .sort((raceA, raceB) => raceA.sortByRaceAsc(raceB))
         .at(0);
 
+    const previousRaces = mutableRaces
+        .filter((race) => services.isRaceEditableByUser(race))
+        .filter((race) => !race.isBefore(filterRace))
+        .filter((race) => race.isBefore(firstRaceToday))
+        .sort((raceA, raceB) => raceA.sortByRaceAsc(raceB));
+
+    // Get the latest historical mutable race day
+    const lastRaces = previousRaces.filter((race) => previousRaces.at(-1).getDate().getTime() === race.getDate().getTime());
+
     const editedRaces = immutableRaces
         .filter((race) => services.isRaceEditableByUser(race));
 
@@ -210,11 +219,18 @@ export default function Races({ editableOnly = false }) {
     return (
         <>
             <Flex direction="column" padding="5px">
-
                 <Flex direction="row" marginTop="20px">
                     <Heading size={"lg"} marginLeft="10px">{`Races`}</Heading>
                 </Flex>
                 <Box marginTop="20px" />
+                {Boolean(lastRaces.length) &&
+                    < RacesCard >
+                        <DroppableHeader heading="Last race day" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                            <RacesView races={lastRaces} />
+                        </Box>
+                    </RacesCard>
+                }
                 {Boolean(activeRaces.length) &&
                     <RacesCard>
                         <DroppableHeader heading="Active races" />

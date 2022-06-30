@@ -170,11 +170,12 @@ export class Stores {
     }
 
     processResults(tranformResults) {
-        const [seriesPoints, raceFinishes, allCorrectedResults, allSeriesRacesByRace] = Stores.processResultsStatic(this.oods.all(), this.pursuitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
+        const [seriesPoints, raceFinishes, allCorrectedResults, allSeriesRacesByRace, helmResultsByRaceAsc] = Stores.processResultsStatic(this.oods.all(), this.pursuitResults.all(), this.results.all(), this.seriesRaces.all(), tranformResults);
         this.raceFinishes = raceFinishes;
         this.allCorrectedResults = allCorrectedResults;
         this.seriesPoints = seriesPoints;
         this.allSeriesRacesByRace = allSeriesRacesByRace;
+        this.helmResultsByRaceAsc = helmResultsByRaceAsc;
     }
 
     static processResultsStatic(allOODs, allPursuitResults, allFleetResults, allSeriesRaces, transformResults = (results) => results, previousRaceFinishes = [], previousCorrectedResults = []) {
@@ -234,7 +235,7 @@ export class Stores {
                     .filter(Boolean)
             )]);
 
-        const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults, allSeriesRacesByRace];
+        const allProcesssed = [seriesPoints, [...raceFinishes.values()], allCorrectedResults, allSeriesRacesByRace, helmResultsByRaceAsc];
         console.log(`Finished processing results in ${Math.round(Date.now() - started)} ms`);
 
         return allProcesssed;
@@ -518,6 +519,7 @@ export class StoreFunctions {
         this.syncroniseStore = this.syncroniseStore;
         this.syncroniseStores = this.syncroniseStores;
         this.reprocessStoredResults = this.reprocessStoredResults;
+        this.getLatestHelmPersonalHandicap = this.getLatestHelmPersonalHandicap;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
         this.readOnly = readOnly;
@@ -762,6 +764,14 @@ export class StoreFunctions {
         const ood = this.stores.deserialiseResult(storeOOD, newHelms, HelmResult);
         this.assertOODNotStored(ood);
         return ood;
+    }
+
+    getLatestHelmPersonalHandicap(helmId) {
+        if (this.stores.helmResultsByRaceAsc.has(helmId)) {
+            const latestFleetResult = this.stores.helmResultsByRaceAsc.get(helmId).at(-1);
+            const [ph, pi] = (latestFleetResult && latestFleetResult.getRollingHandicapsAtRace()) || [];
+            return pi;
+        }
     }
 
     getRaceFinishForResults(race, mutableResults = [], mutableOODs = [], mutableSeriesRaces = []) {

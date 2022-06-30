@@ -59,7 +59,12 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                     registered: [
                         ...registered,
                         newRegisteration,
-                    ],
+                    ].sort((helmA, helmB) => {
+                        const helmAPI = services.getLatestHelmPersonalHandicap(HelmResult.getHelmId(helmA));
+                        const helmBPI = services.getLatestHelmPersonalHandicap(HelmResult.getHelmId(helmB));
+                        return helmBPI > helmAPI
+                            || helmBPI === undefined ? -1 : 1;
+                    }),
                 };
             }
         });
