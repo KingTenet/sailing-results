@@ -1,4 +1,4 @@
-import { devAuth } from "./auth.js";
+import { devReadWrite } from "./auth.js";
 import { getSheetIdFromURL, getAllCellsFromSheet, getGoogleSheetDoc } from "../src/common.js"
 // import { SheetsAPI } from "../src/SheetsAPI.js";
 import ClubMember from "../src/store/types/ClubMember.js";
@@ -8,8 +8,7 @@ import bootstrapLocalStorage from "../src/bootstrapLocalStorage.js";
 
 const COLUMN_INDEXES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
-const auth = devAuth;
-
+const auth = devReadWrite;
 
 // Dev URLs
 // const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
@@ -108,9 +107,7 @@ async function replaceActiveMembersSheet(members, outputDoc) {
     await outputMembersStore.sync();
 }
 
-const parseStr = (str) => str && str.toLowerCase() !== "false" ? str : undefined;
-
-async function importActiveMembers(activeMembershipListURL, outputSheetURL, firstRowStr = "4", firstColumnStr = "D", forceRefresh = false) {
+async function importActiveMembers(activeMembershipListURL, outputSheetURL, firstRowStr = "2", firstColumnStr = "D") {
     await bootstrapLocalStorage();
 
     if (!activeMembershipListURL || !outputSheetURL) {
