@@ -350,7 +350,12 @@ class Indexes {
         }
 
         return new SearchIndex(
-            this.stores.clubMembers.all()
+            [
+                ...this.stores.clubMembers.all(),
+                ...this.stores.helms.all()
+                    .filter((helm) => helm.isGuestHelm())
+                    .map((guestHelm) => ClubMember.fromName(guestHelm.getName())),
+            ]
                 .map((clubMember) => {
                     const helmId = ClubMember.getId(clubMember);
                     if (helmIdsToExclude.includes(helmId)) {

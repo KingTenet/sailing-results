@@ -93,7 +93,15 @@ export default class MutableRaceFinish extends Race {
         // const getHelmResults = (helmId) => helmResultsByRaceAsc.get(helmId) || [];
 
         this.correctedResults = this.results
-            .map((result) => CorrectedResult.fromResult(result, this.getHelmResults(Result.getHelmId(result)), this));
+            .map((result) =>
+                CorrectedResult.fromResult(
+                    result,
+                    result.getHelm().isGuestHelm()
+                        ? []
+                        : this.getHelmResults(Result.getHelmId(result)),
+                    this
+                )
+            );
     }
 
     getSCT() {

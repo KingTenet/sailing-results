@@ -36,6 +36,10 @@ export default class ClubMember extends StoreObject {
         return new ClubMember(fullName, firstNames, lastName, parseInt(yearOfBirth || 1970), StoreObject.fromStore(storeHelm));
     }
 
+    static fromName(helmName) {
+        return new ClubMember(helmName, "", "", 1970, StoreObject.fromStore({}));
+    }
+
     getName() {
         return this.fullName;
     }

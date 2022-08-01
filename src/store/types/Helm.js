@@ -48,6 +48,10 @@ class Helm extends StoreObject {
         return new Helm(clubMember.getName(), clubMember.getYearOfBirth(), gender, noviceInFirstRace, StoreObject.fromStore({}));
     }
 
+    isGuestHelm() {
+        return this.name.toLowerCase().includes("guest helm");
+    }
+
     wasCadetInRace(race) {
         assertType(race, Race);
         return false;
