@@ -35,24 +35,27 @@ function ResultDimension({ children, ...props }) {
     );
 }
 
-function ListItemWrapper({ children, ...props }) {
+function ListItemWrapper({ children, dragHandleProps, ...props }) {
     return <>
         <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" {...props}>
             <Flex direction={"row"} justifyContent="space-between">
                 {children}
+                <div {...dragHandleProps}>
+                    <HamburgerIcon boxSize={"5"} />
+                </div>
             </Flex>
         </Box>
         <Box height={"3px"}></Box>
     </>
 }
 
-export function RegisteredListItem({ registered, onClick }) {
+export function RegisteredListItem({ registered, onClick, ...props }) {
     const helmName = Result.getHelmId(registered);
     const boatClass = formatBoatClass(registered.getBoatClass().getClassName());
     const sailNumber = registered.getSailNumber();
 
     return (
-        <ListItemWrapper onClick={onClick}>
+        <ListItemWrapper onClick={onClick} {...props}>
             <Grid
                 templateColumns='repeat(16, 1fr)'
                 gap={5}
@@ -62,18 +65,17 @@ export function RegisteredListItem({ registered, onClick }) {
                 <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                 <ResultDimension colSpan={4}>{sailNumber}</ResultDimension>
             </Grid>
-            <EditIcon boxSize={"5"} />
         </ListItemWrapper>
     );
 }
 
-export function DNFListItem({ result, onClick }) {
+export function DNFListItem({ result, onClick, ...props }) {
     const helmName = Result.getHelmId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
     const sailNumber = result.getSailNumber();
 
     return (
-        <ListItemWrapper onClick={onClick}>
+        <ListItemWrapper onClick={onClick} {...props}>
             <Grid
                 templateColumns='repeat(16, 1fr)'
                 gap={5}
@@ -83,18 +85,17 @@ export function DNFListItem({ result, onClick }) {
                 <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                 <ResultDimension colSpan={4}>{sailNumber}</ResultDimension>
             </Grid>
-            <HamburgerIcon boxSize={"5"} />
         </ListItemWrapper>
     );
 }
 
-export function PursuitFinishListItem({ result, index }) {
+export function PursuitFinishListItem({ result, index, ...props }) {
     const helmName = Result.getHelmId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
     const sailNumber = result.getSailNumber();
 
     return (
-        <ListItemWrapper>
+        <ListItemWrapper {...props}>
             <Grid
                 templateColumns='repeat(16, 1fr)'
                 gap={3}
@@ -104,25 +105,23 @@ export function PursuitFinishListItem({ result, index }) {
                 <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                 <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
             </Grid>
-            <HamburgerIcon boxSize={"5"} />
         </ListItemWrapper>
     )
 }
 
-export function OODListItem({ ood }) {
+export function OODListItem({ ood, ...props }) {
     const helmName = Result.getHelmId(ood);
 
     return (
-        <ListItemWrapper>
+        <ListItemWrapper {...props}>
             <Grid templateColumns='repeat(1, 1fr)'>
                 <ResultDimension colSpan={1}>{helmName}</ResultDimension>
             </Grid>
-            <HamburgerIcon boxSize={"5"} />
         </ListItemWrapper>
     )
 }
 
-export function FinisherListItem({ result }) {
+export function FinisherListItem({ result, ...props }) {
     const helmName = Result.getHelmId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
     const sailNumber = result.getSailNumber();
@@ -131,7 +130,7 @@ export function FinisherListItem({ result }) {
     const validFinish = result.isValidFinish();
 
     return <>
-        <ListItemWrapper>
+        <ListItemWrapper {...props}>
             <Grid
                 templateColumns='repeat(17, 1fr)'
                 gap={3}

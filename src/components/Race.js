@@ -216,16 +216,17 @@ function DraggableFinishView({
 function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateRaceResults }) {
     const navigateTo = useNavigate();
 
-    const WrappedRegisteredListItem = ({ item }) =>
+    const WrappedRegisteredListItem = ({ item, ...props }) =>
         <RegisteredListItem
             registered={item}
             onClick={() => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)}
+            {...props}
         />
 
-    const WrappedFinisherListItem = ({ item }) => <FinisherListItem result={item} />
-    const WrappedDNFListItem = ({ item }) => <DNFListItem result={item} />
-    const WrappedOODListItem = ({ item }) => <OODListItem ood={item} />
-    const WrappedPursuitFinishListItem = ({ item, index }) => <PursuitFinishListItem result={item} index={index} />
+    const WrappedFinisherListItem = ({ item, ...props }) => <FinisherListItem result={item} {...props} />
+    const WrappedDNFListItem = ({ item, ...props }) => <DNFListItem result={item} {...props} />
+    const WrappedOODListItem = ({ item, ...props }) => <OODListItem ood={item} {...props} />
+    const WrappedPursuitFinishListItem = ({ item, index, ...props }) => <PursuitFinishListItem result={item} index={index} {...props} />
 
     return (
         <DraggableFinishView

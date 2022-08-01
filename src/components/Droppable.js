@@ -34,9 +34,8 @@ export function DroppableList({ DraggableListItem, listItems = [], droppableId, 
                                     key={getId(item)}
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
-                                    {...draggableProvided.dragHandleProps}
                                 >
-                                    <DraggableListItem item={item} index={index} />
+                                    <DraggableListItem item={item} index={index} dragHandleProps={draggableProvided.dragHandleProps} />
                                 </Box>
                             }
                         </Draggable>
