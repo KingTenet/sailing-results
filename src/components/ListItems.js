@@ -1,4 +1,4 @@
-import { EditIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
 import React from "react";
 import Result from "../store/types/Result";
@@ -35,13 +35,39 @@ function ResultDimension({ children, ...props }) {
     );
 }
 
-function ListItemWrapper({ children, dragHandleProps, ...props }) {
+function ListItemWrapper({ children, shortClickExceeded, dragHandleProps, ...props }) {
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" {...props}>
+        <Box
+            className="list-item"
+            as="button"
+            textAlign="left"
+            padding={"10px"}
+            borderRadius={"12px"}
+            borderWidth={"1px"}
+            borderColor={"grey"}
+            width="100%"
+            background={"linear-gradient(to left, white 25%, rgba(255, 200, 200, 0.1) 30%, rgba(255, 42, 42, 0.5) 55%) right"}
+            transition="background 2.0s ease-out"
+            backgroundSize="400%"
+            _active={{
+                backgroundPosition: "left",
+                backgroundColor: "rgba(42, 42, 42, 0)",
+                borderWidth: "2px",
+                padding: "9px"
+            }}
+        >
             <Flex direction={"row"} justifyContent="space-between">
-                {children}
+                <div
+                    {...props}>
+                    {children}
+                </div>
                 <div {...dragHandleProps}>
-                    <HamburgerIcon boxSize={"5"} />
+                    {shortClickExceeded &&
+                        <DeleteIcon boxSize={"5"} />
+                    }
+                    {!shortClickExceeded &&
+                        <HamburgerIcon boxSize={"5"} />
+                    }
                 </div>
             </Flex>
         </Box>
@@ -143,3 +169,4 @@ export function FinisherListItem({ result, ...props }) {
         </ListItemWrapper>
     </>
 }
+

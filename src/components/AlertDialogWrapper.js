@@ -7,9 +7,14 @@ import {
 } from "@chakra-ui/react";
 
 export default function AlertDialogWrapper
-    ({ children, deleteHeading, onConfirm, confirmButtonText = "Delete" }) {
+    ({ children, deleteHeading, onConfirm, confirmButtonText = "Delete", providedDisclosure }) {
     const cancelRef = React.useRef();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    const disclosure = useDisclosure();
+    const { isOpen, onOpen, onClose } = {
+        ...disclosure,
+        ...(providedDisclosure || {}),
+    };
 
     const onDelete = () => {
         onClose();
@@ -18,7 +23,7 @@ export default function AlertDialogWrapper
 
     return (
         <>
-            <Box onClick={onOpen}>
+            <Box onClick={() => providedDisclosure || onOpen()}>
                 {children}
             </Box>
             <>

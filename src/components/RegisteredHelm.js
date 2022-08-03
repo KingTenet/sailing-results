@@ -62,7 +62,7 @@ function RegisteredHelm({ children }) {
                                     </Box>
                                     <Box>
                                         <InputGroup>
-                                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? HelmResult.getHelmId(registeredResult) : ""} />
+                                            <Input readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? HelmResult.getHelmId(registeredResult) : ""} />
                                             <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                                         </InputGroup>
                                     </Box>
@@ -75,7 +75,7 @@ function RegisteredHelm({ children }) {
                                     </Box>
                                     <Box>
                                         <InputGroup>
-                                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getBoatClass().getClassName() : ""} />
+                                            <Input readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getBoatClass().getClassName() : ""} />
                                             <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                                         </InputGroup>
                                     </Box>
@@ -88,7 +88,7 @@ function RegisteredHelm({ children }) {
                                     </Box>
                                     <Box>
                                         <InputGroup>
-                                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getSailNumber() : ""} />
+                                            <Input readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getSailNumber() : ""} />
                                             <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                                         </InputGroup>
                                     </Box>

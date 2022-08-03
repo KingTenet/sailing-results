@@ -1,7 +1,7 @@
 import { Box, Flex, Heading, Spacer } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 import { useAppState, useServices } from "../useAppState";
 import { getURLDate, parseURLDate, useBack } from "../common";
@@ -19,6 +19,8 @@ import MutableRaceResult from "../store/types/MutableRaceResult";
 import CommitResultsDialog from "./CommitResultsDialog";
 import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
+import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, wrapDeleteOnLongPress } from "./DeleteItems";
+
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
 }
@@ -29,7 +31,7 @@ function WrappedDroppableList({ item, isOpen, ...props }) {
 
 function DraggableFinishView({
     PursuitFinishListItem,
-    RegisteredListItem,
+    RegisteredListItem: RegisteredListItemToUse,
     registered,
     FinishedListItem,
     DNFListItem,
@@ -142,7 +144,7 @@ function DraggableFinishView({
                             <WrappedDroppableList
                                 droppableId={"registered"}
                                 listItems={registered}
-                                DraggableListItem={RegisteredListItem}
+                                DraggableListItem={RegisteredListItemToUse}
                                 DroppableContainer={RegisteredCard}
                                 DroppableHeader={RegisteredDroppableHeader}
                                 isDropDisabled={true}
@@ -213,16 +215,11 @@ function DraggableFinishView({
     );
 }
 
+
 function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateRaceResults }) {
     const navigateTo = useNavigate();
 
-    const WrappedRegisteredListItem = ({ item, ...props }) =>
-        <RegisteredListItem
-            registered={item}
-            onClick={() => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)}
-            {...props}
-        />
-
+    const WrappedRegisteredListItem = ({ item, ...props }) => <RegisteredListItem registered={item} {...props} />
     const WrappedFinisherListItem = ({ item, ...props }) => <FinisherListItem result={item} {...props} />
     const WrappedDNFListItem = ({ item, ...props }) => <DNFListItem result={item} {...props} />
     const WrappedOODListItem = ({ item, ...props }) => <OODListItem ood={item} {...props} />
@@ -230,14 +227,16 @@ function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateR
 
     return (
         <DraggableFinishView
-            PursuitFinishListItem={WrappedPursuitFinishListItem}
-            RegisteredListItem={WrappedRegisteredListItem}
+            PursuitFinishListItem={wrapDeleteOnLongPress(DeletePursuitFinish, WrappedPursuitFinishListItem)}
+            RegisteredListItem={wrapDeleteOnLongPress(DeletePursuitFinish, WrappedRegisteredListItem, (item) => ({
+                onClick: () => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)
+            }))}
             registered={registered}
-            FinishedListItem={WrappedFinisherListItem}
+            FinishedListItem={wrapDeleteOnLongPress(DeleteFinisher, WrappedFinisherListItem)}
             finished={finished}
-            DNFListItem={WrappedDNFListItem}
+            DNFListItem={wrapDeleteOnLongPress(DeleteFinisher, WrappedDNFListItem)}
             dnf={dnf}
-            OODListItem={WrappedOODListItem}
+            OODListItem={wrapDeleteOnLongPress(DeleteOOD, WrappedOODListItem)}
             oods={oods}
             isPursuitRace={isPursuitRace}
             onDragCompleted={updateRaceResults}

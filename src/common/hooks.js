@@ -1,5 +1,9 @@
 import { useServices } from "../useAppState";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLongPress, LongPressDetectEvents } from "use-long-press";
+
+const MIN_LONG_PRESS_DURATION_MS = 1200;
+const MAX_SHORT_PRESS_DURATION_MS = 400;
 
 export function useSortedResults(results, race) {
     const services = useServices();
@@ -44,4 +48,53 @@ export function useStoreStatus() {
     }, []);
 
     return storesStatus;
+}
+
+export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration = MAX_SHORT_PRESS_DURATION_MS, longPressDuration = MIN_LONG_PRESS_DURATION_MS) {
+    const [shortClickExceeded, updateShortClickExceeded] = useState(false);
+    const shortClickTimer = useRef();
+    const shortClickTimerStarted = useRef();
+    const clearShortClick = () => {
+        updateShortClickExceeded(false);
+        if (shortClickTimer?.current) {
+            clearTimeout(shortClickTimer.current);
+            shortClickTimer.current = undefined;
+            shortClickTimerStarted.current = undefined;
+        }
+    };
+    const shortClickTimeout = (fn, delay) => {
+        clearShortClick();
+        shortClickTimerStarted.current = Date.now();
+        shortClickTimer.current = setTimeout(fn, delay);
+    };
+
+    const finish = () => {
+        clearShortClick();
+    }
+
+    const bind = useLongPress(
+        () => {
+            updateShortClickExceeded(false);
+            onLongPress();
+        },
+        {
+            onStart: () => shortClickTimeout(() => updateShortClickExceeded(true), Math.round(maxShortPressDuration)),
+            onFinish: () => finish(),
+            onCancel: (event) => {
+                if (["mouseup", "touchend"].includes(event.type) && shortClickTimerStarted?.current && (Date.now() - shortClickTimerStarted.current < maxShortPressDuration)) {
+                    onClick(event);
+                    event.preventDefault();
+                }
+                finish();
+            },
+            threshold: longPressDuration,
+            captureEvent: true,
+            cancelOnMovement: true,
+            detect: LongPressDetectEvents.BOTH
+        });
+
+    return {
+        ...bind(),
+        shortClickExceeded,
+    };
 }
