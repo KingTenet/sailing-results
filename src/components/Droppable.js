@@ -29,13 +29,13 @@ export function DroppableList({ DraggableListItem, listItems = [], droppableId, 
                             draggableId={`${droppableId}${getId(item)}`}
                             index={index}
                         >
-                            {(draggableProvided) =>
+                            {(draggableProvided, draggableSnapshot) =>
                                 <Box
                                     key={getId(item)}
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
                                 >
-                                    <DraggableListItem item={item} index={index} dragHandleProps={draggableProvided.dragHandleProps} />
+                                    <DraggableListItem item={item} index={index} draggableSnapshot={draggableSnapshot} dragHandleProps={draggableProvided.dragHandleProps} />
                                 </Box>
                             }
                         </Draggable>

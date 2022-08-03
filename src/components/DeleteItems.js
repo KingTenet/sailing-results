@@ -93,3 +93,32 @@ export function wrapDeleteOnLongPress(DeleteItemComponent, ListItemComponent, ge
         {...innerProps}
     />
 }
+
+export function DeleteItemOnSwipe({ DeleteItemComponent, ListItemComponent, item, children, ...props }) {
+    const { onOpen, ...providedDisclosure } = useDisclosure();
+
+    return (
+        <DeleteItemComponent
+            providedDisclosure={providedDisclosure}
+            itemToDelete={item}
+        >
+            <ListItemComponent
+                item={item}
+                onDelete={onOpen}
+                {...props}
+            />
+        </DeleteItemComponent>
+    );
+}
+
+export function wrapDeleteOnSwipe(DeleteItemComponent, ListItemComponent, getProps = () => ({})) {
+    return ({ item, ...innerProps }) => <DeleteItemOnSwipe
+        DeleteItemComponent={DeleteItemComponent}
+        ListItemComponent={ListItemComponent}
+        item={item}
+        {...getProps(item)}
+        {...innerProps}
+    />
+}
+
+

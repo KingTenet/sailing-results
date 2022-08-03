@@ -25,3 +25,67 @@ body {
 .list-item:active .delete-icon {
     display: inline;
 }
+
+.list-item {
+    padding: 10px;
+    height: 100%;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: grey;
+    width: 100%;
+    background-color: white;
+}
+
+.list-item:active {
+    border-width: 2px;
+    padding: 9px;
+}
+
+.item {
+    border-radius: 12px;
+    width: 100%;
+    height: 45px;
+    margin-bottom: 3px;
+    position: relative;
+    pointer-events: auto;
+    /* transform-origin: 50% 50% 0px; */
+    box-sizing: border-box;
+    display: grid;
+    align-items: center;
+    text-align: center;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.fg {
+    cursor: -webkit-grab;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    align-items: center;
+    text-align: center;
+}
+
+.fg:active {
+    cursor: -webkit-grabbing;
+}
+
+/* .fg>* {
+    pointer-events: none;
+} */
+
+.av {
+    margin-left: 2px;
+    margin-right: 2px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.362);
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

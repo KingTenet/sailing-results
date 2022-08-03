@@ -1,7 +1,9 @@
 import { DeleteIcon, EditIcon, HamburgerIcon } from "@chakra-ui/icons";
-import { Box, Flex, Text, Grid, GridItem } from "@chakra-ui/react";
-import React from "react";
+import { Box, Flex, Text, Grid, GridItem, Spacer } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
 import Result from "../store/types/Result";
+import { useSpring, animated } from '@react-spring/web'
+import { useDrag } from '@use-gesture/react'
 
 
 
@@ -35,44 +37,95 @@ function ResultDimension({ children, ...props }) {
     );
 }
 
-function ListItemWrapper({ children, shortClickExceeded, dragHandleProps, ...props }) {
-    return <>
+function Slider({ disabled, onDelete, onDNF, children }) {
+    const [{ x }, api] = useSpring(() => ({
+        x: 0,
+    }));
+    const [latchedX, updateLatchedX] = useState();
+
+    useEffect(() => {
+        if (latchedX) {
+            if (latchedX < 0) {
+                onDNF();
+            }
+            else {
+                onDelete();
+            }
+            updateLatchedX();
+        }
+    }, [latchedX])
+
+    const MAX_X = 100;
+
+    const bind = useDrag(
+        ({ active, movement: [x, y], last }) => {
+            if (disabled) {
+                return api.start({
+                    x: 0,
+                    immediate: name => active && name === 'x',
+                });
+            }
+
+            const xToUse = Math.max(Math.min(x, onDelete ? MAX_X : 0), onDNF ? -MAX_X : 0);
+            if (last && y < 100 && !latchedX && (xToUse === MAX_X || xToUse === -MAX_X)) {
+                updateLatchedX(xToUse);
+            }
+
+            return api.start({
+                x: (active) ? xToUse : 0,
+                immediate: name => active && name === 'x',
+            });
+        },
+        // { axis: 'x' }
+    )
+
+    const avSize = x.to({
+        map: Math.abs,
+        range: [50, MAX_X],
+        output: [0.6, 0.8],
+        extrapolate: 'clamp',
+    });
+
+    return (
+        <div className="container">
+            <animated.div {...bind()} className={"item"} style={{ background: `linear-gradient(to right, rgba(219, 17, 17, 0.76) 0%, rgba(50, 50, 220, 0.8) 50%, rgba(253,249,24, 0.84) 100%) ` }}>
+                <div className={"item"} style={{ width: "100%", display: "flex", alignItems: "space-between" }}>
+                    <animated.div className={"av"} style={{ scale: avSize, justifySelf: "start", lineHeight: "35px" }} >
+                        <DeleteIcon style={{ fontSize: "18pt" }} />
+                    </animated.div >
+                    <Spacer />
+                    <animated.div className={"av"} style={{ fontSize: "12pt", fontWeight: "600", scale: avSize, lineHeight: "42px", justifySelf: "end" }} >
+                        DNF
+                    </animated.div >
+                </div>
+                <animated.div className={"fg"} style={{ x, touchAction: 'pan-y' }}>
+                    {children}
+                </animated.div>
+            </animated.div >
+        </div >
+    );
+}
+
+function ListItemWrapper({ children, shortClickExceeded, onDNF, onDelete, draggableSnapshot, onClick, dragHandleProps, ...props }) {
+    return <Slider
+        onDelete={onDelete}
+        onDNF={onDNF}
+        disabled={draggableSnapshot.isDragging}
+    >
         <Box
             className="list-item"
             as="button"
             textAlign="left"
-            padding={"10px"}
-            borderRadius={"12px"}
-            borderWidth={"1px"}
-            borderColor={"grey"}
-            width="100%"
-            background={"linear-gradient(to left, white 25%, rgba(255, 200, 200, 0.1) 30%, rgba(255, 42, 42, 0.5) 55%) right"}
-            transition="background 2.0s ease-out"
-            backgroundSize="400%"
-            _active={{
-                backgroundPosition: "left",
-                backgroundColor: "rgba(42, 42, 42, 0)",
-                borderWidth: "2px",
-                padding: "9px"
-            }}
+            onClick={onClick}
         >
             <Flex direction={"row"} justifyContent="space-between">
-                <div
-                    {...props}>
-                    {children}
-                </div>
-                <div {...dragHandleProps}>
-                    {shortClickExceeded &&
-                        <DeleteIcon boxSize={"5"} />
-                    }
-                    {!shortClickExceeded &&
-                        <HamburgerIcon boxSize={"5"} />
-                    }
+                {children}
+                <div {...dragHandleProps} >
+                    <HamburgerIcon boxSize={"5"} />
                 </div>
             </Flex>
         </Box>
-        <Box height={"3px"}></Box>
-    </>
+    </Slider>
 }
 
 export function RegisteredListItem({ registered, onClick, ...props }) {

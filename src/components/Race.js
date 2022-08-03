@@ -19,7 +19,7 @@ import MutableRaceResult from "../store/types/MutableRaceResult";
 import CommitResultsDialog from "./CommitResultsDialog";
 import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
-import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, wrapDeleteOnLongPress } from "./DeleteItems";
+import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, wrapDeleteOnSwipe } from "./DeleteItems";
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
@@ -219,24 +219,32 @@ function DraggableFinishView({
 function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateRaceResults }) {
     const navigateTo = useNavigate();
 
-    const WrappedRegisteredListItem = ({ item, ...props }) => <RegisteredListItem registered={item} {...props} />
+    const onDNF = (registeredToMove) =>
+        updateRaceResults(
+            registered.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(registeredToMove)),
+            finished,
+            [...dnf, registeredToMove],
+            oods
+        );
+
+    const WrappedRegisteredListItem = ({ item, ...props }) => <RegisteredListItem registered={item} onDNF={() => onDNF(item)} {...props} />;
     const WrappedFinisherListItem = ({ item, ...props }) => <FinisherListItem result={item} {...props} />
     const WrappedDNFListItem = ({ item, ...props }) => <DNFListItem result={item} {...props} />
     const WrappedOODListItem = ({ item, ...props }) => <OODListItem ood={item} {...props} />
-    const WrappedPursuitFinishListItem = ({ item, index, ...props }) => <PursuitFinishListItem result={item} index={index} {...props} />
+    const WrappedPursuitFinishListItem = ({ item, index, ...props }) => <PursuitFinishListItem result={item} onDNF={() => onDNF(item)} index={index} {...props} />
 
     return (
         <DraggableFinishView
-            PursuitFinishListItem={wrapDeleteOnLongPress(DeletePursuitFinish, WrappedPursuitFinishListItem)}
-            RegisteredListItem={wrapDeleteOnLongPress(DeletePursuitFinish, WrappedRegisteredListItem, (item) => ({
+            PursuitFinishListItem={wrapDeleteOnSwipe(DeletePursuitFinish, WrappedPursuitFinishListItem)}
+            RegisteredListItem={wrapDeleteOnSwipe(DeletePursuitFinish, WrappedRegisteredListItem, (item) => ({
                 onClick: () => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)
             }))}
             registered={registered}
-            FinishedListItem={wrapDeleteOnLongPress(DeleteFinisher, WrappedFinisherListItem)}
+            FinishedListItem={wrapDeleteOnSwipe(DeleteFinisher, WrappedFinisherListItem)}
             finished={finished}
-            DNFListItem={wrapDeleteOnLongPress(DeleteFinisher, WrappedDNFListItem)}
+            DNFListItem={wrapDeleteOnSwipe(DeleteFinisher, WrappedDNFListItem)}
             dnf={dnf}
-            OODListItem={wrapDeleteOnLongPress(DeleteOOD, WrappedOODListItem)}
+            OODListItem={wrapDeleteOnSwipe(DeleteOOD, WrappedOODListItem)}
             oods={oods}
             isPursuitRace={isPursuitRace}
             onDragCompleted={updateRaceResults}
