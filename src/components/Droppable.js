@@ -1,14 +1,13 @@
 import { Box } from "@chakra-ui/react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-export function DroppableContext({ setIsDragging, onDragEnd, children }) {
+export function DroppableContext({ onDragEnd, children }) {
     const handleDragEnd = (...props) => {
-        setIsDragging(false);
         onDragEnd(...props);
     };
 
     return (
-        <DragDropContext onDragEnd={(...props) => handleDragEnd(...props)} onBeforeCapture={() => setIsDragging(true)}>
+        <DragDropContext onDragEnd={(...props) => handleDragEnd(...props)}>
             {children}
         </DragDropContext>
     );

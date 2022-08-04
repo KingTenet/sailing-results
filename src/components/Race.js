@@ -29,8 +29,20 @@ function WrappedDroppableList({ item, isOpen, ...props }) {
     return <DroppableList getId={(item) => HelmResult.getId(item)} {...props} />
 }
 
-function DraggableFinishView({
-    PursuitFinishListItem,
+function WrappedList({ Header, Container, ListItem, item, isOpen, listItems, ...props }) {
+    const getId = (item) => HelmResult.getId(item);
+
+    return <Container>
+        {Header && <Header listItems={listItems} />}
+        {listItems.map((item, index) =>
+            <Box key={getId(item)}>
+                <ListItem item={item} index={index} />
+            </Box>
+        )}
+    </Container>
+}
+
+function FinishView({
     RegisteredListItem: RegisteredListItemToUse,
     registered,
     FinishedListItem,
@@ -39,16 +51,70 @@ function DraggableFinishView({
     dnf,
     OODListItem,
     oods,
-    isPursuitRace,
-    onDragCompleted
 }) {
-    const [draggingRegistered, setIsDraggingRegistered] = useState(false);
-    const [draggingFinisher, setIsDraggingFinisher] = useState(false);
-    const [draggingOOD, setIsDraggingOOD] = useState(false);
+    return (
+        <>
+            {registered && Boolean(registered.length) &&
+                <WrappedList
+                    droppableId={"registered"}
+                    listItems={registered}
+                    ListItem={RegisteredListItemToUse}
+                    Container={RegisteredCard}
+                    Header={RegisteredDroppableHeader}
+                />
+            }
+            {dnf && Boolean(dnf.length) &&
+                <WrappedList
+                    droppableId={"dnf"}
+                    listItems={dnf}
+                    ListItem={DNFListItem}
+                    Container={DNFCard}
+                    Header={DNFDroppableHeader}
+                />
+            }
+            {finished && Boolean(finished.length) &&
+                <WrappedList
+                    droppableId={"finished"}
+                    listItems={finished}
+                    ListItem={FinishedListItem}
+                    Container={FinishersCard}
+                    Header={FinishedDroppableHeader}
+                />
+            }
+            {oods && Boolean(oods.length) &&
+                <WrappedList
+                    droppableId={"oods"}
+                    listItems={oods}
+                    ListItem={OODListItem}
+                    Container={FinishersCard}
+                    Header={OODDroppableHeader}
+                />
+            }
+        </>
+    );
+}
+
+
+function DraggableFinishView(props) {
+    if (!props.isPursuitRace) {
+        return <FinishView {...props} />;
+    }
+
+    let {
+        PursuitFinishListItem,
+        RegisteredListItem: RegisteredListItemToUse,
+        registered,
+        FinishedListItem,
+        DNFListItem,
+        finished = [],
+        dnf,
+        OODListItem,
+        oods,
+        isPursuitRace,
+        onDragCompleted
+    } = props;
 
     const pursuitFinishes = registered;
-
-    const renderingDeleteDropZone = draggingRegistered || draggingFinisher || draggingOOD;
 
     const onDragEnd = (result) => {
         const insertItem = (newItem, index, items) => [...items.slice(0, index), newItem, ...items.slice(index)];
@@ -108,108 +174,33 @@ function DraggableFinishView({
     };
     return (
         <>
-            {isPursuitRace &&
-                <DroppableContext setIsDragging={setIsDraggingRegistered} onDragEnd={onDragEnd}>
-                    {pursuitFinishes && Boolean(pursuitFinishes.length) &&
-                        <WrappedDroppableList
-                            droppableId={"pursuitFinishes"}
-                            listItems={pursuitFinishes}
-                            DraggableListItem={PursuitFinishListItem}
-                            DroppableContainer={FinishersCard}
-                            DroppableHeader={FinishedDroppableHeader}
-                        />
-                    }
-                    {(registered && Boolean(registered.length) || (dnf && Boolean(dnf.length))) &&
-                        <WrappedDroppableList
-                            droppableId={"pursuitDNF"}
-                            listItems={dnf}
-                            DraggableListItem={DNFListItem}
-                            DroppableContainer={DNFCard}
-                            DroppableHeader={DNFDroppableHeader}
-                        />
-                    }
-                    {draggingRegistered &&
-                        <WrappedDroppableList
-                            droppableId={"delete"}
-                            DroppableContainer={DeleteCard}
-                            DroppableHeader={DeleteDroppableHeader}
-                        />
-                    }
-                </DroppableContext>
-            }
-            {!isPursuitRace &&
-                <>
-                    <DroppableContext setIsDragging={setIsDraggingRegistered} onDragEnd={onDragEnd}>
-                        {registered && Boolean(registered.length) &&
-                            <WrappedDroppableList
-                                droppableId={"registered"}
-                                listItems={registered}
-                                DraggableListItem={RegisteredListItemToUse}
-                                DroppableContainer={RegisteredCard}
-                                DroppableHeader={RegisteredDroppableHeader}
-                                isDropDisabled={true}
-                            />
-                        }
-                        {(registered && Boolean(registered.length) || (dnf && Boolean(dnf.length))) &&
-                            <WrappedDroppableList
-                                droppableId={"dnf"}
-                                listItems={dnf}
-                                DraggableListItem={DNFListItem}
-                                DroppableContainer={DNFCard}
-                                DroppableHeader={DNFDroppableHeader}
-                            />
-                        }
-                        {draggingRegistered &&
-                            <WrappedDroppableList
-                                droppableId={"delete"}
-                                DroppableContainer={DeleteCard}
-                                DroppableHeader={DeleteDroppableHeader}
-                            />
-                        }
-                    </DroppableContext>
-                    <DroppableContext setIsDragging={setIsDraggingFinisher} onDragEnd={onDragEnd}>
-                        {finished && Boolean(finished.length) &&
-                            <WrappedDroppableList
-                                droppableId={"finished"}
-                                listItems={finished}
-                                DraggableListItem={FinishedListItem}
-                                DroppableContainer={FinishersCard}
-                                DroppableHeader={FinishedDroppableHeader}
-                                isDropDisabled={true}
-                            />
-                        }
-                        {(draggingFinisher) &&
-                            <WrappedDroppableList
-                                droppableId={"delete"}
-                                DroppableContainer={DeleteCard}
-                                DroppableHeader={DeleteDroppableHeader}
-                            />
-                        }
-                    </DroppableContext>
-                </>
-            }
-            <DroppableContext setIsDragging={setIsDraggingOOD} onDragEnd={onDragEnd}>
-                {oods && Boolean(oods.length) &&
+            <DroppableContext onDragEnd={onDragEnd}>
+                {pursuitFinishes && Boolean(pursuitFinishes.length) &&
                     <WrappedDroppableList
-                        droppableId={"oods"}
-                        listItems={oods}
-                        DraggableListItem={OODListItem}
+                        droppableId={"pursuitFinishes"}
+                        listItems={pursuitFinishes}
+                        DraggableListItem={PursuitFinishListItem}
                         DroppableContainer={FinishersCard}
-                        DroppableHeader={OODDroppableHeader}
-                    />
-                }
-                {draggingOOD &&
-                    <WrappedDroppableList
-                        droppableId={"delete"}
-                        DroppableContainer={DeleteCard}
-                        DroppableHeader={DeleteDroppableHeader}
+                        DroppableHeader={FinishedDroppableHeader}
                     />
                 }
             </DroppableContext>
-            {!renderingDeleteDropZone &&
-                <PlaceholderCard>
-                    <DeleteDroppableHeader placeholder={true} />
-                </PlaceholderCard>
+            {dnf && Boolean(dnf.length) &&
+                <WrappedList
+                    listItems={dnf}
+                    ListItem={DNFListItem}
+                    Container={DNFCard}
+                    Header={DNFDroppableHeader}
+                />
+            }
+            {oods && Boolean(oods.length) &&
+                <WrappedList
+                    droppableId={"oods"}
+                    listItems={oods}
+                    ListItem={OODListItem}
+                    Container={FinishersCard}
+                    Header={OODDroppableHeader}
+                />
             }
         </>
     );

@@ -106,7 +106,7 @@ function Slider({ disabled, onDelete, onDNF, children }) {
     );
 }
 
-function ListItemWrapper({ children, shortClickExceeded, onDNF, onDelete, draggableSnapshot, onClick, dragHandleProps, ...props }) {
+function ListItemWrapper({ children, shortClickExceeded, onDNF, onDelete, draggableSnapshot = {}, onClick, dragHandleProps, ...props }) {
     return <Slider
         onDelete={onDelete}
         onDNF={onDNF}
