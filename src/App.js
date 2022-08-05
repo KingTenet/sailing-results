@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import SeriesPoints from "./components/SeriesPoints";
 import { useServices } from "./useAppState";
 import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
+import { ForceSpinner } from "./components/Spinner";
 
 const ADD_ANOTHER_HELM_WORKFLOW = true;
 const BOOTSTRAP_HISTORY = true;
@@ -54,15 +55,14 @@ const ROUTES = [
             { path: ROOT_PATHNAME, element: <Home />, index: true },
             {
                 path: '/races/', element: <NavWrapper />, children: [
-                    { path: '/races/', element: <Races editableOnly={true} />, index: true },
+                    { path: '/races/', element: <ForceSpinner>{() => <Races editableOnly={true} />}</ForceSpinner>, index: true },
                     {
                         path: '/races/:raceDate/:raceNumber', element: <NavWrapper />, children: [
-                            { path: '/races/:raceDate/:raceNumber', element: <Race backButtonText="Back to races" />, index: true },
-                            { path: '/races/:raceDate/:raceNumber/register', element: <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} /> },
-                            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <RegisteredHelm><RegisterAnotherButtons /></RegisteredHelm> },
-                            { path: '/races/:raceDate/:raceNumber/ood', element: <RegisterOOD /> },
-                            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <RegisteredHelm><FinishHelm /></RegisteredHelm> },
-                            { path: '/races/:raceDate/:raceNumber/pursuitFinish/:registered', element: <RegisteredHelm><FinishHelm /></RegisteredHelm> },
+                            { path: '/races/:raceDate/:raceNumber', element: <ForceSpinner>{() => <Race backButtonText="Back to races" />}</ForceSpinner>, index: true },
+                            { path: '/races/:raceDate/:raceNumber/register', element: <ForceSpinner>{() => <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} />}</ForceSpinner> },
+                            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <ForceSpinner>{() => <RegisteredHelm><RegisterAnotherButtons /></RegisteredHelm>}</ForceSpinner> },
+                            { path: '/races/:raceDate/:raceNumber/ood', element: <ForceSpinner>{() => <RegisterOOD />}</ForceSpinner> },
+                            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <ForceSpinner>{() => <RegisteredHelm><FinishHelm /></RegisteredHelm>}</ForceSpinner> },
                         ]
                     }
                 ]

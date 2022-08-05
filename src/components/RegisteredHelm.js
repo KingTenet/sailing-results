@@ -13,11 +13,11 @@ import {
     Box,
     Input,
     InputGroup,
-    InputRightElement,
-    Spacer,
+    InputRightElement
 } from '@chakra-ui/react';
 
 import { CheckCircleIcon } from '@chakra-ui/icons';
+import SpinnerWithTimeout from "./Spinner";
 
 function RegisteredHelm({ children }) {
     const navigateBack = useBack();
@@ -39,13 +39,13 @@ function RegisteredHelm({ children }) {
 
     if (!registeredResult) {
         return (
-            <>
+            <SpinnerWithTimeout timeout={5000}>
                 <Alert status='error'>
                     <AlertIcon />
                     <AlertTitle mr={2}>{"Helm has not been registered"}</AlertTitle>
                 </Alert>
                 <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
-            </>
+            </SpinnerWithTimeout>
         );
     }
 
@@ -94,7 +94,6 @@ function RegisteredHelm({ children }) {
                                     </Box>
                                 </Flex>
                             </Box>
-                            {/* <Spacer /> */}
                         </Flex>
                         {React.Children.map(
                             children,

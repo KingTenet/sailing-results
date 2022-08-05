@@ -3,8 +3,9 @@ import { useAppState, useServices, ServicesContext, CachedContext, useCachedStat
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
 import { getSheetIdFromURL } from "./common";
-import { Button, Box, Text, Spinner, Flex, Spacer } from "@chakra-ui/react";
+import { Button, Box, Text, Flex, Spacer } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
+import Spinner from "./components/Spinner";
 import { StoreFunctions } from "./store/Stores";
 import getVersion from "./version";
 import { useStoreStatus } from "./common/hooks";
@@ -148,14 +149,7 @@ function ServicesWrapper({ token }) {
     }
 
     if (!services.ready) {
-        return (
-            <>
-                <Flex width="100vw" height="100vh" align={"center"} justify={"center"} direction="column">
-                    <Spinner color='blue.500' size="xl" />
-                    <Text marginLeft={"10px"} marginTop={"20px"}>Loading...</Text>
-                </Flex>
-            </>
-        );
+        return <Spinner />;
     }
 
     return (
