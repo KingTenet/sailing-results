@@ -13,6 +13,17 @@ a {
 
 }
 
+.device-height {
+    /* min-height: 754px; */
+    min-height: 888px;
+}
+
+.fixed-height {
+    position: fixed;
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     overscroll-behavior-y: contain;
 }
@@ -88,4 +99,40 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.input-container-1 {
+    background: linear-gradient(135deg, hsla(113, 100%, 25%, 0.442) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+.input-container-2 {
+    background: linear-gradient(135deg, hsl(169, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+.input-container-3 {
+    background: linear-gradient(135deg, hsl(233, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+.input-container-4 {
+    background: linear-gradient(135deg, hsl(269, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+.input-container-5 {
+    background: linear-gradient(135deg, hsl(300, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+.input-container {
+    background-size: 300%;
+    border: 1;
+    border-color: black;
+}
+
+.input-container:not(:focus-within) {
+    opacity: 0.8;
+    border-color: transparent;
+}
+
+input {
+    background-color: white;
+    opacity: 1 !important;
 }

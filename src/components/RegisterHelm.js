@@ -10,6 +10,7 @@ import HelmResult from "../store/types/HelmResult";
 import ClubMember from "../store/types/ClubMember";
 import NewHelm from "./NewHelm";
 import Helm from "../store/types/Helm";
+import { GreenButton, RedButton } from "./Buttons";
 
 function RegisterHelm({ addAnotherHelmWorkflow }) {
     const navigateBack = useBack();
@@ -133,81 +134,84 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         setSelectedHelm(newHelm);
     };
 
+
     return (
         <>
             {/* <Box height="100vh" /> */}
             <form onSubmit={(evt) => evt.preventDefault()}>
-                <Center minHeight="80vh">
-                    <Flex direction={"column"} minHeight="80vh" width="100%">
-                        <Flex direction={"column"} height="100%" >
-                            {helmsIndex && !selectedClubMember &&
+                {/* <Center minHeight="80vh"> */}
+                {/* <Flex direction={"column"} minHeight="888px" width="100%"> */}
+                <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
+                    <Flex direction={"column"} height="100%" width="100%" alignItems={"center"}>
+                        {helmsIndex && !selectedClubMember &&
+                            <Autocomplete
+                                customClassName="input-container-1 input-container"
+                                heading={"Helm"}
+                                data={helmsIndex.data}
+                                itemToString={(helm) => (helm ? helm.getName() : "")}
+                                filterData={(inputValue) => helmsIndex.search(inputValue)}
+                                handleSelectedItemChange={handleSelectedHelm}
+                                sortFn={(helmA, helmB) => helmA.getName() > helmB.getName() ? 1 : -1}
+                                placeholder={"Enter helm name here..."}
+                            />
+                        }
+                        {
+                            selectedClubMember && <NewHelm onNewHelm={onNewHelm} clubMember={selectedClubMember} />
+                        }
+                        {selectedHelm && boatsIndex &&
+                            <Autocomplete
+                                customClassName="input-container-2 input-container"
+                                heading={"Boat"}
+                                data={boatsIndex.data}
+                                itemToString={(boat) => (boat ? boat.getClassName() : "")}
+                                filterData={(inputValue) => boatsIndex.search(inputValue)}
+                                handleSelectedItemChange={setSelectedBoat}
+                                placeholder={"Enter boat..."}
+                            />
+                        }
+                        {selectedBoat && sailNumberIndex &&
+                            <>
                                 <Autocomplete
-                                    heading={"Helm"}
-                                    data={helmsIndex.data}
-                                    itemToString={(helm) => (helm ? helm.getName() : "")}
-                                    filterData={(inputValue) => helmsIndex.search(inputValue)}
-                                    handleSelectedItemChange={handleSelectedHelm}
-                                    placeholder={"Enter helm name here..."}
+                                    customClassName="input-container-3 input-container"
+                                    heading={"Sail Number"}
+                                    data={sailNumberIndex.data}
+                                    itemToString={({ sailNumber }) => (sailNumber !== undefined ? sailNumber : "")}
+                                    filterData={(inputValue) => {
+                                        const matches = sailNumberIndex.search(inputValue);
+                                        if (!matches.length && !isNaN(parseInt(inputValue))) {
+                                            setShowCommit(true);
+                                        }
+                                        else if (showCommit) {
+                                            setShowCommit(false);
+                                        }
+                                        return matches;
+                                    }}
+                                    handleSelectedItemChange={(item) => {
+                                        if (item !== undefined) {
+                                            const sailNumber = !isNaN(parseInt(item)) ? parseInt(item) : item.sailNumber;
+                                            setSailNumber(sailNumber);
+                                        }
+                                    }}
+                                    placeholder={"Enter boat sail number here..."}
+                                    type={"number"}
+                                    triggerExactMatchOnBlur={true}
                                 />
-                            }
-                            {
-                                selectedClubMember && <NewHelm onNewHelm={onNewHelm} clubMember={selectedClubMember} />
-                            }
-                            {selectedHelm && boatsIndex &&
-                                <Autocomplete
-                                    heading={"Boat"}
-                                    data={boatsIndex.data}
-                                    itemToString={(boat) => (boat ? boat.getClassName() : "")}
-                                    filterData={(inputValue) => boatsIndex.search(inputValue)}
-                                    handleSelectedItemChange={setSelectedBoat}
-                                    placeholder={"Enter boat..."}
-                                />
-                            }
-                            {selectedBoat && sailNumberIndex &&
-                                <>
-                                    <Autocomplete
-                                        heading={"Sail Number"}
-                                        data={sailNumberIndex.data}
-                                        itemToString={({ sailNumber }) => (sailNumber !== undefined ? sailNumber : "")}
-                                        filterData={(inputValue) => {
-                                            const matches = sailNumberIndex.search(inputValue);
-                                            if (!matches.length && !isNaN(parseInt(inputValue))) {
-                                                setShowCommit(true);
-                                            }
-                                            else if (showCommit) {
-                                                setShowCommit(false);
-                                            }
-                                            return matches;
-                                        }}
-                                        handleSelectedItemChange={(item) => {
-                                            if (item !== undefined) {
-                                                const sailNumber = !isNaN(parseInt(item)) ? parseInt(item) : item.sailNumber;
-                                                setSailNumber(sailNumber);
-                                            }
-                                        }}
-                                        placeholder={"Enter boat sail number here..."}
-                                        type={"number"}
-                                        triggerExactMatchOnBlur={true}
-                                    />
-                                    {!sailNumber &&
-                                        <input style={{
-                                            opacity: 0,         // hide it visually
-                                            zIndex: -1,         // avoid unintended clicks
-                                            position: "absolute"  // don't affect other elements positioning
-                                        }}></input>
-                                    }
-                                </>
-                            }
-                        </Flex>
+                                {!sailNumber &&
+                                    <input style={{
+                                        opacity: 0,         // hide it visually
+                                        zIndex: -1,         // avoid unintended clicks
+                                        position: "absolute"  // don't affect other elements positioning
+                                    }}></input>
+                                }
+                            </>
+                        }
                         <Spacer />
                         {(sailNumber !== undefined || showCommit) &&
-                            <Button backgroundColor="green.500" onClick={() => {
-                                processHelmResult();
-                            }} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus={sailNumber}><Text fontSize={"lg"}>Register Helm</Text></Button>
+                            <GreenButton onClick={() => processHelmResult()} autoFocus={sailNumber}>Register Helm</GreenButton>
                         }
-                        <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
+                        <RedButton tabIndex="-1" onClick={() => navigateBack()}>Cancel</RedButton>
                     </Flex>
-                </Center>
+                </Flex>
             </form>
         </>
     );

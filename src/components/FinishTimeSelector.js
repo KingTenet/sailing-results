@@ -38,7 +38,7 @@ function NumberSelector({ setFinishTimeSeconds }) {
     };
 
     return (
-        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} className={"input-container input-container-4"}>
             {!completed &&
                 <Box minWidth="110px" paddingTop="5px">
                     <Text fontSize={"lg"}>{"Finish Time"}</Text>
@@ -50,13 +50,13 @@ function NumberSelector({ setFinishTimeSeconds }) {
                         <Text fontSize={"lg"}>{"Finish Time"}</Text>
                     </Box>
                 }
-                <PinInput onComplete={onComplete} isInvalid={secondsInvalid}>
+                <PinInput onComplete={onComplete} isInvalid={secondsInvalid} >
                     <Text paddingTop="7px">{!completed ? "Minutes" : ""}</Text>
-                    <PinInputField autoFocus />
-                    <PinInputField />
+                    <PinInputField bgColor="white" autoFocus />
+                    <PinInputField bgColor="white" />
                     <Text paddingTop="7px">{!completed ? "Seconds" : ":"}</Text>
-                    <PinInputField />
-                    <PinInputField />
+                    <PinInputField bgColor="white" />
+                    <PinInputField bgColor="white" />
                 </PinInput>
             </Stack>
             {secondsInvalid &&

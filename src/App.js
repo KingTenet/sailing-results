@@ -18,6 +18,8 @@ import { useServices } from "./useAppState";
 import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
 import { ForceSpinner } from "./components/Spinner";
 
+import './styles.css';
+
 const ADD_ANOTHER_HELM_WORKFLOW = true;
 const BOOTSTRAP_HISTORY = true;
 

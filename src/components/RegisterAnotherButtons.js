@@ -1,8 +1,9 @@
 import React from "react";
 import { parseURLDate, useBack, getURLDate } from "../common"
-import { Text, Button, Flex } from '@chakra-ui/react'
+import { Text, Button, Flex, Spacer } from '@chakra-ui/react'
 import { useParams, useNavigate } from "react-router-dom";
 import Race from "../store/types/Race";
+import { GreenButton, RedButton } from "./Buttons";
 
 export default function RegisterAnotherButtons() {
     const navigateBack = useBack();
@@ -18,9 +19,12 @@ export default function RegisterAnotherButtons() {
     const registerAnother = () => navigateTo(`/races/${getURLDate(race.getDate())}/${race.getNumber()}/register`, { replace: true });
 
     return (
-        <Flex direction="column">
-            <Button backgroundColor="green.500" onClick={() => registerAnother()} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus={true}><Text fontSize={"lg"}>Register Another Helm</Text></Button>
-            <Button backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Back to race</Text></Button>
-        </Flex>
+        <>
+            <Spacer />
+            <Flex direction="column" width="100%" alignItems={"center"}>
+                <GreenButton onClick={() => registerAnother()} autoFocus={true}>Register Another Helm</GreenButton>
+                <RedButton tabIndex="-1" onClick={() => navigateBack()}>Back to race editing</RedButton>
+            </Flex>
+        </>
     );
 }

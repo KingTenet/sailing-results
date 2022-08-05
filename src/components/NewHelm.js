@@ -52,18 +52,19 @@ export default function NewHelm({ clubMember, onNewHelm }) {
 
     return (
         <>
-            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
-                <Flex direction={"row"}>
-                    <Box minWidth="110px" paddingTop="5px">
+            <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }}>
+                <Flex direction={"row"} width="100%">
+                    <Box minWidth="110px" paddingTop="5px" >
                         <Text fontSize={"lg"}>{"Helm"}</Text>
                     </Box>
-                    <Box>
+                    <Box width="100%">
                         <InputGroup>
-                            <Input readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={clubMember ? clubMember.getName() : ""} />
+                            <Input bgColor="white" readOnly={true} onFocus="this.blur()" tabIndex="-1" placeholder={clubMember ? clubMember.getName() : ""} />
                         </InputGroup>
                     </Box>
                 </Flex>
-                {!confirmed &&
+                {
+                    !confirmed &&
                     < Box minWidth="110px" paddingTop="10px">
                         <Alert status='error'>
                             <AlertIcon />
@@ -74,26 +75,27 @@ export default function NewHelm({ clubMember, onNewHelm }) {
                 <Flex direction={"row"} marginTop="20px">
                     <Text fontSize={"large"} marginTop="7px">{clubMember.getName()} is</Text>
                     {!experienceEnabled &&
-                        <BlueButton onClick={() => setExperienceEnabled(true)} style={{ marginLeft: "10px", opacity: "0.4" }} autoFocus>{experience}</BlueButton>
+                        <BlueButton onClick={() => setExperienceEnabled(true)} style={{ marginLeft: "10px", opacity: "0.4", width: "inherit" }} autoFocus>{experience}</BlueButton>
                     }
                     {experienceEnabled &&
-                        <BlueButton onClick={() => toggleExperience(true)} style={{ marginLeft: "10px" }} autoFocus disabled={confirmed}>{experience}</BlueButton>
+                        <BlueButton onClick={() => toggleExperience(true)} style={{ marginLeft: "10px", width: "inherit" }} autoFocus disabled={confirmed}>{experience}</BlueButton>
                     }
                     {!genderEnabled &&
-                        <BlueButton onClick={() => setGenderEnabled(true)} style={{ marginLeft: "10px", opacity: "0.4" }}>{gender}</BlueButton>
+                        <BlueButton onClick={() => setGenderEnabled(true)} style={{ marginLeft: "10px", opacity: "0.4", width: "inherit" }}>{gender}</BlueButton>
                     }
                     {genderEnabled &&
-                        <BlueButton onClick={() => toggleGender(true)} style={{ marginLeft: "10px" }} disabled={confirmed} autoFocus>{gender}</BlueButton>
+                        <BlueButton onClick={() => toggleGender(true)} style={{ marginLeft: "10px", width: "inherit" }} disabled={confirmed} autoFocus>{gender}</BlueButton>
                     }
                     <Text fontSize={"large"} marginTop="7px" marginLeft="10px" >sailor</Text>
                     {confirmed &&
                         <CheckCircleIcon marginLeft="10px" marginTop="13px" color='green.500' />
                     }
                 </Flex>
-                {genderEnabled && experienceEnabled && !confirmed &&
+                {
+                    genderEnabled && experienceEnabled && !confirmed &&
                     < GreenButton onClick={() => onConfirm()} style={{ marginLeft: "10px" }} disabled={confirmed}>Confirm</GreenButton>
                 }
-            </Box>
+            </Box >
         </>
     );
 }

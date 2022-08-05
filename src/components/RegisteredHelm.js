@@ -13,7 +13,8 @@ import {
     Box,
     Input,
     InputGroup,
-    InputRightElement
+    InputRightElement,
+    Spacer
 } from '@chakra-ui/react';
 
 import { CheckCircleIcon } from '@chakra-ui/icons';
@@ -52,57 +53,55 @@ function RegisteredHelm({ children }) {
     return (
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
-                <Center minHeight="80vh">
-                    <Flex direction={"column"} minHeight="80vh" width="100%" justifyContent={"space-between"}>
-                        <Flex direction={"column"} height="100%" >
-                            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
-                                <Flex direction={"row"}>
-                                    <Box minWidth="110px" paddingTop="5px">
-                                        <Text fontSize={"lg"}>{"Helm"}</Text>
-                                    </Box>
-                                    <Box>
-                                        <InputGroup>
-                                            <Input readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? HelmResult.getHelmId(registeredResult) : ""} />
-                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                        </InputGroup>
-                                    </Box>
-                                </Flex>
-                            </Box>
-                            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
-                                <Flex direction={"row"}>
-                                    <Box minWidth="110px" paddingTop="5px">
-                                        <Text fontSize={"lg"}>{"Boat"}</Text>
-                                    </Box>
-                                    <Box>
-                                        <InputGroup>
-                                            <Input readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getBoatClass().getClassName() : ""} />
-                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                        </InputGroup>
-                                    </Box>
-                                </Flex>
-                            </Box>
-                            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
-                                <Flex direction={"row"}>
-                                    <Box minWidth="110px" paddingTop="5px">
-                                        <Text fontSize={"lg"}>{"Sail Number"}</Text>
-                                    </Box>
-                                    <Box>
-                                        <InputGroup>
-                                            <Input readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getSailNumber() : ""} />
-                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                        </InputGroup>
-                                    </Box>
-                                </Flex>
-                            </Box>
-                        </Flex>
-                        {React.Children.map(
-                            children,
-                            (child) => React.isValidElement(child)
-                                ? React.cloneElement(child, { registeredResult })
-                                : child
-                        )}
+                <Flex direction={"column"} className="device-height fixed-height" width="100%" alignItems="center">
+                    <Flex direction={"column"} alignItems={"center"} width="100%" >
+                        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} width="100%" className={"input-container-1 input-container"}>
+                            <Flex direction={"row"} >
+                                <Box minWidth="110px" paddingTop="5px">
+                                    <Text fontSize={"lg"}>{"Helm"}</Text>
+                                </Box>
+                                <Box width="100%" >
+                                    <InputGroup>
+                                        <Input bgColor="white" _placeholder={{ opacity: 1 }} readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? HelmResult.getHelmId(registeredResult) : ""} />
+                                        <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                    </InputGroup>
+                                </Box>
+                            </Flex>
+                        </Box>
+                        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} width="100%" className={"input-container-2 input-container"}>
+                            <Flex direction={"row"}>
+                                <Box minWidth="110px" paddingTop="5px">
+                                    <Text fontSize={"lg"}>{"Boat"}</Text>
+                                </Box>
+                                <Box width="100%" >
+                                    <InputGroup>
+                                        <Input bgColor="white" _placeholder={{ opacity: 1 }} readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getBoatClass().getClassName() : ""} />
+                                        <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                    </InputGroup>
+                                </Box>
+                            </Flex>
+                        </Box>
+                        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} width="100%" className={"input-container-3 input-container"}>
+                            <Flex direction={"row"}>
+                                <Box minWidth="110px" paddingTop="5px">
+                                    <Text fontSize={"lg"}>{"Sail Number"}</Text>
+                                </Box>
+                                <Box width="100%" >
+                                    <InputGroup>
+                                        <Input bgColor="white" _placeholder={{ opacity: 1 }} readOnly={true} disabled={true} onFocus="this.blur()" tabIndex="-1" placeholder={registeredResult ? registeredResult.getSailNumber() : ""} />
+                                        <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                    </InputGroup>
+                                </Box>
+                            </Flex>
+                        </Box>
                     </Flex>
-                </Center>
+                    {React.Children.map(
+                        children,
+                        (child) => React.isValidElement(child)
+                            ? React.cloneElement(child, { registeredResult })
+                            : child
+                    )}
+                </Flex>
             </form>
         </>
     );

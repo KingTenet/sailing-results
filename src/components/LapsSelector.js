@@ -18,7 +18,7 @@ function LapsSelector({ onLapsUpdated }) {
 
     return (
         <>
-            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+            <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} className={"input-container input-container-5"}>
                 {!completed &&
                     <Box minWidth="110px" paddingTop="5px">
                         <Text fontSize={"lg"}>{"Laps"}</Text>
@@ -31,7 +31,7 @@ function LapsSelector({ onLapsUpdated }) {
                         </Box>
                     }
                     <PinInput onComplete={(value) => onComplete(parseInt(value))}>
-                        <PinInputField autoFocus />
+                        <PinInputField bgColor="white" autoFocus />
                     </PinInput>
                 </Stack>
             </Box>

@@ -20,12 +20,12 @@ function CollapseEx({ children, isOpen }) {
         <>
             <Collapse in={isOpen} animateOpacity>
                 <Box
-                    p='5px'
-                    color='white'
-                    mt='4'
-                    bg='teal.500'
-                    rounded='md'
-                    shadow='md'
+                // p='5px'
+                // color='white'
+                // mt='4'
+                // bg='teal.500'
+                // rounded='md'
+                // shadow='md'
                 >
                     {children}
                 </Box>
@@ -41,7 +41,7 @@ function getMenuItems(inputItems, initialItems) {
     return initialItems;
 }
 
-export default function ({ data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false }) {
+export default function ({ customClassName = "input-container-1 input-container", sortFn, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false }) {
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
     const exactMatch = partialMatch === undefined
@@ -105,14 +105,14 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
     return (
         <>
             {exactMatch &&
-                <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }}>
+                <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
                     <Flex direction={"row"}>
                         <Box minWidth="110px" paddingTop="5px">
                             <Text fontSize={"lg"}>{heading}</Text>
                         </Box>
-                        <Box {...getComboboxProps()}>
+                        <Box {...getComboboxProps()} width="100%">
                             <InputGroup>
-                                <Input {...getInputProps()} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
+                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" />
                                 <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                             </InputGroup>
                         </Box>
@@ -120,43 +120,50 @@ export default function ({ data, itemToString, filterData, heading, placeholder,
                 </Box>
             }
             {!exactMatch &&
-                <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "10px 15px 15px 15px" }}>
+                <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
                     <Flex direction={"column"}>
-                        <Box minWidth="110px" paddingTop="3px">
-                            <Text fontSize={"lg"}>{heading}</Text>
-                        </Box>
-                        <Spacer />
-                        <Box {...getComboboxProps()}>
-                            <InputGroup>
-                                <>
-                                    {!exactMatch &&
-                                        <Input {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
-                                    }
-                                    {exactMatch &&
-                                        <>
-                                            <Input {...getInputProps()} readOnly={true} onFocus="this.blur()" tabIndex="-1" />
-                                            <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                        </>
-                                    }
-                                </>
-                            </InputGroup>
-                        </Box>
+                        <Flex direction={"row"} >
+                            <Box minWidth="110px" paddingTop="5px">
+                                <Text fontSize={"lg"}>{heading}</Text>
+                            </Box>
+                            <Box {...getComboboxProps()} width="100%">
+                                <InputGroup>
+                                    <>
+                                        {!exactMatch &&
+                                            <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
+                                        }
+                                        {exactMatch &&
+                                            <>
+                                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" />
+                                                <InputRightElement children={<CheckCircleIcon color='green.500' />} />
+                                            </>
+                                        }
+                                    </>
+                                </InputGroup>
+                            </Box>
+                        </Flex>
                         <Spacer />
                         <CollapseEx isOpen={menuIsOpen()}>
                             <ul {...getMenuProps()}>
-                                {getMenuItems(inputItems, data).slice(0, 4).map((item, index) => (
-                                    <Box
-                                        margin="10px"
-                                        padding="10px"
-                                        borderWidth="1px"
-                                        borderRadius="base"
-                                        backgroundColor={highlightedIndex === index ? "red.500" : ""}
-                                        key={`${itemToString(item)}${index}`}
-                                        {...getItemProps({ item, index })}
-                                    >
-                                        <Heading fontSize={"lg"}>{itemToString(item)}</Heading>
-                                    </Box>
-                                ))}
+                                {getMenuItems(inputItems, data)
+                                    .slice(0, 6)
+                                    .map((item, index) => [item, index])
+                                    .sort(([itemA, indexA], [itemB, indexB]) => sortFn && !partialMatch ? sortFn(itemA, itemB) : indexA - indexB)
+                                    .map(([item, index]) => (
+                                        <Box
+                                            shadow='md'
+                                            marginTop="8px"
+                                            marginBottom="5px"
+                                            padding="12px"
+                                            borderWidth="1px"
+                                            borderRadius="base"
+                                            backgroundColor="white"
+                                            key={`${itemToString(item)}${index}`}
+                                            {...getItemProps({ item, index })}
+                                        >
+                                            <Heading fontSize={"lg"}>{itemToString(item)}</Heading>
+                                        </Box>
+                                    ))}
                             </ul>
                         </CollapseEx>
                         <Spacer />

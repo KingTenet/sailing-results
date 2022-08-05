@@ -312,19 +312,19 @@ export default function Race({ backButtonText }) {
 
     function Wrapped({ children }) {
         return (
-            <Box minHeight="100vh" margin="0">
-                <Flex direction="column" minHeight="80vh" alignItems={"center"}>
-                    <Flex direction="row" marginTop="20px" marginBottom="20px" width="100%">
-                        <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
-                        <Spacer />
-                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
-                    </Flex>
-                    {children}
-                    {!raceIsMutable &&
-                        <BackButton disabled={committingResults}>{backButtonText}</BackButton>
-                    }
+
+            <Flex direction="column" className="device-height" alignItems={"center"}>
+                <Flex direction="row" marginTop="20px" marginBottom="20px" width="100%" style={{ overflow: "hidden" }}>
+                    <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
+                    <Spacer />
+                    <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
                 </Flex>
-            </Box>
+                {children}
+                {!raceIsMutable &&
+                    <BackButton disabled={committingResults}>{backButtonText}</BackButton>
+                }
+            </Flex>
+
         )
     }
 
@@ -343,7 +343,7 @@ export default function Race({ backButtonText }) {
                     }
                     <Spacer />
                     <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
-                    <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helms</GreenButton>
+                    <GreenButton onClick={() => navigateTo("register")} marginBottom={"50px"} autoFocus>Register Helms</GreenButton>
                 </Wrapped>
             </>
         );

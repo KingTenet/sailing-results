@@ -3,15 +3,17 @@ import { useState } from "react";
 import Autocomplete from "./AutocompleteSimple";
 import { useAppState, useServices } from "../useAppState";
 import { parseURLDate, useBack } from "../common"
-import { Center, Text, Button, Flex, Spacer } from '@chakra-ui/react'
+import { Flex, Spacer } from '@chakra-ui/react'
 import { useParams } from "react-router-dom";
 import Race from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Helm from "../store/types/Helm";
 import ClubMember from "../store/types/ClubMember";
 import NewHelm from "./NewHelm";
+import { GreenButton, RedButton } from "./Buttons";
 
-function RegisterHelm() {
+
+export default function RegisterOOD() {
     const navigateBack = useBack();
     const [selectedHelm, setSelectedHelm] = useState(null);
     const [selectedClubMember, setSelectedClubMember] = useState(null);
@@ -100,32 +102,29 @@ function RegisterHelm() {
     return (
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
-                <Center minHeight="80vh">
-                    <Flex direction={"column"} minHeight="80vh" width="100%">
-                        <Flex direction={"column"} height="100%" >
-                            {helmsIndex && !selectedClubMember && <Autocomplete
-                                heading={"OOD"}
-                                data={helmsIndex.data}
-                                itemToString={(helm) => (helm ? helm.getName() : "")}
-                                filterData={(inputValue) => helmsIndex.search(inputValue)}
-                                handleSelectedItemChange={handleSelectedHelm}
-                                placeholder={"Enter name here..."}
-                            />
-                            }
-                            {
-                                selectedClubMember && <NewHelm onNewHelm={onNewHelm} clubMember={selectedClubMember} />
-                            }
-                        </Flex>
+                <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
+                    <Flex direction={"column"} height="100%" alignItems={"center"} width="100%">
+                        {helmsIndex && !selectedClubMember && <Autocomplete
+                            customClassName="input-container-1 input-container"
+                            heading={"OOD"}
+                            data={helmsIndex.data}
+                            itemToString={(helm) => (helm ? helm.getName() : "")}
+                            filterData={(inputValue) => helmsIndex.search(inputValue)}
+                            handleSelectedItemChange={handleSelectedHelm}
+                            placeholder={"Enter name here..."}
+                        />
+                        }
+                        {
+                            selectedClubMember && <NewHelm onNewHelm={onNewHelm} clubMember={selectedClubMember} />
+                        }
                         <Spacer />
                         {selectedHelm &&
-                            <Button backgroundColor="green.500" onClick={processHelmResult} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add OOD to race</Text></Button>
+                            <GreenButton onClick={processHelmResult} autoFocus>Add OOD to race</GreenButton>
                         }
-                        <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
+                        <RedButton tabIndex="-1" onClick={() => navigateBack()}>Cancel</RedButton>
                     </Flex>
-                </Center>
+                </Flex>
             </form>
         </>
     );
 }
-
-export default RegisterHelm;

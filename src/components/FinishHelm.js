@@ -4,11 +4,9 @@ import FinishTimeSelector from "./FinishTimeSelector";
 import LapsSelector from "./LapsSelector";
 import { useBack } from "../common"
 import { useAppState, useServices } from "../useAppState";
-import { Text, Button } from '@chakra-ui/react'
 import HelmResult from "../store/types/HelmResult";
-
-import { Spacer } from '@chakra-ui/react';
-
+import { Spacer, Flex, Box } from '@chakra-ui/react';
+import { GreenButton, RedButton } from "./Buttons";
 
 export default function FinishedHelm({ registeredResult }) {
     const navigateBack = useBack();
@@ -45,16 +43,18 @@ export default function FinishedHelm({ registeredResult }) {
     };
 
     return (
-        <>
-            <FinishTimeSelector setFinishTimeSeconds={setFinishTimeSeconds} />
-            {finishTimeSeconds &&
-                <LapsSelector onLapsUpdated={setFinishedLaps} />
-            }
+        <Flex direction="column" width="100%" height="100%" alignItems={"center"}>
+            <Box width="100%">
+                <FinishTimeSelector setFinishTimeSeconds={setFinishTimeSeconds} />
+                {finishTimeSeconds &&
+                    <LapsSelector onLapsUpdated={setFinishedLaps} />
+                }
+            </Box>
             <Spacer />
             {(finishedLaps) &&
-                <Button tabIndex="-1" backgroundColor="green.500" onClick={finishHelm} marginLeft="50px" marginRight="50px" marginTop="50px" autoFocus><Text fontSize={"lg"}>Add to race results</Text></Button>
+                <GreenButton tabIndex="-1" onClick={finishHelm} autoFocus>Add to race results</GreenButton>
             }
-            <Button tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()} marginLeft="50px" marginRight="50px" marginTop="50px"><Text fontSize={"lg"}>Cancel</Text></Button>
-        </>
+            <RedButton tabIndex="-1" backgroundColor="red.500" onClick={() => navigateBack()}>Cancel</RedButton>
+        </Flex >
     )
 }
