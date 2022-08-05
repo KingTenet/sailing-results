@@ -15,7 +15,8 @@ a {
 
 .device-height {
     /* min-height: 754px; */
-    min-height: 888px;
+    /* min-height: 888px; */
+    min-height: 860px;
 }
 
 .fixed-height {
@@ -26,6 +27,27 @@ a {
 
 body {
     overscroll-behavior-y: contain;
+}
+
+.status-bar {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    height: 10px;
+}
+
+.status-bar-version {
+    position: fixed;
+    bottom: 0px;
+    height: 10px;
+    padding-left: 10px;
+    padding-right: 300px;
+    color: white;
+    background: linear-gradient(to right, rgba(77, 0, 0, 0.766) 0%, rgba(255, 255, 255, 0) 100%);
+    background-size: 100%;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 10px;
 }
 
 .list-item:active .drag-icon,

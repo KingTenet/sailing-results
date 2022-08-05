@@ -343,7 +343,7 @@ export default function Race({ backButtonText }) {
                     }
                     <Spacer />
                     <GreenButton onClick={() => navigateTo("ood")}>Register OOD</GreenButton>
-                    <GreenButton onClick={() => navigateTo("register")} marginBottom={"50px"} autoFocus>Register Helms</GreenButton>
+                    <GreenButton onClick={() => navigateTo("register")} autoFocus>Register Helms</GreenButton>
                 </Wrapped>
             </>
         );

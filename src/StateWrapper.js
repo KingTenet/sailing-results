@@ -288,17 +288,19 @@ function StoresSync({ verbose }) {
         </>;
     }
 
-    return <Flex position="absolute" height="10px" width="100%" bgColor={syncing ? "blue.500" :
-        failed ? "red.500" :
-            "green.100"
-    } alignContent="flex-end" display="flex">
-        <Spacer />
+    // return <></>;
+
+    return <>
+        <Flex className="status-bar" bgColor={syncing ? "blue.500" :
+            failed ? "red.500" :
+                "green.100"
+        } />
         {!Boolean(services.readOnly) &&
-            <Box>
-                <Text bgColor="red">{`In ${services.isLive ? "live" : "practice"} version: ${getVersion()}`}</Text>
+            <Box className="status-bar-version">
+                <Text>{`${services.isLive ? "LIVE" : "PRACTICE"}: ${getVersion()}`}</Text>
             </Box>
         }
-    </Flex>
+    </>
 }
 
 function Debug() {
