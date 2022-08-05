@@ -303,6 +303,22 @@ function StoresSync({ verbose }) {
     </>
 }
 
+function Viewport() {
+    const [viewport, updateViewport] = useState();
+
+    useEffect(() => {
+        setTimeout(() => {
+            updateViewport([window.innerWidth, window.innerHeight]);
+        }, 10);
+    }, [viewport]);
+
+    return (
+        <Box className="status-bar-version">
+            <Text>{`${viewport}`}</Text>
+        </Box>
+    )
+}
+
 function Debug() {
     const [state, updateAppState] = useAppState();
     let [searchParams, setSearchParams] = useSearchParams();

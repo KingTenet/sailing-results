@@ -15,8 +15,8 @@ a {
 
 .device-height {
     /* min-height: 754px; */
-    /* min-height: 888px; */
-    min-height: 860px;
+    min-height: 888px;
+    padding-bottom: 20px;
 }
 
 .fixed-height {
@@ -48,6 +48,17 @@ body {
     font-size: 9px;
     font-weight: 800;
     line-height: 10px;
+}
+
+
+@media only screen and (max-height: 700px) {
+    .status-bar {
+        display: none !important;
+    }
+
+    .status-bar-version {
+        display: none;
+    }
 }
 
 .list-item:active .drag-icon,

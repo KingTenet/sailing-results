@@ -112,7 +112,7 @@ export default function ({ customClassName = "input-container-1 input-container"
                         </Box>
                         <Box {...getComboboxProps()} width="100%">
                             <InputGroup>
-                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" />
+                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" autocomplete="new-password" />
                                 <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                             </InputGroup>
                         </Box>
@@ -128,17 +128,7 @@ export default function ({ customClassName = "input-container-1 input-container"
                             </Box>
                             <Box {...getComboboxProps()} width="100%">
                                 <InputGroup>
-                                    <>
-                                        {!exactMatch &&
-                                            <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
-                                        }
-                                        {exactMatch &&
-                                            <>
-                                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" />
-                                                <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                                            </>
-                                        }
-                                    </>
+                                    <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} autocomplete="new-password" />
                                 </InputGroup>
                             </Box>
                         </Flex>
@@ -146,7 +136,7 @@ export default function ({ customClassName = "input-container-1 input-container"
                         <CollapseEx isOpen={menuIsOpen()}>
                             <ul {...getMenuProps()}>
                                 {getMenuItems(inputItems, data)
-                                    .slice(0, 6)
+                                    .slice(0, 8)
                                     .map((item, index) => [item, index])
                                     .sort(([itemA, indexA], [itemB, indexB]) => sortFn && !partialMatch ? sortFn(itemA, itemB) : indexA - indexB)
                                     .map(([item, index]) => (
