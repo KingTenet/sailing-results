@@ -1,3 +1,7 @@
+:root {
+    --screen-height: 100px;
+}
+
 button,
 textarea,
 input,
@@ -15,13 +19,15 @@ a {
 
 .device-height {
     /* min-height: 754px; */
-    min-height: 888px;
+    /* min-height: 888px; */
+    min-height: var(--screen-height);
     padding-bottom: 20px;
 }
 
 .fixed-height {
     position: fixed;
-    height: 100%;
+    /* height: 100%; */
+    height: var(--screen-height);
     overflow: hidden;
 }
 
@@ -59,15 +65,6 @@ body {
     .status-bar-version {
         display: none;
     }
-}
-
-.list-item:active .drag-icon,
-.list-item .delete-icon {
-    display: none;
-}
-
-.list-item:active .delete-icon {
-    display: inline;
 }
 
 .list-item {
@@ -110,6 +107,10 @@ body {
     align-items: center;
     text-align: center;
 }
+
+/* .fg:active div {
+    display: none;
+} */
 
 .fg:active {
     cursor: -webkit-grabbing;

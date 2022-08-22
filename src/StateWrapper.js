@@ -288,7 +288,6 @@ function StoresSync({ verbose }) {
         </>;
     }
 
-    // return <></>;
 
     return <>
         <Flex className="status-bar" bgColor={syncing ? "blue.500" :
@@ -300,8 +299,23 @@ function StoresSync({ verbose }) {
                 <Text>{`${services.isLive ? "LIVE" : "PRACTICE"}: ${getVersion()}`}</Text>
             </Box>
         }
+        {/* {
+            <Viewport />
+        } */}
     </>
 }
+
+var maxHeight = 0;
+
+const updateHeight = () => {
+    if (window.innerHeight > maxHeight) {
+        maxHeight = window.innerHeight;
+        document.documentElement.style.setProperty('--screen-height', `${window.innerHeight}px`);
+    }
+}
+
+updateHeight();
+window.addEventListener('resize', () => updateHeight());
 
 function Viewport() {
     const [viewport, updateViewport] = useState();
@@ -318,6 +332,7 @@ function Viewport() {
         </Box>
     )
 }
+
 
 function Debug() {
     const [state, updateAppState] = useAppState();

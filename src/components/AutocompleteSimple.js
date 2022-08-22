@@ -112,7 +112,7 @@ export default function ({ customClassName = "input-container-1 input-container"
                         </Box>
                         <Box {...getComboboxProps()} width="100%">
                             <InputGroup>
-                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" autocomplete="new-password" />
+                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" />
                                 <InputRightElement children={<CheckCircleIcon color='green.500' />} />
                             </InputGroup>
                         </Box>
@@ -128,7 +128,7 @@ export default function ({ customClassName = "input-container-1 input-container"
                             </Box>
                             <Box {...getComboboxProps()} width="100%">
                                 <InputGroup>
-                                    <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} autocomplete="new-password" />
+                                    <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
                                 </InputGroup>
                             </Box>
                         </Flex>
