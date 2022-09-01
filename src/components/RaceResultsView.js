@@ -319,7 +319,7 @@ export default function RaceResultsView({ results, oods, race, raceIsMutable, ..
 
     return (
         <>
-            <Heading marginBottom="20px" marginLeft="20px" size={"md"} width="100%">{`${heading} `}</Heading>
+            <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">{`${heading} `}</Heading>
             <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
                 <>
                     <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />

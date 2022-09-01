@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import Autocomplete from "./AutocompleteSimple";
 import { useAppState, useServices } from "../useAppState";
-import { parseURLDate, useBack, getURLDate } from "../common"
-import { Center, Text, Button, Flex, Spacer } from '@chakra-ui/react'
+import { parseURLDate, useBack, getURLDate, cleanName } from "../common"
+import { Center, Text, Button, Flex, Spacer, useDisclosure } from '@chakra-ui/react'
 import { useParams, useNavigate } from "react-router-dom";
 import Race from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
@@ -11,10 +11,12 @@ import ClubMember from "../store/types/ClubMember";
 import NewHelm from "./NewHelm";
 import Helm from "../store/types/Helm";
 import { GreenButton, RedButton } from "./Buttons";
+import AlertDialogWrapper from "./AlertDialogWrapper";
 
 function RegisterHelm({ addAnotherHelmWorkflow }) {
     const navigateBack = useBack();
     const [selectedHelm, setSelectedHelm] = useState(null);
+    const [selectedNewMember, setSelectedNewMember] = useState(null);
     const [selectedClubMember, setSelectedClubMember] = useState(null);
     const [selectedBoat, setSelectedBoat] = useState(null);
     const [sailNumber, setSailNumber] = useState();
@@ -103,7 +105,9 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         if (selectedHelm) {
             setBoatsIndex(services.indexes.getBoatIndexForHelmRace(selectedHelm, race));
         }
-    }, [selectedHelm])
+    }, [selectedHelm]);
+
+    useEffect(() => setSelectedHelm(undefined), [selectedClubMember]);
 
     const handleSelectedHelm = (selectedHelm) => {
         if (selectedHelm instanceof ClubMember) {
@@ -134,6 +138,39 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         setSelectedHelm(newHelm);
     };
 
+    const { onOpen, isOpen, onClose } = useDisclosure();
+
+    const onNewHelmName = (newMemberName) => {
+        try {
+            const cleanedName = cleanName(newMemberName);
+            if (!services.stores.clubMembers.has(cleanedName)
+                && !services.stores.newMembers.has(cleanedName)) {
+                setSelectedNewMember(cleanedName);
+                onOpen();
+            }
+        }
+        catch (err) {
+            // do nothing
+        }
+    };
+
+    const onConfirmNewClubMember = () => {
+        if (services.stores.helms.has(selectedNewMember)) {
+            setSelectedHelm(services.stores.helms.get(selectedNewMember));
+            return;
+        }
+        setSelectedClubMember(ClubMember.fromName(selectedNewMember));
+    };
+
+    const getHelmNameErrorMessage = (partialMatch) => {
+        try {
+            cleanName(partialMatch);
+            return;
+        }
+        catch (err) {
+            return err.message;
+        }
+    }
 
     return (
         <>
@@ -144,16 +181,28 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
                     <Flex direction={"column"} height="100%" width="100%" alignItems={"center"}>
                         {helmsIndex && !selectedClubMember &&
-                            <Autocomplete
-                                customClassName="input-container-1 input-container"
-                                heading={"Helm"}
-                                data={helmsIndex.data}
-                                itemToString={(helm) => (helm ? helm.getName() : "")}
-                                filterData={(inputValue) => helmsIndex.search(inputValue)}
-                                handleSelectedItemChange={handleSelectedHelm}
-                                sortFn={(helmA, helmB) => helmA.getName() > helmB.getName() ? 1 : -1}
-                                placeholder={"Enter helm name here..."}
-                            />
+                            <AlertDialogWrapper
+                                providedDisclosure={{ isOpen: isOpen, onClose }}
+                                onConfirm={() => onConfirmNewClubMember()}
+                                confirmColorScheme="green"
+                                confirmButtonText="Confirm"
+                                warningText="Are you sure you want to add a new helm?"
+                                deleteHeading={`Add new helm: ${selectedNewMember}.`}
+                            >
+                                <Autocomplete
+                                    customClassName="input-container-1 input-container"
+                                    heading={"Helm"}
+                                    data={helmsIndex.data}
+                                    itemToString={(helm) => (helm ? helm.getName() : "")}
+                                    filterData={(inputValue) => helmsIndex.search(inputValue)}
+                                    handleSelectedItemChange={handleSelectedHelm}
+                                    sortFn={(helmA, helmB) => helmA.getName() > helmB.getName() ? 1 : -1}
+                                    placeholder={"Enter helm name here..."}
+                                    handleOnBlur={onNewHelmName}
+                                    forceBlurOnExactMatch={true}
+                                    getPartialMatchErrorMsg={getHelmNameErrorMessage}
+                                />
+                            </AlertDialogWrapper>
                         }
                         {
                             selectedClubMember && <NewHelm onNewHelm={onNewHelm} clubMember={selectedClubMember} />

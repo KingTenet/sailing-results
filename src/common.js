@@ -229,3 +229,41 @@ export async function getAllCellsFromSheet(sheetId, auth, sheetName, filterEmpty
         return cells;
     });
 }
+
+export function cleanName(str) {
+    if (!str) {
+        throw new Error(`No name provided.`);
+    }
+
+    let name = str.replace(/\([\s]?[\s]?\)/, "");
+
+    if (/[^A-Za-zÀ-ÖØ-öø-ÿ'\- ]/.test(name)) {
+        throw new Error(`The name: ${name} has invalid characters.`);
+    }
+    let cleanName = name.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ'\- ]/g, "").replace(/\s+/g, " ").trim();
+
+    if (!cleanName) {
+        throw new Error(`The name: ${name} is invalid.`);
+    }
+
+    if (cleanName.split(" ").length < 2) {
+        throw new Error(`Both first name and last name required.`);
+    }
+
+    for (let subName of cleanName.split(" ")) {
+        if (subName.length < 2) {
+            throw new Error(`Names must be at least 2 characters long.`);
+        }
+    }
+
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const capitalizeAfterChars = (str, char) => str.split(char).reduce((str, part, i) => i ? [str, capitalize(part)].join(char) : part)
+    const capitalizedName = capitalize(
+        [" ", "-", "'", " Mc"]
+            .reduce(
+                (acc, chars) => capitalizeAfterChars(acc, chars),
+                ` ${cleanName}`.toLowerCase())
+    ).trim();
+
+    return capitalizedName;
+}

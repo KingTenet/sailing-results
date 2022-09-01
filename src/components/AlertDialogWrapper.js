@@ -7,7 +7,7 @@ import {
 } from "@chakra-ui/react";
 
 export default function AlertDialogWrapper
-    ({ children, deleteHeading, onConfirm, confirmButtonText = "Delete", providedDisclosure }) {
+    ({ children, deleteHeading, onConfirm, confirmButtonText = "Delete", confirmColorScheme = "red", warningText = "Are you sure? This action cannot be undone.", providedDisclosure }) {
     const cancelRef = React.useRef();
 
     const disclosure = useDisclosure();
@@ -23,7 +23,7 @@ export default function AlertDialogWrapper
 
     return (
         <>
-            <Box onClick={() => providedDisclosure || onOpen()}>
+            <Box width="100%" onClick={() => providedDisclosure || onOpen()}>
                 {children}
             </Box>
             <>
@@ -39,14 +39,14 @@ export default function AlertDialogWrapper
                             </AlertDialogHeader>
 
                             <AlertDialogBody>
-                                Are you sure? This action cannot be undone.
+                                {warningText}
                             </AlertDialogBody>
 
                             <AlertDialogFooter>
                                 <Button ref={cancelRef} onClick={onClose}>
                                     Cancel
                                 </Button>
-                                <Button colorScheme='red' onClick={onDelete} ml={3}>
+                                <Button colorScheme={confirmColorScheme} onClick={onDelete} ml={3}>
                                     {confirmButtonText}
                                 </Button>
                             </AlertDialogFooter>

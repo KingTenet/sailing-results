@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Spacer } from "@chakra-ui/react";
+import { Box, Center, Flex, Heading, Spacer } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useRef } from "react";
@@ -357,11 +357,13 @@ export default function Race({ backButtonText }) {
                     <BlueButton onClick={() => updateEditingRace(true)} isDisabled={committingResults}>Edit results</BlueButton>
                     {Boolean(viewableRaceResults.length) &&
                         <CommitResultsDialog race={race} onSuccess={committingResultsSuccess} onFailed={committingResultsFailed} onStarted={committingResultsStarted} >
-                            <YellowButton
-                                onClick={(event) => event.preventDefault()}
-                                isLoading={committingResults}
-                                loadingText='Committing Results'
-                            >Commit results</YellowButton>
+                            <Center>
+                                <YellowButton
+                                    onClick={(event) => event.preventDefault()}
+                                    isLoading={committingResults}
+                                    loadingText='Committing Results'
+                                >Commit results</YellowButton>
+                            </Center>
                         </CommitResultsDialog>
                     }
                 </>

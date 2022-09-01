@@ -170,3 +170,7 @@ input {
     background-color: white;
     opacity: 1 !important;
 }
+
+.autocomplete-error {
+    margin-top: 10px;
+}

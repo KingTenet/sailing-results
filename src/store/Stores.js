@@ -61,14 +61,26 @@ export class Stores {
         const createStoreWrapper = (...args) => StoreWrapper.create(forceCacheRefresh, ...args);
 
         const promiseClubMembers = createStoreWrapper("Active Membership", this.raceResultsDocument, this, ClubMember);
+        const promiseNewMembers = createStoreWrapper("New Membership", this.raceResultsDocument, this, ClubMember);
         const promiseHelms = createStoreWrapper("Helms", this.raceResultsDocument, this, Helm);
 
         const promiseRYAClasses = createStoreWrapper("RYA Full List", this.raceResultsDocument, this, BoatClass);
         const promiseClubClasses = createStoreWrapper("Club Handicaps", this.raceResultsDocument, this, BoatClass);
         const promiseSeriesRaces = createStoreWrapper("Seasons/Series", this.raceResultsDocument, this, SeriesRace);
 
-        const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces]);
+        const [clubMembers, helms, ryaClasses, clubClasses, seriesRaces, newMembers] = await Promise.all([promiseClubMembers, promiseHelms, promiseRYAClasses, promiseClubClasses, promiseSeriesRaces, promiseNewMembers]);
         this.clubMembers = clubMembers;
+        this.newMembers = newMembers;
+
+        const allClubMemberIds = [
+            ...this.newMembers.all(),
+            ...this.clubMembers.all()
+        ].map(ClubMember.getId);
+
+        if ([...new Set(allClubMemberIds)].length !== allClubMemberIds.length) {
+            throw new Error("Duplicate helms exist in new members and existing members");
+        }
+
         this.helms = helms;
         this.ryaClassesStore = ryaClasses;
         this.clubClassesStore = clubClasses;
@@ -352,6 +364,7 @@ class Indexes {
         return new SearchIndex(
             [
                 ...this.stores.clubMembers.all(),
+                ...this.stores.newMembers.all(),
                 ...this.stores.helms.all()
                     .filter((helm) => helm.isGuestHelm())
                     .map((guestHelm) => ClubMember.fromName(guestHelm.getName())),
@@ -525,6 +538,7 @@ export class StoreFunctions {
         this.syncroniseStores = this.syncroniseStores;
         this.reprocessStoredResults = this.reprocessStoredResults;
         this.getLatestHelmPersonalHandicap = this.getLatestHelmPersonalHandicap;
+        this.helmIsClubMember = this.helmIsClubMember;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
         this.readOnly = readOnly;
@@ -569,23 +583,39 @@ export class StoreFunctions {
         return this.stores.getStatus();
     }
 
+    helmIsClubMember(helm) {
+        return this.stores.clubMembers.has(Helm.getId(helm)) || this.stores.newMembers.has(Helm.getId(helm));
+    }
+
     async commitNewHelmsForResults(race, results, oods, newHelms) {
         await promiseSleep(0);
         const [raceResults, raceOODs] = this.getResultsOODsForRace(race, results, oods);
         const newHelmsById = mapGroupBy(newHelms, [Helm.getId]);
         const helmsToCommit = new AutoMap(Helm.getId);
+        const newMembersToCommit = new AutoMap(ClubMember.getId);
         for (let result of raceResults) {
             if (newHelmsById.has(Result.getHelmId(result))) {
                 helmsToCommit.upsert(result.getHelm());
+            }
+            if (!this.helmIsClubMember(result.getHelm())) {
+                newMembersToCommit.upsert(ClubMember.fromName(Result.getHelmId(result)));
             }
         }
         for (let ood of raceOODs) {
             if (newHelmsById.has(HelmResult.getHelmId(ood))) {
                 helmsToCommit.upsert(ood.getHelm());
             }
+            if (!this.helmIsClubMember(ood.getHelm())) {
+                newMembersToCommit.upsert(ClubMember.fromName(Result.getHelmId(ood)));
+            }
         }
         for (let [, helm] of [...helmsToCommit]) {
-            this.stores.helms.add(helm);
+            if (!this.stores.helms.has(Helm.getId(helm))) {
+                this.stores.helms.add(helm);
+            }
+        }
+        for (let [, clubMember] of [...newMembersToCommit]) {
+            this.stores.newMembers.add(clubMember);
         }
         return [...helmsToCommit].map(([helmId]) => helmId);
     }

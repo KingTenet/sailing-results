@@ -11,6 +11,9 @@ import {
     InputRightElement,
     Spacer,
     Collapse,
+    Alert,
+    AlertIcon,
+    AlertTitle,
 } from '@chakra-ui/react'
 
 import { CheckCircleIcon } from '@chakra-ui/icons'
@@ -19,14 +22,7 @@ function CollapseEx({ children, isOpen }) {
     return (
         <>
             <Collapse in={isOpen} animateOpacity>
-                <Box
-                // p='5px'
-                // color='white'
-                // mt='4'
-                // bg='teal.500'
-                // rounded='md'
-                // shadow='md'
-                >
+                <Box>
                     {children}
                 </Box>
             </Collapse>
@@ -41,9 +37,10 @@ function getMenuItems(inputItems, initialItems) {
     return initialItems;
 }
 
-export default function ({ customClassName = "input-container-1 input-container", sortFn, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false }) {
+export default function ({ customClassName = "input-container-1 input-container", sortFn, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false, forceBlurOnExactMatch, handleOnBlur, getPartialMatchErrorMsg }) {
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
+    const [errorMessage, setErrorMessage] = useState();
     const exactMatch = partialMatch === undefined
         ? undefined
         : partialMatch === false
@@ -57,6 +54,9 @@ export default function ({ customClassName = "input-container-1 input-container"
     const setPartiaValue = (value) => {
         setPartialMatch(value);
         setInputItems(filterData(value));
+        if (value && getPartialMatchErrorMsg && errorMessage) {
+            setErrorMessage(getPartialMatchErrorMsg(value));
+        }
     };
 
     const {
@@ -74,11 +74,12 @@ export default function ({ customClassName = "input-container-1 input-container"
         },
         onInputValueChange: ({ inputValue }) => {
             let exactMatch = data.find((item) => itemToString(item).toLowerCase() === inputValue.toLowerCase());
-            if (exactMatch) {
-                // Re-enable to automatically force blur on any match (which is annoying due to subsets being valid)
-                // setExactMatch(exactMatch);
+            if (forceBlurOnExactMatch && exactMatch) {
+                setExactMatch(exactMatch);
             }
-            setPartiaValue(inputValue);
+            else {
+                setPartiaValue(inputValue);
+            }
         }
     });
 
@@ -100,11 +101,17 @@ export default function ({ customClassName = "input-container-1 input-container"
         if (triggerExactMatchOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
             setExactMatch(partialMatch);
         }
+        if (handleOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
+            handleOnBlur(partialMatch);
+        }
+        if (getPartialMatchErrorMsg && partialMatch) {
+            setErrorMessage(getPartialMatchErrorMsg(partialMatch));
+        }
     }, [isOpen]);
 
     return (
         <>
-            {exactMatch &&
+            {/* {exactMatch &&
                 <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
                     <Flex direction={"row"}>
                         <Box minWidth="110px" paddingTop="5px">
@@ -118,48 +125,56 @@ export default function ({ customClassName = "input-container-1 input-container"
                         </Box>
                     </Flex>
                 </Box>
-            }
-            {!exactMatch &&
-                <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
-                    <Flex direction={"column"}>
-                        <Flex direction={"row"} >
-                            <Box minWidth="110px" paddingTop="5px">
-                                <Text fontSize={"lg"}>{heading}</Text>
-                            </Box>
-                            <Box {...getComboboxProps()} width="100%">
-                                <InputGroup>
-                                    <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
-                                </InputGroup>
-                            </Box>
-                        </Flex>
-                        <Spacer />
-                        <CollapseEx isOpen={menuIsOpen()}>
-                            <ul {...getMenuProps()}>
-                                {getMenuItems(inputItems, data)
-                                    .slice(0, 8)
-                                    .map((item, index) => [item, index])
-                                    .sort(([itemA, indexA], [itemB, indexB]) => sortFn && !partialMatch ? sortFn(itemA, itemB) : indexA - indexB)
-                                    .map(([item, index]) => (
-                                        <Box
-                                            shadow='md'
-                                            marginTop="8px"
-                                            marginBottom="5px"
-                                            padding="12px"
-                                            borderWidth="1px"
-                                            borderRadius="base"
-                                            backgroundColor="white"
-                                            key={`${itemToString(item)}${index}`}
-                                            {...getItemProps({ item, index })}
-                                        >
-                                            <Heading fontSize={"lg"}>{itemToString(item)}</Heading>
-                                        </Box>
-                                    ))}
-                            </ul>
-                        </CollapseEx>
-                        <Spacer />
+            } */}
+
+            <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
+                <Flex direction={"column"}>
+                    <Flex direction={"row"} className={"autocomplete-input"}>
+                        <Box minWidth="110px" paddingTop="5px">
+                            <Text fontSize={"lg"}>{heading}</Text>
+                        </Box>
+                        <Box {...getComboboxProps()} width="100%">
+                            <InputGroup>
+                                <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
+                            </InputGroup>
+                        </Box>
                     </Flex>
-                </Box>
-            }
+                    {!exactMatch && errorMessage &&
+                        <Box className={"autocomplete-error"}>
+                            <Alert status='error'>
+                                <AlertIcon />
+                                <AlertTitle mr={2}>{errorMessage}</AlertTitle>
+                            </Alert>
+                        </Box>
+                    }
+                    <Spacer />
+                    <CollapseEx isOpen={menuIsOpen()}>
+                        <ul {...getMenuProps()}>
+                            {getMenuItems(inputItems, data)
+                                .slice(0, 8)
+                                .map((item, index) => [item, index])
+                                .sort(([itemA, indexA], [itemB, indexB]) => sortFn && !partialMatch ? sortFn(itemA, itemB) : indexA - indexB)
+                                .map(([item, index]) => (
+                                    <Box
+                                        shadow='md'
+                                        marginTop="8px"
+                                        marginBottom="5px"
+                                        padding={highlightedIndex === index ? "11px" : "12px"}
+                                        borderWidth={highlightedIndex === index ? "2px" : "1px"}
+                                        borderColor="gray"
+                                        borderRadius="base"
+                                        backgroundColor="white"
+                                        key={`${itemToString(item)}${index}`}
+                                        {...getItemProps({ item, index })}
+                                    >
+                                        <Heading fontSize={"lg"}>{itemToString(item)}</Heading>
+                                    </Box>
+                                ))}
+                        </ul>
+                    </CollapseEx>
+                    <Spacer />
+                </Flex>
+            </Box>
         </>
     )
 }
