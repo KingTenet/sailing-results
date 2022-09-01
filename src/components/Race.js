@@ -19,7 +19,7 @@ import MutableRaceResult from "../store/types/MutableRaceResult";
 import CommitResultsDialog from "./CommitResultsDialog";
 import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
-import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, wrapDeleteOnSwipe } from "./DeleteItems";
+import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, ResetTiming, wrapDeleteOnSwipe } from "./DeleteItems";
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
@@ -218,6 +218,19 @@ function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateR
             oods
         );
 
+    const resetFinisher = (itemToReset) => {
+        updateRaceResults(
+            [...registered, MutableRaceResult.fromResult(itemToReset)],
+            finished.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(itemToReset)),
+            dnf.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(itemToReset)),
+            oods
+        );
+
+        if (!isPursuitRace) {
+            navigateTo(`fleetFinish/${HelmResult.getHelmId(itemToReset)}`)
+        }
+    };
+
     const WrappedRegisteredListItem = ({ item, ...props }) => <RegisteredListItem registered={item} onDNF={() => onDNF(item)} {...props} />;
     const WrappedFinisherListItem = ({ item, ...props }) => <FinisherListItem result={item} {...props} />
     const WrappedDNFListItem = ({ item, ...props }) => <DNFListItem result={item} {...props} />
@@ -231,9 +244,9 @@ function DraggableView({ registered, finished, dnf, oods, isPursuitRace, updateR
                 onClick: () => navigateTo(`fleetFinish/${HelmResult.getHelmId(item)}`)
             }))}
             registered={registered}
-            FinishedListItem={wrapDeleteOnSwipe(DeleteFinisher, WrappedFinisherListItem)}
+            FinishedListItem={wrapDeleteOnSwipe(DeleteFinisher, WrappedFinisherListItem, undefined, resetFinisher)}
             finished={finished}
-            DNFListItem={wrapDeleteOnSwipe(DeleteFinisher, WrappedDNFListItem)}
+            DNFListItem={wrapDeleteOnSwipe(DeleteFinisher, WrappedDNFListItem, undefined, resetFinisher)}
             dnf={dnf}
             OODListItem={wrapDeleteOnSwipe(DeleteOOD, WrappedOODListItem)}
             oods={oods}

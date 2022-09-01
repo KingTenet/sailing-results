@@ -79,8 +79,6 @@ export function ForceSpinner({ children: getChildren, threshold = 2 }) {
         }
     }, [count]);
 
-    console.log("Rendering force spinner");
-
     if (count >= threshold) {
         return <>
             {getChildren()}
