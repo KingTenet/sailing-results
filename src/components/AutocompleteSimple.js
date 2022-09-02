@@ -41,20 +41,27 @@ export default function ({ customClassName = "input-container-1 input-container"
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
     const [errorMessage, setErrorMessage] = useState();
-    const exactMatch = partialMatch === undefined
-        ? undefined
-        : partialMatch === false
+    const [canShowErrors, setCanShowErrors] = useState();
+    const [exactMatch, setWrappedExactMatch] = useState();
+    const [blurEventCount, setBlurEventCount] = useState(0);
+    // const exactMatch = partialMatch === undefined
+    //     ? undefined
+    //     : partialMatch === false
 
     const setExactMatch = (value) => {
-        setPartialMatch(false);
+        setWrappedExactMatch(value);
         setInputItems([]);
         handleSelectedItemChange(value);
     };
 
-    const setPartiaValue = (value) => {
-        setPartialMatch(value);
-        setInputItems(filterData(value));
-        if (value && getPartialMatchErrorMsg && errorMessage) {
+    const resetExactMatch = () => {
+        setWrappedExactMatch();
+        setInputItems(filterData(partialMatch));
+        handleSelectedItemChange();
+    }
+
+    const handleErrorMessage = (value) => {
+        if (getPartialMatchErrorMsg) {
             setErrorMessage(getPartialMatchErrorMsg(value));
         }
     };
@@ -73,15 +80,61 @@ export default function ({ customClassName = "input-container-1 input-container"
             setExactMatch(selectedItem);
         },
         onInputValueChange: ({ inputValue }) => {
-            let exactMatch = data.find((item) => itemToString(item).toLowerCase() === inputValue.toLowerCase());
-            if (forceBlurOnExactMatch && exactMatch) {
-                setExactMatch(exactMatch);
-            }
-            else {
-                setPartiaValue(inputValue);
-            }
+            setPartialMatch(inputValue);
         }
     });
+
+    useEffect(() => {
+        if (partialMatch === undefined) {
+            return;
+        }
+
+        setInputItems(filterData(partialMatch));
+        handleErrorMessage(partialMatch);
+
+        if (exactMatch === undefined && forceBlurOnExactMatch) {
+            console.log("In forceBlurOnExactMatch");
+            let exactMatch = data.find((item) => itemToString(item).toLowerCase() === partialMatch.toLowerCase());
+            if (exactMatch) {
+                setExactMatch(exactMatch);
+            }
+        }
+    }, [partialMatch]);
+
+    useEffect(() => {
+        if (exactMatch) {
+            console.log("Got new exact match " + exactMatch);
+            setPartialMatch(itemToString(exactMatch));
+        }
+    }, [exactMatch]);
+
+    useEffect(() => {
+        if (isOpen) {
+            resetExactMatch();
+            setCanShowErrors(false);
+            return;
+        }
+
+        // TODO: This timeout is necessary to avoid race where handleOnBlur is called before onSelectedItemChange (which is undesirable)
+        setTimeout(() => setBlurEventCount(blurEventCount + 1), 0);
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (exactMatch === undefined && partialMatch !== undefined) {
+            const exactMatch = data.find((item) => itemToString(item).toLowerCase() === partialMatch.toLowerCase());
+            if (exactMatch && triggerExactMatchOnBlurIfValid) {
+                setExactMatch(exactMatch);
+            }
+            else if (triggerExactMatchOnBlur) {
+                setExactMatch(partialMatch);
+            }
+            if (handleOnBlur) {
+                console.log("Calling handleOnBlur with " + partialMatch);
+                handleOnBlur(partialMatch);
+            }
+        }
+        setCanShowErrors(true);
+    }, [blurEventCount]);
 
     const menuIsOpen = () => {
         if (exactMatch) {
@@ -96,24 +149,6 @@ export default function ({ customClassName = "input-container-1 input-container"
             return true;
         }
     }
-
-    useEffect(() => {
-        if (partialMatch !== undefined && partialMatch !== false && !isOpen) {
-            const exactMatch = data.find((item) => itemToString(item).toLowerCase() === partialMatch.toLowerCase());
-            if (exactMatch && triggerExactMatchOnBlurIfValid) {
-                setExactMatch(exactMatch);
-            }
-            else if (triggerExactMatchOnBlur) {
-                setExactMatch(partialMatch);
-            }
-        }
-        if (handleOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
-            handleOnBlur(partialMatch);
-        }
-        if (getPartialMatchErrorMsg && partialMatch) {
-            setErrorMessage(getPartialMatchErrorMsg(partialMatch));
-        }
-    }, [isOpen]);
 
     return (
         <>
@@ -145,7 +180,7 @@ export default function ({ customClassName = "input-container-1 input-container"
                             </InputGroup>
                         </Box>
                     </Flex>
-                    {!exactMatch && errorMessage &&
+                    {!exactMatch && errorMessage && canShowErrors &&
                         <Box className={"autocomplete-error"}>
                             <Alert status='error'>
                                 <AlertIcon />

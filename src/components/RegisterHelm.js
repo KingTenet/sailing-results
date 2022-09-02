@@ -96,7 +96,10 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
             );
 
             setSailNumberIndex(index);
-            // setAllSailNumbers(sailNumbers);
+        }
+        else {
+            setSailNumber(undefined);
+            setSailNumberIndex(undefined);
         }
     },
         [selectedBoat]
@@ -105,6 +108,10 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
     useEffect(() => {
         if (selectedHelm) {
             setBoatsIndex(services.indexes.getBoatIndexForHelmRace(selectedHelm, race));
+        }
+        else {
+            setSelectedBoat(undefined);
+            setBoatsIndex(undefined);
         }
     }, [selectedHelm]);
 
@@ -240,6 +247,9 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                                         if (item !== undefined) {
                                             const sailNumber = !isNaN(parseInt(item)) ? parseInt(item) : item.sailNumber;
                                             setSailNumber(sailNumber);
+                                        }
+                                        else {
+                                            setSailNumber();
                                         }
                                     }}
                                     placeholder={"Enter boat sail number here..."}
