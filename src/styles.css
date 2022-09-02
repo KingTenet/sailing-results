@@ -175,6 +175,15 @@ input {
     opacity: 1 !important;
 }
 
+.hidden-input {
+    /* hide it visually */
+    opacity: 0 !important;
+    /* avoid unintended clicks */
+    z-index: -1;
+    /* don't affect other elements positioning */
+    position: absolute;
+}
+
 .autocomplete-error {
     margin-top: 10px;
 }

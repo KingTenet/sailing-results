@@ -175,10 +175,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
 
     return (
         <>
-            {/* <Box height="100vh" /> */}
             <form onSubmit={(evt) => evt.preventDefault()}>
-                {/* <Center minHeight="80vh"> */}
-                {/* <Flex direction={"column"} minHeight="888px" width="100%"> */}
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
                     <BackHeader heading="Register Helm" marginBottom="5px" />
                     <Flex direction={"column"} height="100%" width="100%" alignItems={"center"}>
@@ -217,7 +214,9 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                                 itemToString={(boat) => (boat ? boat.getClassName() : "")}
                                 filterData={(inputValue) => boatsIndex.search(inputValue)}
                                 handleSelectedItemChange={setSelectedBoat}
+                                getPartialMatchErrorMsg={(partialMatch) => `${partialMatch} is not a recognised boat class`}
                                 placeholder={"Enter boat..."}
+                                triggerExactMatchOnBlurIfValid={true}
                             />
                         }
                         {selectedBoat && sailNumberIndex &&
@@ -247,14 +246,10 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                                     type={"number"}
                                     triggerExactMatchOnBlur={true}
                                 />
-                                {!sailNumber &&
-                                    <input style={{
-                                        opacity: 0,         // hide it visually
-                                        zIndex: -1,         // avoid unintended clicks
-                                        position: "absolute"  // don't affect other elements positioning
-                                    }}></input>
-                                }
                             </>
+                        }
+                        {sailNumber === undefined &&
+                            <input className="hidden-input"></input>
                         }
                         <Spacer />
                         {(sailNumber !== undefined || showCommit) &&

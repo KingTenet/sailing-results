@@ -37,7 +37,7 @@ function getMenuItems(inputItems, initialItems) {
     return initialItems;
 }
 
-export default function ({ customClassName = "input-container-1 input-container", sortFn, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false, forceBlurOnExactMatch, handleOnBlur, getPartialMatchErrorMsg }) {
+export default function ({ customClassName = "input-container-1 input-container", sortFn, data, itemToString, filterData, heading, placeholder, handleSelectedItemChange, openOnFocus = true, type = "text", triggerExactMatchOnBlur = false, triggerExactMatchOnBlurIfValid = false, forceBlurOnExactMatch, handleOnBlur, getPartialMatchErrorMsg }) {
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
     const [errorMessage, setErrorMessage] = useState();
@@ -98,8 +98,14 @@ export default function ({ customClassName = "input-container-1 input-container"
     }
 
     useEffect(() => {
-        if (triggerExactMatchOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
-            setExactMatch(partialMatch);
+        if (partialMatch !== undefined && partialMatch !== false && !isOpen) {
+            const exactMatch = data.find((item) => itemToString(item).toLowerCase() === partialMatch.toLowerCase());
+            if (exactMatch && triggerExactMatchOnBlurIfValid) {
+                setExactMatch(exactMatch);
+            }
+            else if (triggerExactMatchOnBlur) {
+                setExactMatch(partialMatch);
+            }
         }
         if (handleOnBlur && partialMatch !== undefined && partialMatch !== false && !isOpen) {
             handleOnBlur(partialMatch);
