@@ -38,7 +38,7 @@ function NumberSelector({ setFinishTimeSeconds }) {
     };
 
     return (
-        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} className={"input-container input-container-4"}>
+        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} className={"input-container input-container-5"}>
             {!completed &&
                 <Box minWidth="110px" paddingTop="5px">
                     <Text fontSize={"lg"}>{"Finish Time"}</Text>

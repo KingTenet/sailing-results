@@ -19,6 +19,7 @@ import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
 import { ForceSpinner } from "./components/Spinner";
 
 import './styles.css';
+import BackHeader from "./components/BackHeader";
 
 const ADD_ANOTHER_HELM_WORKFLOW = true;
 const BOOTSTRAP_HISTORY = true;
@@ -64,7 +65,7 @@ const ROUTES = [
                             { path: '/races/:raceDate/:raceNumber/register', element: <ForceSpinner>{() => <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} />}</ForceSpinner> },
                             { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <ForceSpinner>{() => <RegisteredHelm><RegisterAnotherButtons /></RegisteredHelm>}</ForceSpinner> },
                             { path: '/races/:raceDate/:raceNumber/ood', element: <ForceSpinner>{() => <RegisterOOD />}</ForceSpinner> },
-                            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <ForceSpinner>{() => <RegisteredHelm><FinishHelm /></RegisteredHelm>}</ForceSpinner> },
+                            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <ForceSpinner>{() => <RegisteredHelm backHeading="Finish Helm"><FinishHelm /></RegisteredHelm>}</ForceSpinner> },
                         ]
                     }
                 ]

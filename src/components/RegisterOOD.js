@@ -12,6 +12,7 @@ import ClubMember from "../store/types/ClubMember";
 import NewHelm from "./NewHelm";
 import { GreenButton, RedButton } from "./Buttons";
 import AlertDialogWrapper from "./AlertDialogWrapper";
+import BackHeader from "./BackHeader";
 
 
 export default function RegisterOOD() {
@@ -141,6 +142,7 @@ export default function RegisterOOD() {
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
+                    <BackHeader heading="Register OOD" marginBottom="5px" />
                     <Flex direction={"column"} height="100%" alignItems={"center"} width="100%">
                         {helmsIndex && !selectedClubMember &&
 

@@ -12,6 +12,7 @@ import NewHelm from "./NewHelm";
 import Helm from "../store/types/Helm";
 import { GreenButton, RedButton } from "./Buttons";
 import AlertDialogWrapper from "./AlertDialogWrapper";
+import BackHeader from "./BackHeader";
 
 function RegisterHelm({ addAnotherHelmWorkflow }) {
     const navigateBack = useBack();
@@ -179,6 +180,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                 {/* <Center minHeight="80vh"> */}
                 {/* <Flex direction={"column"} minHeight="888px" width="100%"> */}
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
+                    <BackHeader heading="Register Helm" marginBottom="5px" />
                     <Flex direction={"column"} height="100%" width="100%" alignItems={"center"}>
                         {helmsIndex && !selectedClubMember &&
                             <AlertDialogWrapper

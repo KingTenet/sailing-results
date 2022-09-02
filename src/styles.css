@@ -140,18 +140,22 @@ body {
 }
 
 .input-container-2 {
-    background: linear-gradient(135deg, hsl(169, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+    background: linear-gradient(135deg, hsl(165, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
 }
 
 .input-container-3 {
-    background: linear-gradient(135deg, hsl(233, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+    background: linear-gradient(135deg, hsl(195, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
 }
 
 .input-container-4 {
-    background: linear-gradient(135deg, hsl(269, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+    background: linear-gradient(135deg, hsl(243, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
 }
 
 .input-container-5 {
+    background: linear-gradient(135deg, hsl(275, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+.input-container-6 {
     background: linear-gradient(135deg, hsl(300, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
 }
 
@@ -173,4 +177,21 @@ input {
 
 .autocomplete-error {
     margin-top: 10px;
+}
+
+.back-header .back-button-container {
+    background-color: rgba(0, 0, 0, 0.03);
+    background-size: 100%;
+    border-width: 0px;
+    border-color: black;
+    border-radius: 15px;
+    padding: 2px 5px 5px 5px;
+}
+
+.back-header .back-button-container:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.page-container {
+    background: linear-gradient(180deg, hsl(219, 69%, 45%, 0.15) 0%, rgba(255, 255, 255, 1) 100%);
 }

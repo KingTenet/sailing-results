@@ -126,7 +126,7 @@ export default function TokenWrapper() {
 
     return (
         <>
-            <Box bg="blue.50" minHeight="100vh" >
+            <Box className="page-container" minHeight="100vh" >
                 <ServicesContext.Provider value={servicesManager}>
                     <ServicesWrapper token={token && token.body} />
                 </ServicesContext.Provider>

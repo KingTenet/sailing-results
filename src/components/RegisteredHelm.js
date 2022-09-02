@@ -19,8 +19,9 @@ import {
 
 import { CheckCircleIcon } from '@chakra-ui/icons';
 import SpinnerWithTimeout from "./Spinner";
+import BackHeader from "./BackHeader";
 
-function RegisteredHelm({ children }) {
+function RegisteredHelm({ backHeading, children }) {
     const navigateBack = useBack();
     const [appState] = useAppState();
 
@@ -54,6 +55,7 @@ function RegisteredHelm({ children }) {
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" alignItems="center">
+                    <BackHeader heading={backHeading} marginBottom="5px" />
                     <Flex direction={"column"} alignItems={"center"} width="100%" >
                         <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} width="100%" className={"input-container-1 input-container"}>
                             <Flex direction={"row"} >
