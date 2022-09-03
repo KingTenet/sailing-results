@@ -12,7 +12,7 @@ import { GreenButton } from "./Buttons";
 import { RegisteredCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
 
-const FLEET_RACE_VIEWS = ["CLASS_HANDICAP", "PERSONAL_HANDICAP", "FINISH_TIME"];
+const FLEET_RACE_VIEWS = ["FINISH_TIME", "CLASS_HANDICAP", "PERSONAL_HANDICAP"];
 const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
 
 const COLUMN_1_DIMENSIONS = {
@@ -25,8 +25,8 @@ const COLUMN_1_DIMENSIONS = {
         "SAIL_NUMBER",
     ],
     "FINISH_TIME": [
-        "NAME",
         "SAIL_NUMBER",
+        "NAME",
     ],
     "PURSUIT_POSITIONS": [
         "NAME",
