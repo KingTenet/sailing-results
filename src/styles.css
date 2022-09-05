@@ -188,13 +188,25 @@ input {
     margin-top: 10px;
 }
 
+.back-header {
+    padding-top: 20px;
+    padding-bottom: 5px;
+    padding-right: 10px;
+    padding-left: 20px;
+    /* overflow: hidden; */
+    /* background-color: blue; */
+}
+
 .back-header .back-button-container {
     background-color: rgba(0, 0, 0, 0.03);
     background-size: 100%;
     border-width: 0px;
     border-color: black;
     border-radius: 15px;
-    padding: 2px 5px 5px 5px;
+    padding: 5px 8px 6px 8px;
+    position: relative;
+    top: -7px;
+
 }
 
 .back-header .back-button-container:active {

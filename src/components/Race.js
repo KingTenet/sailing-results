@@ -20,6 +20,7 @@ import CommitResultsDialog from "./CommitResultsDialog";
 import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
 import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, ResetTiming, wrapDeleteOnSwipe } from "./DeleteItems";
+import BackHeader from "./BackHeader";
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
@@ -327,11 +328,13 @@ export default function Race({ backButtonText }) {
         return (
 
             <Flex direction="column" className="device-height" alignItems={"center"}>
-                <Flex direction="row" marginTop="20px" marginBottom="20px" width="100%" style={{ overflow: "hidden" }}>
-                    <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
-                    <Spacer />
-                    <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
-                </Flex>
+                {(editingRace || !raceIsMutable) &&
+                    <Flex direction="row" marginTop="20px" marginBottom="20px" width="100%" style={{ overflow: "hidden" }}>
+                        <Heading size={"lg"} marginLeft="20px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</Heading>
+                        <Spacer />
+                        <Heading size={"lg"} marginRight="20px">{`${formatRaceNumber(raceNumber)} ${formatFleetPursuit(isPursuitRace)} race`}</Heading>
+                    </Flex>
+                }
                 {children}
                 {!raceIsMutable &&
                     <BackButton disabled={committingResults}>{backButtonText}</BackButton>
@@ -363,6 +366,9 @@ export default function Race({ backButtonText }) {
     }
     else {
         return <Wrapped>
+            {raceIsMutable &&
+                <BackHeader heading={"Race results"} onClick={() => updateEditingRace(true)} />
+            }
             <RaceResultsView results={viewableRaceResults} oods={oods} race={race} isDisabled={committingResults} raceIsMutable={raceIsMutable} />
             <Spacer />
             {raceIsMutable &&

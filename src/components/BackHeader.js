@@ -3,6 +3,7 @@ import {
     Text,
     Flex,
     Spacer,
+    Heading,
 } from '@chakra-ui/react'
 import { useBack } from '../common';
 
@@ -15,17 +16,17 @@ const BackIcon = (props) => (
     </Icon>
 )
 
-function BackHeader({ heading, paddingTop = "5px", paddingLeft = "5px", paddingRight = "5px", onClick, ...props }) {
+function BackHeader({ heading, onClick, ...props }) {
     const navigateBack = useBack();
 
     return (
-        <Flex direction="row" justifyContent={"space-between"} width="100%" className="back-header" marginBottom="0" paddingLeft={paddingLeft} paddingRight={paddingRight} {...props}>
+        <Flex direction="row" justifyContent={"space-between"} width="100%" className="back-header" {...props}>
             {heading &&
-                <Text fontSize={"2xl"}>{heading}</Text>
+                <Heading size={"lg"}>{heading}</Heading>
             }
             <Spacer />
-            <Flex direction="row" className="back-button-container" justifyContent={"flex-end"} marginTop="4px" onClick={() => onClick ? onClick() : navigateBack()} >
-                <Text fontSize={"l"} marginRight="5px">{"Go Back"}</Text>
+            <Flex direction="row" className="back-button-container" justifyContent={"flex-end"} onClick={() => onClick ? onClick() : navigateBack()} >
+                <Text fontSize={"lg"} marginRight="5px">{"Back to Race"}</Text>
                 <BackIcon boxSize="5" marginTop="3px" />
             </Flex>
         </Flex>

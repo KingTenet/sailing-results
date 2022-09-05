@@ -184,7 +184,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
-                    <BackHeader heading="Register Helm" marginBottom="5px" />
+                    <BackHeader heading="Register Helm" />
                     <Flex direction={"column"} height="100%" width="100%" alignItems={"center"}>
                         {helmsIndex && !selectedClubMember &&
                             <AlertDialogWrapper

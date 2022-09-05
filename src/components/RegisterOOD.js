@@ -142,7 +142,7 @@ export default function RegisterOOD() {
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" justifyContent={"center"} alignItems="center">
-                    <BackHeader heading="Register OOD" marginBottom="5px" />
+                    <BackHeader heading="Register OOD" />
                     <Flex direction={"column"} height="100%" alignItems={"center"} width="100%">
                         {helmsIndex && !selectedClubMember &&
 

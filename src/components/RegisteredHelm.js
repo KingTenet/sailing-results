@@ -55,7 +55,7 @@ function RegisteredHelm({ backHeading, children }) {
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
                 <Flex direction={"column"} className="device-height fixed-height" width="100%" alignItems="center">
-                    <BackHeader heading={backHeading} marginBottom="5px" />
+                    <BackHeader heading={backHeading} />
                     <Flex direction={"column"} alignItems={"center"} width="100%" >
                         <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} width="100%" className={"input-container-1 input-container"}>
                             <Flex direction={"row"} >

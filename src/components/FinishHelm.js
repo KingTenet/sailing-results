@@ -9,7 +9,6 @@ import { Spacer, Flex, Box } from '@chakra-ui/react';
 import { GreenButton, RedButton } from "./Buttons";
 import DNFSelector from "./DNFSelector";
 import FinishCode from "../store/types/FinishCode";
-import BackHeader from "./BackHeader";
 
 export default function FinishedHelm({ registeredResult }) {
     const navigateBack = useBack();
