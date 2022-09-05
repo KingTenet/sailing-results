@@ -151,8 +151,8 @@ export default function RegisterOOD() {
                                 onConfirm={() => onConfirmNewClubMember()}
                                 confirmColorScheme="green"
                                 confirmButtonText="Confirm"
-                                warningText="Are you sure you want to add a new OOD?"
-                                deleteHeading={`Add new OOD: ${selectedNewMember}.`}
+                                warningText="Do you want to add them?"
+                                deleteHeading={`${selectedNewMember} is not a recognised member.`}
                             >
                                 <Autocomplete
                                     customClassName="input-container-1 input-container"
