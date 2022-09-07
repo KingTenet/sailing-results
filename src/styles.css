@@ -108,12 +108,25 @@ body {
     text-align: center;
 }
 
-/* .fg:active div {
+/* 
+.fg:active div {
     display: none;
 } */
 
 .fg:active {
     cursor: -webkit-grabbing;
+}
+
+.slide-handle {
+    width: calc(100% - 40px);
+    touch-action: pan-y;
+}
+
+.slider-background {
+    background: linear-gradient(to right, rgba(219, 17, 17, 0.76) 0%, rgba(50, 50, 220, 0.8) 50%, rgba(253, 249, 24, 0.84) 100%);
+    width: 100%;
+    display: flex;
+    align-items: space-between;
 }
 
 /* .fg>* {
@@ -215,4 +228,80 @@ input {
 
 .page-container {
     background: linear-gradient(180deg, hsl(219, 69%, 45%, 0.15) 0%, rgba(255, 255, 255, 1) 100%);
+}
+
+.race-list-item {
+    padding: 5px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: grey;
+    height: 48px;
+    background: linear-gradient(355deg, rgba(255, 255, 255, 1) 0%, rgba(210, 225, 233, 0.684) 100%);
+}
+
+.winners-container {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.025) 0%, rgba(255, 255, 255, 0.112) 100%);
+    /* background-color: blue; */
+    /* padding: 0px 0px 0px 5px; */
+    border-radius: 8px;
+    /* border-width: 1px; */
+    width: 100%;
+    /* height: 100%; */
+    overflow: hidden;
+
+}
+
+.winners-container .label {
+    /* width: 50px; */
+
+    /* margin-left: 10px; */
+    /* border-width: 1px; */
+    border-radius: 9px 0px 0px 9px;
+    font-weight: 700;
+    overflow: hidden;
+}
+
+.winners-container .name {
+    padding: 5px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.07) 0%, rgba(224, 209, 253, 0.3) 100%);
+    border-radius: 0px 9px 9px 0px;
+    border-width: 1px;
+    border-color: rgba(246, 246, 246, 0.824);
+    max-width: 23vw;
+}
+
+.label.ph {
+    background-color: rgba(197, 82, 166, 0.574);
+}
+
+.label.ch {
+    background-color: rgba(197, 122, 82, 0.574);
+}
+
+.label.winners {
+    padding: 5px;
+    margin: 0;
+    font-weight: 700;
+}
+
+.trophy-container {
+    position: relative !important;
+}
+
+.trophy-container p {
+    position: absolute !important;
+    top: 6px;
+    left: 7px;
+    color: rgba(0, 0, 0, 0.72);
+    font-size: 9pt !important;
+}
+
+.trophy-container svg {
+    margin-top: 3px;
+    margin-left: 3px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    height: 30px;
+    width: 27px;
+    color: rgba(127, 54, 54, 0.598);
 }

@@ -1,4 +1,4 @@
-import { List, ListItem, Text, Grid, GridItem } from "@chakra-ui/react";
+import { List, ListItem, Text, Grid, GridItem, Icon } from "@chakra-ui/react";
 import { Box, Flex, Heading, Spacer } from "@chakra-ui/react";
 import React, { useState } from "react";
 
@@ -15,52 +15,89 @@ import {
     AlertIcon,
     AlertTitle,
 } from '@chakra-ui/react'
+import { EditIcon } from "@chakra-ui/icons";
 
-function RaceDimension({ children, ...props }) {
+const TrophyIcon = (props) => (
+    <Icon viewBox="0.45 2.1 7.6 6.8" {...props}>
+        <path
+            fill='currentColor'
+            d="M4.25 1.338.495 2.466c.093 2.793.793 6.2 3.755 7.196 2.994-.968 3.627-4.433 3.755-7.196L4.25 1.338z"
+        />
+    </Icon>
+);
+
+function RaceDimension({ children, isTruncated = false, ...props }) {
     return (
         <GridItem
             height='20px'
+            minWidth={isTruncated ? "0px" : "auto"}
             {...props}>
-            <Text isTruncated>{children}</Text>
+            <Text isTruncated={isTruncated}>{children}</Text>
         </GridItem>
     );
 }
 
-function RaceListItem({ raceDate, raceNumber, raceResults = [], raceRegistered = [], onClick }) {
+function RaceListItem({ raceDate, raceNumber, onClick }) {
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} onClick={onClick}>
-            <Flex>
-                <Grid
-                    templateColumns='repeat(4, 1fr)'
-                    gap={5}
-                    width={"100%"}>
-                    <RaceDimension colSpan={1}>{`${getURLDate(raceDate).replace(/-/g, "/")}`}</RaceDimension>
-                    <RaceDimension colSpan={1}>{`${formatRaceNumber(raceNumber)} race`}</RaceDimension>
-                    <RaceDimension colSpan={1}>{`${raceResults.length} result${raceResults.length - 1 ? "s" : ""}`}</RaceDimension>
-                    <RaceDimension colSpan={1}>{`${raceRegistered.length} registered`}</RaceDimension>
-                </Grid>
-            </Flex>
-        </Box>
+        <Flex className="race-list-item" alignItems={"center"} onClick={onClick}>
+            <Grid
+                templateColumns='repeat(6, 1fr)'
+                gap={5}
+                width={"100%"}>
+
+                <RaceDimension colSpan={1} paddingLeft="5px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</RaceDimension>
+                <RaceDimension colSpan={1} paddingLeft="5px">{`${formatRaceNumber(raceNumber)} race`}</RaceDimension>
+                <GridItem colSpan="4">
+                    <Flex direction="row" justifyContent={"space-between"} paddingRight="5px">
+                        <Spacer />
+                        <Text>Edit Race</Text>
+                        <EditIcon fontSize="xl" style={{ marginLeft: "5px", marginTop: "1px" }} />
+                    </Flex>
+                </GridItem>
+            </Grid>
+        </Flex>
+
     </>
 }
 
 function ImmutableRaceListItem({ raceDate, raceNumber, raceResults = [], wonBy = [], onClick }) {
     const formatRaceNumber = (raceNumber) => ["1st", "2nd", "3rd"][raceNumber - 1];
+    const [classWinner, phWinner] = wonBy;
+
     return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} onClick={onClick}>
+        <Box className="race-list-item" onClick={onClick}>
             <Flex>
                 <Grid
-                    templateColumns={`repeat(${5 + wonBy.length}, 1fr)`}
+                    templateColumns={`repeat(${6}, 1fr)`}
                     gap={5}
                     width={"100%"}>
-                    <RaceDimension colSpan={1}>{`${getURLDate(raceDate).replace(/-/g, "/")}`}</RaceDimension>
-                    <RaceDimension colSpan={1}>{`${formatRaceNumber(raceNumber)} race`}</RaceDimension>
-                    <RaceDimension colSpan={1}>{`${raceResults.length} result${raceResults.length - 1 ? "s" : ""}`}</RaceDimension>
-                    <RaceDimension colSpan={1}>Won by</RaceDimension>
-                    {wonBy.length && wonBy.map((helm, key) => (
-                        <RaceDimension colSpan={1} key={`helm${key}`}>{helm}</RaceDimension>
-                    ))}
+                    <RaceDimension colSpan={1} padding="5px 0px 5px 5px">{`${getURLDate(raceDate).replace(/-/g, "/")}`}</RaceDimension>
+                    <RaceDimension colSpan={1} padding="5px 0px 5px 5px">{`${formatRaceNumber(raceNumber)} race`}</RaceDimension>
+                    <GridItem colSpan="4">
+                        <Flex direction="row" className="winners-container" justifyContent={"space-between"}>
+                            <Flex direction="row">
+                                <div className="label ch trophy-container">
+                                    <TrophyIcon />
+                                    <Text>CH</Text>
+                                </div>
+                                <Text className="name" isTruncated fontSize={"sm"}>
+                                    {classWinner}
+                                </Text>
+                            </Flex>
+                            {phWinner &&
+                                <Flex direction="row">
+                                    <div className="label ph trophy-container">
+                                        <TrophyIcon />
+                                        <Text>PH</Text>
+                                    </div>
+                                    <Text className="name" isTruncated fontSize={"sm"}>
+                                        {phWinner}
+                                    </Text>
+                                </Flex>
+                            }
+                        </Flex>
+                    </GridItem>
                 </Grid>
             </Flex>
         </Box>
@@ -119,7 +156,7 @@ function ImmutableRace({ race }) {
     const classWinners = getWinners(resultsByClass);
     const phWinners = !isPursuitRace ? getWinners(resultsByPH) : [];
 
-    const wonBy = [...phWinners, ...classWinners];
+    const wonBy = [classWinners.join(", "), phWinners.join(", ")];
 
     return <ListItem>
         <ImmutableRaceListItem

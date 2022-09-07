@@ -62,7 +62,7 @@ const ROUTES = [
                         path: '/races/:raceDate/:raceNumber', element: <NavWrapper />, children: [
                             { path: '/races/:raceDate/:raceNumber', element: <ForceSpinner>{() => <Race backButtonText="Back to races" />}</ForceSpinner>, index: true },
                             { path: '/races/:raceDate/:raceNumber/register', element: <ForceSpinner>{() => <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} />}</ForceSpinner> },
-                            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <ForceSpinner>{() => <RegisteredHelm><RegisterAnotherButtons /></RegisteredHelm>}</ForceSpinner> },
+                            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <ForceSpinner>{() => <RegisteredHelm backHeading="Register Helm"><RegisterAnotherButtons /></RegisteredHelm>}</ForceSpinner> },
                             { path: '/races/:raceDate/:raceNumber/ood', element: <ForceSpinner>{() => <RegisterOOD />}</ForceSpinner> },
                             { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <ForceSpinner>{() => <RegisteredHelm backHeading="Finish Helm"><FinishHelm /></RegisteredHelm>}</ForceSpinner> },
                         ]

@@ -23,7 +23,7 @@ export default function RegisterAnotherButtons() {
             <Spacer />
             <Flex direction="column" width="100%" alignItems={"center"}>
                 <GreenButton onClick={() => registerAnother()} autoFocus={true}>Register Another Helm</GreenButton>
-                <RedButton tabIndex="-1" onClick={() => navigateBack()}>Back to summary</RedButton>
+                <RedButton tabIndex="-1" onClick={() => navigateBack()}>Finish Helm Registration</RedButton>
             </Flex>
         </>
     );

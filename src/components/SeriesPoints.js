@@ -116,7 +116,7 @@ export default function SeriesPoints() {
     const params = useParams();
     const season = params["season"];
     const series = params["series"];
-    const [resultsByPersonalHandicap, updateResultsByPersonalHandicap] = useState(true);
+    const [resultsByPersonalHandicap, updateResultsByPersonalHandicap] = useState(false);
     const seriesPoints = services.getSeriesPoints().find((seriesPoints) => seriesPoints.getSeasonName() === season && seriesPoints.getSeriesName() === series);
 
     const personalHandicapRaces = seriesPoints.getPersonalHandicapRacesToCount(new Date()) - 1;
