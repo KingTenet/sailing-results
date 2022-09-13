@@ -253,6 +253,8 @@ export default function Races({ editableOnly = false }) {
         .map(([id]) => Race.fromId(id))
         .filter((race) => services.isRaceMutable(race.getDate(), race.getNumber()));
 
+    const showNextEditableRace = !Boolean(activeRaces.length) && Boolean(nextEditableRace);
+
     return (
         <>
             <Flex direction="column" padding="5px">
@@ -260,7 +262,7 @@ export default function Races({ editableOnly = false }) {
                     <Heading size={"lg"} marginLeft="10px">{`Races`}</Heading>
                 </Flex>
                 <Box marginTop="20px" />
-                {Boolean(lastRaces.length) && ((!Boolean(activeRaces.length) && Boolean(nextEditableRace)) || appState.adminMode) &&
+                {Boolean(lastRaces.length) && (!showNextEditableRace || appState.adminMode) &&
                     < RacesCard >
                         <DroppableHeader heading="Last race day" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">
@@ -283,7 +285,7 @@ export default function Races({ editableOnly = false }) {
                         </Box>
                     </RacesCard>
                 }
-                {!Boolean(activeRaces.length) && Boolean(nextEditableRace) &&
+                {showNextEditableRace &&
                     <RacesCard>
                         <DroppableHeader heading="Next race" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">
