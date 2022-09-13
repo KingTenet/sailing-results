@@ -260,7 +260,7 @@ export default function Races({ editableOnly = false }) {
                     <Heading size={"lg"} marginLeft="10px">{`Races`}</Heading>
                 </Flex>
                 <Box marginTop="20px" />
-                {Boolean(lastRaces.length) &&
+                {Boolean(lastRaces.length) && ((!Boolean(activeRaces.length) && Boolean(nextEditableRace)) || appState.adminMode) &&
                     < RacesCard >
                         <DroppableHeader heading="Last race day" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">

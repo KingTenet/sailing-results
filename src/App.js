@@ -17,6 +17,7 @@ import SeriesPoints from "./components/SeriesPoints";
 import { useServices } from "./useAppState";
 import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
 import { ForceSpinner } from "./components/Spinner";
+import Debug from "./Debug";
 
 import './styles.css';
 
@@ -30,7 +31,7 @@ function Home() {
     let navigate = useNavigate();
 
     useEffect(() => {
-        if (appState) {
+        if (appState && !appState.adminMode) {
             console.log(services.readOnly);
             if (!services.readOnly) {
                 navigate("races");
@@ -41,8 +42,14 @@ function Home() {
         }
     }, [appState]);
 
+    if (!appState?.adminMode) {
+        return (
+            <></>
+        )
+    }
+
     return (
-        <></>
+        <Debug />
     )
 }
 

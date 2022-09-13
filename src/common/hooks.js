@@ -1,4 +1,4 @@
-import { useServices } from "../useAppState";
+import { useAppState, useServices } from "../useAppState";
 import { useState, useEffect, useRef } from "react";
 import { useLongPress, LongPressDetectEvents } from "use-long-press";
 
@@ -48,6 +48,40 @@ export function useStoreStatus() {
     }, []);
 
     return storesStatus;
+}
+
+export function useAdminToggle() {
+    const ADMIN_COUNT_THRESHOLD = 5;
+    const [adminCount, updateAdminCount] = useState(0);
+    const [appState, updateAppState] = useAppState();
+    const [firstClickTime, updateFirstClickTime] = useState();
+
+    const TIMEOUT = 5000;
+
+    const handleAdminRequest = () => {
+        const nextAdminCount = adminCount + 1;
+        if (!firstClickTime || (Date.now() - firstClickTime > TIMEOUT)) {
+            updateFirstClickTime(Date.now());
+            updateAdminCount(1);
+        }
+        else {
+            if (nextAdminCount >= ADMIN_COUNT_THRESHOLD) {
+                updateAppState(({ ...state }) => ({
+                    ...state,
+                    adminMode: true,
+                }));
+            }
+            else if (appState.adminMode) {
+                updateAppState(({ ...state }) => ({
+                    ...state,
+                    adminMode: false,
+                }));
+            }
+            updateAdminCount(nextAdminCount);
+        }
+    }
+
+    return [appState.adminMode, () => handleAdminRequest()];
 }
 
 export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration = MAX_SHORT_PRESS_DURATION_MS, longPressDuration = MIN_LONG_PRESS_DURATION_MS) {
