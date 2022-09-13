@@ -1,12 +1,10 @@
-import { assertType, AutoMap, getGoogleSheetDoc, groupBy, parseURLDate, promiseSleep, mapGroupBy, isOnline } from "../common.js"
+import { assertType, AutoMap, groupBy, parseURLDate, promiseSleep, mapGroupBy } from "../common.js"
 import StoreWrapper from "./StoreWrapper.js";
 import SeriesRace from "./types/SeriesRace.js";
 import Helm from "./types/Helm.js";
 import Result from "./types/Result.js";
 import { parseISOString } from "../common.js"
 import BoatClass from "./types/BoatClass.js";
-import CorrectedResult from "./types/CorrectedResult.js";
-import Series from "./types/Series.js";
 import Race from "./types/Race.js";
 import SeriesPoints from "./types/SeriesPoints.js";
 import HelmResult from "./types/HelmResult.js";

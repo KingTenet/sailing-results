@@ -37,7 +37,6 @@ async function initialiseServicesFromToken(token, refreshCache) {
 
     console.log(`https://docs.google.com/spreadsheets/d/${resultsSheetId}`);
 
-    // return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, liveBackupResultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId, true);
     return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId, true);
 }
 
