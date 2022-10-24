@@ -251,12 +251,12 @@ export class Stores {
         return allProcesssed;
     }
 
-    static async create(auth, raceResultsSheetId, forceCacheRefresh, readOnly) {
+    static async create(auth, raceResultsSheetId, forceCacheRefresh, readOnly, skipStoreInit) {
         await bootstrapLocalStorage();
         const stores = new Stores(auth, raceResultsSheetId, readOnly);
         const started = Date.now();
         console.log(`Started loading`);
-        await stores.init(forceCacheRefresh);
+        skipStoreInit || await stores.init(forceCacheRefresh);
         console.log(`Loaded results in ${Math.round(Date.now() - started)} ms`);
         return stores;
     }
