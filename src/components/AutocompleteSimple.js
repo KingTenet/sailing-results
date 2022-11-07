@@ -192,14 +192,14 @@ export default function ({ customClassName = "input-container-1 input-container"
                     <CollapseEx isOpen={menuIsOpen()}>
                         <ul {...getMenuProps()}>
                             {getMenuItems(inputItems, data)
-                                .slice(0, 8)
+                                .slice(0, 6)
                                 .map((item, index) => [item, index])
                                 .sort(([itemA, indexA], [itemB, indexB]) => sortFn && !partialMatch ? sortFn(itemA, itemB) : indexA - indexB)
                                 .map(([item, index]) => (
                                     <Box
                                         shadow='md'
-                                        marginTop="8px"
-                                        marginBottom="5px"
+                                        marginTop="5px"
+                                        marginBottom="3px"
                                         padding={highlightedIndex === index ? "11px" : "12px"}
                                         borderWidth={highlightedIndex === index ? "2px" : "1px"}
                                         borderColor="gray"

@@ -80,6 +80,10 @@ body {
     .status-bar-version {
         display: none;
     }
+
+    .status-bar-viewport {
+        display: none;
+    }
 }
 
 .list-item {
