@@ -1,12 +1,7 @@
-import { Outlet, useSearchParams } from "react-router-dom";
-import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState";
-import { tokenParser } from "./token.js";
+import { useServices } from "./useAppState";
 import React, { useEffect, useState } from "react";
-import { getSheetIdFromURL } from "./common";
-import { Button, Box, Text, Flex, Spacer } from "@chakra-ui/react";
+import { Box, Text, Flex } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
-import Spinner from "./components/Spinner";
-import { StoreFunctions } from "./store/Stores";
 import getVersion from "./version";
 import { useStoreStatus, useAdminToggle } from "./common/hooks";
 
@@ -102,12 +97,31 @@ export default function StoresSync({ verbose }) {
                 "green.100"
         } />
         {!Boolean(services.readOnly) &&
-            <Box className="status-bar-version" onClick={() => { console.log("Received click") || adminHandler() }}>
-                <Text>{`${services.isLive ? "LIVE" : "PRACTICE"}: ${getVersion()} ${isAdmin ? ": ADMIN MODE" : ""}`}</Text>
-            </Box>
+            <>
+                <Box className="status-bar-version" onClick={() => { console.log("Received click") || adminHandler() }}>
+                    <Text>{`${services.isLive ? "LIVE" : "PRACTICE"}: ${getVersion()} ${isAdmin ? ": ADMIN MODE" : ""}`}</Text>
+                </Box>
+                <Viewport />
+            </>
         }
-        {/* {
-            <Viewport />
-        } */}
     </>
+}
+
+
+function Viewport() {
+    const [viewport, updateViewport] = useState();
+
+    useEffect(() => {
+        setTimeout(() => {
+            updateViewport([window.innerWidth, window.innerHeight]);
+        }, 10);
+    }, [viewport]);
+
+    return (
+        <Box className="status-bar-viewport" width="100%">
+            <Flex width="100%" justifyContent="flex-end">
+                <Text>{`${viewport}`}</Text>
+            </Flex>
+        </Box >
+    )
 }

@@ -240,19 +240,3 @@ const updateHeight = () => {
 
 updateHeight();
 window.addEventListener('resize', () => updateHeight());
-
-function Viewport() {
-    const [viewport, updateViewport] = useState();
-
-    useEffect(() => {
-        setTimeout(() => {
-            updateViewport([window.innerWidth, window.innerHeight]);
-        }, 10);
-    }, [viewport]);
-
-    return (
-        <Box className="status-bar-version">
-            <Text>{`${viewport}`}</Text>
-        </Box>
-    )
-}
