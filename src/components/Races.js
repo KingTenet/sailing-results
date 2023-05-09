@@ -253,7 +253,13 @@ export default function Races({ editableOnly = false }) {
         .map(([id]) => Race.fromId(id))
         .filter((race) => services.isRaceMutable(race.getDate(), race.getNumber()));
 
-    const showNextEditableRace = !Boolean(activeRaces.length) && Boolean(nextEditableRace);
+    const todaysActiveRaces = activeRaces
+        .filter((race) => race.getDate().getTime() === firstRaceToday.getDate().getTime());
+
+    const oldActiveRaces = activeRaces
+        .filter((race) => race.getDate().getTime() !== firstRaceToday.getDate().getTime());
+
+    const showNextEditableRace = Boolean(nextEditableRace);
 
     return (
         <>
@@ -270,11 +276,26 @@ export default function Races({ editableOnly = false }) {
                         </Box>
                     </RacesCard>
                 }
-                {Boolean(activeRaces.length) &&
+                {Boolean(oldActiveRaces.length) && (!showNextEditableRace || appState.adminMode) &&
+                    <RacesCard>
+                        <DroppableHeader heading="Old Active races" />
+                        <Box marginBottom="20px" padding="10px" paddingTop="20px">
+                            <RacesView races={oldActiveRaces} />
+                        </Box>
+                        <Spacer />
+                        <Box margin="10px">
+                            <Alert status='warning'>
+                                <AlertIcon />
+                                <AlertTitle mr={2}>Old active race results have not been committed.</AlertTitle>
+                            </Alert>
+                        </Box>
+                    </RacesCard>
+                }
+                {Boolean(todaysActiveRaces.length) &&
                     <RacesCard>
                         <DroppableHeader heading="Active races" />
                         <Box marginBottom="20px" padding="10px" paddingTop="20px">
-                            <RacesView races={activeRaces} />
+                            <RacesView races={todaysActiveRaces} />
                         </Box>
                         <Spacer />
                         <Box margin="10px">
