@@ -118,8 +118,8 @@ function Viewport() {
     }, [viewport]);
 
     return (
-        <Box className="status-bar-viewport" width="100%">
-            <Flex width="100%" justifyContent="flex-end">
+        <Box className="status-bar-viewport">
+            <Flex justifyContent="flex-end">
                 <Text>{`${viewport}`}</Text>
             </Flex>
         </Box >
