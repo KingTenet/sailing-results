@@ -20,14 +20,3 @@ export const devReadWrite = {
 }
 _EOF_
 ```
-
-# Scripts
-## Import membership list
-### Ensure that destination spreadhsheet does *NOT* have a sheet named "Active Membership"
-```
-rm -fr backend/ # This removes the local cache
-node scripts/importActiveMembersList.js <<SOURCE_SPREADSHEET_URL>> <<DESTINATION_SPREADSHEET_URL>>
-
-eg.
-node scripts/importActiveMembersList.js https://docs.google.com/spreadsheets/d/1E_VGWu3QTFKxs2W9YkzvZVJvhVti05pmvpPSxk3L2js https://docs.google.com/spreadsheets/d/10eL8Nr1rVdVXxs-OIuoTsN3lrGYET4GaLY8-PHxISw0
-```
