@@ -50,7 +50,7 @@
         "build": "export PUBLIC_URL=https://nhebsc.org.uk/results/app/ && react-scripts build",
         "staging": "export PUBLIC_URL=https://nhebsc.org.uk/results/test/ && react-scripts build",
         "local": "export PUBLIC_URL=http://localhost:5000/ && react-scripts build",
-        "test": "react-scripts test",
+        "test": "node tests/testCorrectedResults.js",
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
