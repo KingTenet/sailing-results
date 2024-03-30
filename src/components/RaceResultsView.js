@@ -1,19 +1,23 @@
-import { Alert, AlertIcon, AlertTitle } from "@chakra-ui/react";
+import { Alert, AlertIcon, AlertTitle, Button } from "@chakra-ui/react";
 import { Box, Flex, Heading, List, ListItem, Text, Grid, GridItem } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
 import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpers.js";
 import { useDimensionsToggle, useSortedResults } from "../common/hooks.js";
-import { round2sf } from "../common";
+import { groupBy, round2sf } from "../common";
 
 import { GreenButton } from "./Buttons";
 import { RegisteredCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
+import MutableRaceFinish from "../store/types/MutableRaceFinish.js";
+import MutableRaceResult from "../store/types/MutableRaceResult.js";
+import Race from "../store/types/Race.js";
 
 const FLEET_RACE_VIEWS = ["FINISH_TIME", "CLASS_HANDICAP", "PERSONAL_HANDICAP"];
 const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
+const PURSUIT_START_TIMES_VIEW = ["PURSUIT_START_TIMES"];
 
 const COLUMN_1_DIMENSIONS = {
     "PERSONAL_HANDICAP": [
@@ -31,6 +35,10 @@ const COLUMN_1_DIMENSIONS = {
     "PURSUIT_POSITIONS": [
         "NAME",
         "SAIL_NUMBER",
+    ],
+    "PURSUIT_START_TIMES": [
+        "CLASS_NAME",
+        "CLASS_HANDICAP"
     ],
 };
 
@@ -90,8 +98,9 @@ const DIMENSION_LABELS = {
     "LAPS": "Laps",
 };
 
+const SECONDS_IN_MINUTE = 60;
+
 function secondsToMinutesSeconds(totalSeconds) {
-    const SECONDS_IN_MINUTE = 60;
     const roundedSeconds = Math.round(totalSeconds);
     var minutes = Math.floor(roundedSeconds / SECONDS_IN_MINUTE);
     var seconds = roundedSeconds % SECONDS_IN_MINUTE;
@@ -241,115 +250,230 @@ function ResultsList({ children, isDisabled, ...props }) {
     )
 }
 
-export default function RaceResultsView({ results, oods, race, raceIsMutable, ...props }) {
-    const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isPursuitRace] = useSortedResults(results, race);
-    const RACE_VIEWS = isPursuitRace
-        ? PURSUIT_RACE_VIEW
-        : FLEET_RACE_VIEWS
-    const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
+// export default function RaceResultsView({ results, oods, race, raceIsMutable, ...props }) {
+//     const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isPursuitRace] = useSortedResults(results, race);
+//     const RACE_VIEWS = isPursuitRace
+//         ? PURSUIT_RACE_VIEW
+//         : FLEET_RACE_VIEWS
+//     const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
+//     const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
+//     const [dimension2, toggleDimension2] = useDimensionsToggle(COLUMN_2_DIMENSIONS[raceView]);
+//     const [dimension3, toggleDimension3] = useDimensionsToggle(COLUMN_3_DIMENSIONS[raceView]);
+
+
+//     const sortedResults =
+//         raceView === "FINISH_TIME" ? byFinishTime.map((result, key) => [result, key + 1])
+//             : raceView === "CLASS_HANDICAP" ? byClassFinishTime
+//                 : byPersonalFinishTime;
+
+//     const heading =
+//         raceView === "FINISH_TIME" ? "Finish times"
+//             : raceView === "CLASS_HANDICAP" ? `Corrected to ${correctedLaps} laps by class PY`
+//                 : `Corrected to ${correctedLaps} laps by personal PY`;
+
+//     const nextRaceView = RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length];
+
+//     const fleetViewButtonMsg =
+//         nextRaceView === "FINISH_TIME" ? "Show results by finish time"
+//             : nextRaceView === "CLASS_HANDICAP" ? "Show results by class handicap"
+//                 : "Show results by personal handicap";
+
+//     const toggleResultsView = (event) => {
+//         event.preventDefault();
+//         updateRaceView(nextRaceView);
+//     }
+
+//     if (!raceFinish) {
+//         return (
+//             <Alert status='error' marginBottom="20px">
+//                 <AlertIcon />
+//                 <AlertTitle mr={2}>{"Race cannot be viewed/edited by current user"}</AlertTitle>
+//             </Alert>
+//         );
+//     }
+
+//     if (isPursuitRace) {
+//         return (
+//             <>
+//                 <RegisteredCard>
+//                     <DroppableHeader heading="Pursuit finish points" />
+//                     <Box style={{ marginBottom: "10px" }} />
+//                     <ResultsList marginBottom="20px" >
+//                         <HeadingRow raceView={"PURSUIT_FINISH_POSITIONS"} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+//                         {byClassFinishTime.map(([result, position]) =>
+//                             <ListItem key={HelmResult.getId(result)}>
+//                                 <ResultListItem
+//                                     result={result}
+//                                     raceView={"PURSUIT_FINISH_POSITIONS"}
+//                                     position={position}
+//                                     dimension1={dimension1}
+//                                     dimension2={dimension2}
+//                                     dimension3={dimension3}
+//                                     toggleDimension1={toggleDimension1}
+//                                     toggleDimension2={toggleDimension2}
+//                                     toggleDimension3={toggleDimension3} />
+//                             </ListItem>
+//                         )}
+//                     </ResultsList>
+//                     {Boolean(oods.length) &&
+//                         <>
+//                             <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+//                             <OODView marginBottom="20px" oods={oods} />
+//                         </>
+//                     }
+//                 </RegisteredCard>
+//             </>
+//         );
+//     }
+
+//     return (
+//         <>
+//             <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">{`${heading} `}</Heading>
+//             <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
+//                 <>
+//                     <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
+//                     {sortedResults.map(([result, position]) =>
+//                         <ListItem key={HelmResult.getId(result)}>
+//                             <ResultListItem
+//                                 result={result}
+//                                 raceView={raceView}
+//                                 position={position}
+//                                 dimension1={dimension1}
+//                                 dimension2={dimension2}
+//                                 dimension3={dimension3}
+//                                 toggleDimension1={toggleDimension1}
+//                                 toggleDimension2={toggleDimension2}
+//                                 toggleDimension3={toggleDimension3}
+//                                 sct={SCT}
+//                                 correctedLaps={correctedLaps}
+//                             />
+//                         </ListItem>
+//                     )}
+//                 </>
+//             </ResultsList>
+//             {/* <Box>{`SCT: ${SCT / correctedLaps} `}</Box> */}
+//             {Boolean(oods.length) &&
+//                 <>
+//                     <Heading size={"lg"} marginBottom="10px">OODs</Heading>
+//                     <OODView marginBottom="20px" oods={oods} />
+//                 </>
+//             }
+//             <GreenButton onClick={toggleResultsView} autoFocus {...props}>{fleetViewButtonMsg}</GreenButton>
+//         </>
+//     );
+// }
+
+
+function getPursuitStartTimes(results, race, raceLengthSeconds) {
+    if (!results.length || results.some((result) => Race.getId(result.getRace()) !== Race.getId(race))) {
+        return [];
+    }
+
+    const getPY = (result) => result.getBoatClass().getPY();
+    const roundDown = (num) => -Math.round(-num);
+
+    const resultsByBoatClass = groupBy(results, [Result.getBoatClassName])
+        .map(([, results]) => results.at(0));
+
+    const slowestClassPY = Math.max(...resultsByBoatClass.map(getPY));
+
+    const newResults = resultsByBoatClass
+        .map((result) => Result.fromMutableRaceResult(
+            MutableRaceResult.fromResult(result),
+            1,
+            undefined,
+            roundDown(raceLengthSeconds * getPY(result) / slowestClassPY)
+        ))
+
+    return MutableRaceFinish.fromResults(newResults, () => []).getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a));
+}
+
+function PursuitStartTimes({ results, race, raceLengthMinutes }) {
+
+    const raceLengthSeconds = raceLengthMinutes * SECONDS_IN_MINUTE;
+    const [pseudoResults, updatePsuedoResults] = useState(() => getPursuitStartTimes(results, race, raceLengthSeconds));
+
+    useEffect(() => updatePsuedoResults(getPursuitStartTimes(results, race, raceLengthSeconds)),
+        [results, race, raceLengthSeconds]);
+
+    const raceView = PURSUIT_START_TIMES_VIEW[0];
     const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
-    const [dimension2, toggleDimension2] = useDimensionsToggle(COLUMN_2_DIMENSIONS[raceView]);
-    const [dimension3, toggleDimension3] = useDimensionsToggle(COLUMN_3_DIMENSIONS[raceView]);
 
-
-    const sortedResults =
-        raceView === "FINISH_TIME" ? byFinishTime.map((result, key) => [result, key + 1])
-            : raceView === "CLASS_HANDICAP" ? byClassFinishTime
-                : byPersonalFinishTime;
-
-    const heading =
-        raceView === "FINISH_TIME" ? "Finish times"
-            : raceView === "CLASS_HANDICAP" ? `Corrected to ${correctedLaps} laps by class PY`
-                : `Corrected to ${correctedLaps} laps by personal PY`;
-
-    const nextRaceView = RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length];
-
-    const fleetViewButtonMsg =
-        nextRaceView === "FINISH_TIME" ? "Show results by finish time"
-            : nextRaceView === "CLASS_HANDICAP" ? "Show results by class handicap"
-                : "Show results by personal handicap";
-
-    const toggleResultsView = (event) => {
-        event.preventDefault();
-        updateRaceView(nextRaceView);
+    if (!pseudoResults.length) {
+        return <></>;
     }
 
-    if (!raceFinish) {
-        return (
-            <Alert status='error' marginBottom="20px">
-                <AlertIcon />
-                <AlertTitle mr={2}>{"Race cannot be viewed/edited by current user"}</AlertTitle>
-            </Alert>
-        );
-    }
-
-    if (isPursuitRace) {
-        return (
+    return <>
+        <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">
+            {`Pursuit start times for ${raceLengthMinutes} minute race, ${formatBoatClass(pseudoResults.at(-1).getBoatClass().getClassName())} start.`}
+        </Heading>
+        <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
             <>
-                <RegisteredCard>
-                    <DroppableHeader heading="Pursuit finish points" />
-                    <Box style={{ marginBottom: "10px" }} />
-                    <ResultsList marginBottom="20px" >
-                        <HeadingRow raceView={"PURSUIT_FINISH_POSITIONS"} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
-                        {byClassFinishTime.map(([result, position]) =>
-                            <ListItem key={HelmResult.getId(result)}>
-                                <ResultListItem
-                                    result={result}
-                                    raceView={"PURSUIT_FINISH_POSITIONS"}
-                                    position={position}
-                                    dimension1={dimension1}
-                                    dimension2={dimension2}
-                                    dimension3={dimension3}
-                                    toggleDimension1={toggleDimension1}
-                                    toggleDimension2={toggleDimension2}
-                                    toggleDimension3={toggleDimension3} />
-                            </ListItem>
-                        )}
-                    </ResultsList>
-                    {Boolean(oods.length) &&
-                        <>
-                            <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                            <OODView marginBottom="20px" oods={oods} />
-                        </>
-                    }
-                </RegisteredCard>
+                <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg="white">
+                    <Flex>
+                        <Grid
+                            templateColumns='repeat(16, 1fr)'
+                            gap={3}
+                            width={"100%"}>
+                            <ResultDimension colSpan={8} onClick={toggleDimension1}>{DIMENSION_LABELS[dimension1]}</ResultDimension>
+                            <ResultDimension colSpan={8} >{"Start time"}</ResultDimension>
+                        </Grid>
+                    </Flex>
+                </Box>
+                {pseudoResults.reverse().map((result) =>
+                    <ListItem key={HelmResult.getId(result)}>
+                        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} marginBottom={"5px"} backgroundColor="white">
+                            <Flex>
+                                <Grid
+                                    templateColumns='repeat(16, 1fr)'
+                                    gap={3}
+                                    width={"100%"}>
+                                    <ResultDimension colSpan={8} onClick={toggleDimension1}>{getDimensionValue(dimension1, result)}</ResultDimension>
+                                    <ResultDimension colSpan={8}>{formatMinutesSeconds(secondsToMinutesSeconds(raceLengthSeconds - result.getFinishTime()))}</ResultDimension>
+                                </Grid>
+                            </Flex>
+                        </Box>
+                    </ListItem>
+                )}
             </>
-        );
-    }
+        </ResultsList>
+    </>
+
+}
+
+
+export default function PursuitStartTimesWrapper({ results, race }) {
+    const [raceLengthMinutes, updateRaceLengthMinutes] = useState(60);
 
     return (
         <>
-            <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">{`${heading} `}</Heading>
-            <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
-                <>
-                    <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
-                    {sortedResults.map(([result, position]) =>
-                        <ListItem key={HelmResult.getId(result)}>
-                            <ResultListItem
-                                result={result}
-                                raceView={raceView}
-                                position={position}
-                                dimension1={dimension1}
-                                dimension2={dimension2}
-                                dimension3={dimension3}
-                                toggleDimension1={toggleDimension1}
-                                toggleDimension2={toggleDimension2}
-                                toggleDimension3={toggleDimension3}
-                                sct={SCT}
-                                correctedLaps={correctedLaps}
-                            />
-                        </ListItem>
-                    )}
-                </>
-            </ResultsList>
-            {/* <Box>{`SCT: ${SCT / correctedLaps} `}</Box> */}
-            {Boolean(oods.length) &&
-                <>
-                    <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                    <OODView marginBottom="20px" oods={oods} />
-                </>
-            }
-            <GreenButton onClick={toggleResultsView} autoFocus {...props}>{fleetViewButtonMsg}</GreenButton>
+            <PursuitStartTimes results={results} race={race} raceLengthMinutes={raceLengthMinutes} />
+            <div style={{
+                display: "flex",
+                flexDirection: "row"
+            }}>
+                <MinutesDiv currentMinutes={raceLengthMinutes} minutes={60} onClick={() => updateRaceLengthMinutes(60)} />
+                <MinutesDiv currentMinutes={raceLengthMinutes} minutes={50} onClick={() => updateRaceLengthMinutes(50)} />
+                <MinutesDiv currentMinutes={raceLengthMinutes} minutes={40} onClick={() => updateRaceLengthMinutes(40)} />
+                <MinutesDiv currentMinutes={raceLengthMinutes} minutes={30} onClick={() => updateRaceLengthMinutes(30)} />
+            </div>
         </>
     );
+}
+
+
+function MinutesButton({ children, ...props }) {
+    return <Button
+        backgroundColor="green.500"
+        marginBottom="20px"
+        // width="80vw"
+        maxWidth="600px"
+        {...props}
+    >
+        <Text fontSize={"lg"}>{children}</Text>
+    </Button>
+}
+
+function MinutesDiv({ currentMinutes, minutes, onClick }) {
+    return <MinutesButton style={{}} onClick={onClick}>{`${minutes} mins`}</MinutesButton>
 }
