@@ -8,7 +8,7 @@ import { getURLDate, parseURLDate, useBack } from "../common";
 import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
-import RaceResultsView from "./RaceResultsView";
+import { PursuitStartTimesWrapper, RaceResultsView } from "./RaceResultsView";
 
 import { BackButton, GreenButton, BlueButton, YellowButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
@@ -21,6 +21,9 @@ import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
 import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, ResetTiming, wrapDeleteOnSwipe } from "./DeleteItems";
 import BackHeader from "./BackHeader";
+
+
+const PURSUIT_RACE_LENGTHS = [60, 55, 50, 45, 40, 35, 30];
 
 function formatFleetPursuit(isPursuitRace) {
     return isPursuitRace ? "pursuit" : "fleet";
@@ -272,6 +275,7 @@ export default function Race({ backButtonText }) {
     const [editingRace, updateEditingRace] = useState(() => raceIsMutable)
     const [committingResults, setCommittingResults] = useState(false);
 
+
     const raceResults = appState.results.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const raceRegistered = appState.registered.filter((result) => Result.getRaceId(result) === StoreRace.getId(race));
     const oods = appState.oods.filter((ood) => Result.getRaceId(ood) === StoreRace.getId(race));
@@ -344,6 +348,19 @@ export default function Race({ backButtonText }) {
         )
     }
 
+    const [showStartTimes, updateShowStartTimes] = useState(false);
+    const [raceLengthMinutes, updateRaceLengthMinutes] = useState(PURSUIT_RACE_LENGTHS[0]);
+
+    if (isPursuitRace && showStartTimes) {
+        return <Wrapped>
+            <PursuitStartTimesWrapper results={viewableRaceResults} race={race} raceLengthMinutes={raceLengthMinutes} updateRaceLengthMinutes={updateRaceLengthMinutes} allRaceLengths={PURSUIT_RACE_LENGTHS} />
+            <Box marginTop="20px" />
+            {((isPursuitRace && (raceRegistered.length + raceResults.length) > 1)) &&
+                <GreenButton onClick={() => updateShowStartTimes(!showStartTimes)}>{showStartTimes ? "Hide start times" : "Show start times"}</GreenButton>
+            }
+        </Wrapped>;
+    }
+
     if (editingRace) {
         return (
             <>
@@ -351,9 +368,11 @@ export default function Race({ backButtonText }) {
                     <CopyFromPreviousRace race={race} previousRace={new StoreRace(race.getDate(), race.getNumber() - 1)}></CopyFromPreviousRace>
                 }
                 <Wrapped>
-
                     <DraggableView registered={raceRegistered} finished={finished} dnf={dnf} oods={oods} isPursuitRace={isPursuitRace} updateRaceResults={updateRaceResults} />
                     <Box marginTop="20px" />
+                    {((isPursuitRace && (raceRegistered.length + raceResults.length) > 1)) &&
+                        <GreenButton onClick={() => updateShowStartTimes(!showStartTimes)}>{showStartTimes ? "Hide start times" : "Show start times"}</GreenButton>
+                    }
                     {((isPursuitRace && (raceRegistered.length + raceResults.length) > 2) || (!raceRegistered.length && raceResults.length > 2)) &&
                         <GreenButton onClick={() => updateEditingRace(false)} autoFocus>View results</GreenButton>
                     }
