@@ -348,8 +348,14 @@ export default function Race({ backButtonText }) {
         )
     }
 
+    const updateRaceLengthMinutes = (newRaceLengthMinutes) =>
+        updateAppState(({ ...state }) => ({
+            ...state,
+            pursuitRaceLength: newRaceLengthMinutes
+        }));
+
     const [showStartTimes, updateShowStartTimes] = useState(false);
-    const [raceLengthMinutes, updateRaceLengthMinutes] = useState(PURSUIT_RACE_LENGTHS[0]);
+    const raceLengthMinutes = appState.pursuitRaceLength || PURSUIT_RACE_LENGTHS[0];
 
     if (isPursuitRace && showStartTimes) {
         return <Wrapped>
