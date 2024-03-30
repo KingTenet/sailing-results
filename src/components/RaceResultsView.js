@@ -8,16 +8,18 @@ import { calculatePIFromPersonalHandicap } from "../common/personalHandicapHelpe
 import { useDimensionsToggle, useSortedResults } from "../common/hooks.js";
 import { groupBy, round2sf } from "../common";
 
-import { GreenButton } from "./Buttons";
+import { GreenButton, YellowButton } from "./Buttons";
 import { RegisteredCard } from "./Cards";
 import { DroppableHeader } from "./CardHeaders";
 import MutableRaceFinish from "../store/types/MutableRaceFinish.js";
 import MutableRaceResult from "../store/types/MutableRaceResult.js";
 import Race from "../store/types/Race.js";
+import { useServices } from "../useAppState.js";
 
 const FLEET_RACE_VIEWS = ["FINISH_TIME", "CLASS_HANDICAP", "PERSONAL_HANDICAP"];
 const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
 const PURSUIT_START_TIMES_VIEW = ["PURSUIT_START_TIMES"];
+const PURSUIT_PH_START_TIMES_VIEW = ["PURSUIT_PH_START_TIMES"];
 
 
 const COLUMN_1_DIMENSIONS = {
@@ -41,6 +43,10 @@ const COLUMN_1_DIMENSIONS = {
         "CLASS_NAME",
         "CLASS_HANDICAP"
     ],
+    "PURSUIT_PH_START_TIMES": [
+        "NAME",
+        "SAIL_NUMBER",
+    ]
 };
 
 const COLUMN_2_DIMENSIONS = {
@@ -59,6 +65,12 @@ const COLUMN_2_DIMENSIONS = {
     ],
     "PURSUIT_POSITIONS": [
         "CLASS_NAME",
+        "CLASS_HANDICAP"
+    ],
+    "PURSUIT_PH_START_TIMES": [
+        "CLASS_NAME",
+        "PERSONAL_HANDICAP",
+        "PERSONAL_INTERVAL",
         "CLASS_HANDICAP"
     ],
 };
@@ -365,7 +377,7 @@ export function RaceResultsView({ results, oods, race, raceIsMutable, ...props }
 }
 
 
-function getPursuitStartTimes(results, race, raceLengthSeconds) {
+function getPursuitStartTimesByClass(results, race, raceLengthSeconds) {
     if (!results.length || results.some((result) => Race.getId(result.getRace()) !== Race.getId(race))) {
         return [];
     }
@@ -389,11 +401,40 @@ function getPursuitStartTimes(results, race, raceLengthSeconds) {
     return MutableRaceFinish.fromResults(newResults, () => []).getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a));
 }
 
-function PursuitStartTimes({ results, race, raceLengthMinutes }) {
-    const raceLengthSeconds = raceLengthMinutes * SECONDS_IN_MINUTE;
-    const [pseudoResults, updatePsuedoResults] = useState(() => getPursuitStartTimes(results, race, raceLengthSeconds));
+function usePursuitStartTimesByPersonalHandicap(results, race, raceLengthSeconds) {
+    const createArtificialFleetResults = (resultsToMap, mapFinishTime = () => 1) =>
+        resultsToMap
+            .map((result) => Result.fromMutableRaceResult(
+                MutableRaceResult.fromResult(result),
+                1,
+                undefined,
+                mapFinishTime(result)
+            ));
 
-    useEffect(() => updatePsuedoResults(getPursuitStartTimes(results, race, raceLengthSeconds)),
+    const [raceFinish] = useSortedResults(createArtificialFleetResults(results), race);
+    const allRegistered = raceFinish.getCorrectedResults();
+
+    const getPY = (result) => result.getRollingHandicapsAtRace(race)[0];
+
+    console.log(allRegistered.map(getPY));
+    const slowestClassPY = Math.max(...allRegistered.map(getPY));
+    const roundDown = (num) => -Math.round(-num);
+
+    const newResults = createArtificialFleetResults(
+        allRegistered,
+        (result) => roundDown(raceLengthSeconds * getPY(result) / slowestClassPY)
+    );
+    const [raceFinish2] = useSortedResults(newResults, race);
+
+    return raceFinish2.getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a));
+}
+
+function PursuitStartTimesByClass({ results, race, raceLengthMinutes }) {
+    const raceLengthSeconds = raceLengthMinutes * SECONDS_IN_MINUTE;
+    const getPsuedoResults = () => getPursuitStartTimesByClass(results, race, raceLengthSeconds);
+    const [pseudoResults, updatePsuedoResults] = useState(getPsuedoResults);
+
+    useEffect(() => updatePsuedoResults(getPsuedoResults()),
         [results, race, raceLengthSeconds]);
 
     const raceView = PURSUIT_START_TIMES_VIEW[0];
@@ -441,11 +482,67 @@ function PursuitStartTimes({ results, race, raceLengthMinutes }) {
 
 }
 
-export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, updateRaceLengthMinutes, allRaceLengths }) {
+function PursuitStartTimesByPersonalHandicap({ results, race, raceLengthMinutes }) {
+    const raceLengthSeconds = raceLengthMinutes * SECONDS_IN_MINUTE;
+    const pseudoResults = usePursuitStartTimesByPersonalHandicap(results, race, raceLengthSeconds);
 
+    const raceView = PURSUIT_PH_START_TIMES_VIEW[0];
+    const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
+    const [dimension2, toggleDimension2] = useDimensionsToggle(COLUMN_2_DIMENSIONS[raceView]);
+
+    if (!pseudoResults.length) {
+        return <></>;
+    }
+
+    return <>
+        <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">
+            {`Pursuit start times for ${raceLengthMinutes} minute PH race, ${formatBoatClass(pseudoResults.at(-1).getHelm().getName())} start.`}
+        </Heading>
+        <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
+            <>
+                <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg="white">
+                    <Flex>
+                        <Grid
+                            templateColumns='repeat(16, 1fr)'
+                            gap={3}
+                            width={"100%"}>
+                            <ResultDimension colSpan={1}></ResultDimension>
+                            <ResultDimension colSpan={6} onClick={toggleDimension1}>{DIMENSION_LABELS[dimension1]}</ResultDimension>
+                            <ResultDimension colSpan={6} onClick={toggleDimension2}>{DIMENSION_LABELS[dimension2]}</ResultDimension>
+                            <ResultDimension colSpan={3} >{"Start time"}</ResultDimension>
+                        </Grid>
+                    </Flex>
+                </Box>
+                {[...pseudoResults].reverse().map((result) =>
+                    <ListItem key={HelmResult.getId(result)}>
+                        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} marginBottom={"5px"} backgroundColor="white">
+                            <Flex>
+                                <Grid
+                                    templateColumns='repeat(16, 1fr)'
+                                    gap={3}
+                                    width={"100%"}>
+                                    <ResultDimension colSpan={1}></ResultDimension>
+                                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{getDimensionValue(dimension1, result)}</ResultDimension>
+                                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{getDimensionValue(dimension2, result)}</ResultDimension>
+                                    <ResultDimension colSpan={3}>{formatMinutesSeconds(secondsToMinutesSeconds(raceLengthSeconds - result.getFinishTime()))}</ResultDimension>
+                                </Grid>
+                            </Flex>
+                        </Box>
+                    </ListItem>
+                )}
+            </>
+        </ResultsList>
+    </>
+
+}
+
+export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, updateRaceLengthMinutes, allRaceLengths, toggleStartTimesByClass, startTimesByClass }) {
     return (
         <>
-            <PursuitStartTimes results={results} race={race} raceLengthMinutes={raceLengthMinutes} />
+            {startTimesByClass
+                ? <PursuitStartTimesByClass results={results} race={race} raceLengthMinutes={raceLengthMinutes} />
+                : <PursuitStartTimesByPersonalHandicap results={results} race={race} raceLengthMinutes={raceLengthMinutes} />
+            }
             <div style={{
                 display: "flex",
                 flexDirection: "row",
@@ -456,6 +553,7 @@ export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, upd
                 justifyContent: "center",
                 alignContent: "center",
             }}>
+                <YellowButton onClick={() => toggleStartTimesByClass()}>{`Start times by ${startTimesByClass ? "class PN" : "personal PN"}`}</YellowButton>
                 {allRaceLengths.map((minutes) =>
                     <MinutesButton
                         selected={minutes === raceLengthMinutes}

@@ -330,7 +330,6 @@ export default function Race({ backButtonText }) {
 
     function Wrapped({ children }) {
         return (
-
             <Flex direction="column" className="device-height" alignItems={"center"}>
                 {(editingRace || !raceIsMutable) &&
                     <Flex direction="row" marginTop="20px" marginBottom="20px" width="100%" style={{ overflow: "hidden" }}>
@@ -344,8 +343,7 @@ export default function Race({ backButtonText }) {
                     <BackButton disabled={committingResults}>{backButtonText}</BackButton>
                 }
             </Flex>
-
-        )
+        );
     }
 
     const updateRaceLengthMinutes = (newRaceLengthMinutes) =>
@@ -354,12 +352,27 @@ export default function Race({ backButtonText }) {
             pursuitRaceLength: newRaceLengthMinutes
         }));
 
+    const toggleStartTimesByClass = () =>
+        updateAppState(({ startTimesByClass, ...state }) => ({
+            ...state,
+            startTimesByClass: !startTimesByClass,
+        }))
+
     const [showStartTimes, updateShowStartTimes] = useState(false);
     const raceLengthMinutes = appState.pursuitRaceLength || PURSUIT_RACE_LENGTHS[0];
+    const startTimesByClass = appState.startTimesByClass;
 
     if (isPursuitRace && showStartTimes) {
         return <Wrapped>
-            <PursuitStartTimesWrapper results={viewableRaceResults} race={race} raceLengthMinutes={raceLengthMinutes} updateRaceLengthMinutes={updateRaceLengthMinutes} allRaceLengths={PURSUIT_RACE_LENGTHS} />
+            <PursuitStartTimesWrapper
+                results={viewableRaceResults}
+                race={race}
+                raceLengthMinutes={raceLengthMinutes}
+                updateRaceLengthMinutes={updateRaceLengthMinutes}
+                allRaceLengths={PURSUIT_RACE_LENGTHS}
+                toggleStartTimesByClass={toggleStartTimesByClass}
+                startTimesByClass={startTimesByClass}
+            />
             <Box marginTop="20px" />
             {((isPursuitRace && (raceRegistered.length + raceResults.length) > 1)) &&
                 <GreenButton onClick={() => updateShowStartTimes(!showStartTimes)}>{showStartTimes ? "Hide start times" : "Show start times"}</GreenButton>
