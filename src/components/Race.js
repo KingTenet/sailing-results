@@ -272,6 +272,7 @@ export default function Race({ backButtonText }) {
     const services = useServices();
     const [raceIsMutable, setRaceIsMutable] = useState(() => services.isRaceMutable(raceDate, raceNumber));
     const [isPursuitRace] = useState(() => services.isPursuitRace(race));
+    const [isFunkyPursuitRace] = useState(() => services.isFunkyPursuitRace(race));
     const [editingRace, updateEditingRace] = useState(() => raceIsMutable)
     const [committingResults, setCommittingResults] = useState(false);
 
@@ -352,15 +353,8 @@ export default function Race({ backButtonText }) {
             pursuitRaceLength: newRaceLengthMinutes
         }));
 
-    const toggleStartTimesByClass = () =>
-        updateAppState(({ startTimesByClass, ...state }) => ({
-            ...state,
-            startTimesByClass: !startTimesByClass,
-        }))
-
     const [showStartTimes, updateShowStartTimes] = useState(false);
     const raceLengthMinutes = appState.pursuitRaceLength || PURSUIT_RACE_LENGTHS[0];
-    const startTimesByClass = appState.startTimesByClass;
 
     if (isPursuitRace && showStartTimes) {
         return <Wrapped>
@@ -370,8 +364,7 @@ export default function Race({ backButtonText }) {
                 raceLengthMinutes={raceLengthMinutes}
                 updateRaceLengthMinutes={updateRaceLengthMinutes}
                 allRaceLengths={PURSUIT_RACE_LENGTHS}
-                toggleStartTimesByClass={toggleStartTimesByClass}
-                startTimesByClass={startTimesByClass}
+                startTimesByClass={!isFunkyPursuitRace}
             />
             <Box marginTop="20px" />
             {((isPursuitRace && (raceRegistered.length + raceResults.length) > 1)) &&

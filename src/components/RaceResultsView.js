@@ -416,7 +416,6 @@ function usePursuitStartTimesByPersonalHandicap(results, race, raceLengthSeconds
 
     const getPY = (result) => result.getRollingHandicapsAtRace(race)[0];
 
-    console.log(allRegistered.map(getPY));
     const slowestClassPY = Math.max(...allRegistered.map(getPY));
     const roundDown = (num) => -Math.round(-num);
 
@@ -536,7 +535,7 @@ function PursuitStartTimesByPersonalHandicap({ results, race, raceLengthMinutes 
 
 }
 
-export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, updateRaceLengthMinutes, allRaceLengths, toggleStartTimesByClass, startTimesByClass }) {
+export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, updateRaceLengthMinutes, allRaceLengths, startTimesByClass }) {
     return (
         <>
             {startTimesByClass
@@ -553,7 +552,6 @@ export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, upd
                 justifyContent: "center",
                 alignContent: "center",
             }}>
-                <YellowButton onClick={() => toggleStartTimesByClass()}>{`Start times by ${startTimesByClass ? "class PN" : "personal PN"}`}</YellowButton>
                 {allRaceLengths.map((minutes) =>
                     <MinutesButton
                         selected={minutes === raceLengthMinutes}

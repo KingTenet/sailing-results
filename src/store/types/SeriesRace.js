@@ -4,11 +4,12 @@ import { assertType, parseURLDate, getURLDate, generateId, parseISOString, getIS
 import Series from "./Series.js";
 
 export default class SeriesRace extends StoreObject {
-    constructor(series, race, lastImported, isPursuit, metaData) {
+    constructor(series, race, lastImported, isPursuit, isFunky, metaData) {
         super(metaData);
         this.series = assertType(series, Series);
         this.race = assertType(race, Race);
         this.isPursuitRace = assertType(isPursuit, "boolean");
+        this.isFunkyRace = assertType(isFunky, "boolean");
         // this.lastImported = assertType(lastImported, Date);
     }
 
@@ -35,6 +36,7 @@ export default class SeriesRace extends StoreObject {
             "Race Number",
             "Last Imported",
             "Is Pursuit",
+            "Is Funky",
             ...StoreObject.sheetHeaders(),
         ];
     }
@@ -47,16 +49,21 @@ export default class SeriesRace extends StoreObject {
             "Race Number": raceNumber,
             "Last Imported": lastImported,
             "Is Pursuit": isPursuit,
+            "Is Funky": isFunky,
         } = storeSeriesRace;
 
         const race = new Race(parseURLDate(raceDate), parseInt(raceNumber));
         const raceSeries = new Series(season, series);
-        return new SeriesRace(raceSeries, race, parseISOString(lastImported, new Date(0)), parseBoolean(isPursuit), StoreObject.fromStore(storeSeriesRace));
+        return new SeriesRace(raceSeries, race, parseISOString(lastImported, new Date(0)), parseBoolean(isPursuit), parseBoolean(isFunky), StoreObject.fromStore(storeSeriesRace));
     }
 
 
     isPursuit() {
         return this.isPursuitRace;
+    }
+
+    isFunky() {
+        return this.isFunkyRace;
     }
 
     getSeries() {
@@ -75,6 +82,7 @@ export default class SeriesRace extends StoreObject {
             "Race Number": this.race.getNumber(),
             "Last Imported": getISOStringFromDate(this.lastImported),
             "Is Pursuit": this.isPursuit(),
+            "Is Funky": this.isFunky(),
             ...super.toStore(this),
         };
     }

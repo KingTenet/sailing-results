@@ -521,6 +521,7 @@ export class StoreFunctions {
         this.deserialiseRegistered = this.deserialiseRegistered;
         this.getRaceFinishForResults = this.getRaceFinishForResults;
         this.isPursuitRace = this.isPursuitRace;
+        this.isFunkyPursuitRace = this.isFunkyPursuitRace;
         this.isRaceMutable = this.isRaceMutable;
         this.isRaceEditableByUser = this.isRaceEditableByUser;
         this.getSailNumberIndexForHelmBoat = this.getSailNumberIndexForHelmBoat;
@@ -653,6 +654,16 @@ export class StoreFunctions {
         assertType(race, Race);
         const seriesRacesForRace = this.stores.allSeriesRacesByRace.get(Race.getId(race));
         return seriesRacesForRace && seriesRacesForRace.at(0).isPursuit();
+    }
+
+    isFunkyPursuitRace(race) {
+        assertType(race, Race);
+        if (!this.isPursuitRace(race)) {
+            return false;
+        }
+
+        const seriesRacesForRace = this.stores.allSeriesRacesByRace.get(Race.getId(race));
+        return seriesRacesForRace && seriesRacesForRace.at(0).isPursuit() && seriesRacesForRace.at(0).isFunky();
     }
 
     isRaceMutable(raceDate, raceNumber) {
