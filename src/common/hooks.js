@@ -5,6 +5,16 @@ import { useLongPress, LongPressDetectEvents } from "use-long-press";
 const MIN_LONG_PRESS_DURATION_MS = 1200;
 const MAX_SHORT_PRESS_DURATION_MS = 400;
 
+export function useAllHelms() {
+    const services = useServices();
+    const [allHelmsByRaceAsc] = useState(
+        () => services.getHelmResultsByRaceAsc(),
+        new Map(),
+    );
+
+    return allHelmsByRaceAsc
+}
+
 export function useSortedResults(results, race) {
     const services = useServices();
     const [raceFinish] = useState(

@@ -537,6 +537,7 @@ export class StoreFunctions {
         this.reprocessStoredResults = this.reprocessStoredResults;
         this.getLatestHelmPersonalHandicap = this.getLatestHelmPersonalHandicap;
         this.helmIsClubMember = this.helmIsClubMember;
+        this.getHelmResultsByRaceAsc = this.getHelmResultsByRaceAsc;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
         this.readOnly = readOnly;
@@ -797,6 +798,10 @@ export class StoreFunctions {
         const ood = this.stores.deserialiseResult(storeOOD, newHelms, HelmResult);
         this.assertOODNotStored(ood);
         return ood;
+    }
+
+    getHelmResultsByRaceAsc() {
+        return this.stores.helmResultsByRaceAsc;
     }
 
     getLatestHelmPersonalHandicap(helmId) {

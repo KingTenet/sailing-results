@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useAppState } from "./useAppState";
 
 import StateWrapper from "./StateWrapper";
+import AllHelms from "./components/AllHelms";
 import Races from "./components/Races";
 import Race from "./components/Race";
 import RegisterHelm from "./components/RegisterHelm";
@@ -85,6 +86,11 @@ const ROUTES = [
                             { path: '/series/:season/:series/:raceDate/:raceNumber', element: <Race backButtonText="Back to series" /> },
                         ]
                     }
+                ]
+            },
+            {
+                path: '/helms/', element: <NavWrapper />, children: [
+                    { path: '/helms/', element: <AllHelms />, index: true },
                 ]
             },
         ]
