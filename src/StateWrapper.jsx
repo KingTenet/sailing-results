@@ -1,5 +1,5 @@
 import { Outlet, useSearchParams } from "react-router-dom";
-import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState";
+import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState.js";
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
 import { getSheetIdFromURL } from "./common";
@@ -8,6 +8,7 @@ import { RedButton } from "./components/Buttons";
 import Spinner from "./components/Spinner";
 import { StoreFunctions } from "./store/Stores";
 import StoresSync from "./StoresSync";
+import readOnlyAuth from "./auth";
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
 const liveSourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
@@ -15,11 +16,6 @@ const liveSourceResultsSheetId = getSheetIdFromURL(liveSourceResultsURL);
 
 const liveBackupResultsURL = "https://docs.google.com/spreadsheets/d/1rkP8dagZxVZKTLOOPHr1c02wQc0VmKw485w7rMv-02I";
 const liveBackupResultsSheetId = getSheetIdFromURL(liveBackupResultsURL);
-
-const readOnlyAuth = {
-    privateKey: "<<PRIVATE_KEY>>",
-    clientEmail: "<<CLIENT_EMAIL>>",
-};
 
 function getTokenExpiry(token) {
     return tokenParser(token).expiry;

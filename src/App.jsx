@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 
 import { useAppState } from "./useAppState";
 
-import StateWrapper from "./StateWrapper";
 import Races from "./components/Races";
 import Race from "./components/Race";
 import RegisterHelm from "./components/RegisterHelm";
@@ -12,11 +11,13 @@ import FinishHelm from "./components/FinishHelm";
 import RegisteredHelm from "./components/RegisteredHelm";
 import RegisterOOD from "./components/RegisterOOD";
 import Series from "./components/Series";
-import { useNavigate } from "react-router-dom";
 import SeriesPoints from "./components/SeriesPoints";
-import { useServices } from "./useAppState";
 import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
 import { ForceSpinner } from "./components/Spinner";
+
+import StateWrapper from "./StateWrapper";
+import { useNavigate } from "react-router-dom";
+import { useServices } from "./useAppState";
 import Debug from "./Debug";
 
 import './styles.css';
@@ -165,5 +166,4 @@ function App() {
         </Router>
     )
 }
-
 export default App;
