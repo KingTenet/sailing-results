@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { GoogleSpreadsheet } from "google-spreadsheet";
+import { JWT } from "google-auth-library";
 import inBrowser from "./inBrowser.js";
 
 const KEY_SEP = "::";
@@ -164,11 +165,16 @@ export function isOnline() {
 
 export async function getGoogleSheetDoc(sheetId, clientEmail, privateKey) {
     try {
-        const doc = new GoogleSpreadsheet(sheetId);
-        await doc.useServiceAccountAuth({
-            client_email: clientEmail,
-            private_key: privateKey,
+        const serviceAccountJWT = new JWT({
+            email: clientEmail,
+            key: privateKey,
+            scopes: [
+                'https://www.googleapis.com/auth/spreadsheets',
+                'https://www.googleapis.com/auth/drive.file',
+            ],
         });
+
+        const doc = new GoogleSpreadsheet(sheetId, serviceAccountJWT);
         await doc.loadInfo();
         return doc;
     }

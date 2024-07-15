@@ -13,7 +13,8 @@ export default class RemoteStore {
 
     async getAllRows() {
         const sheet = await this.getSheet();
-        return await sheet.getRows();
+        const allRows = await sheet.getRows();
+        return allRows.map((row) => row._worksheet._headerValues.reduce((prev, key) => ({ ...prev, [key]: row.get(key) }), {}));
     }
 
     async append(rows) {

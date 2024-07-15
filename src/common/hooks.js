@@ -1,6 +1,6 @@
 import { useAppState, useServices } from "../useAppState";
 import { useState, useEffect, useRef } from "react";
-import { useLongPress, LongPressDetectEvents } from "use-long-press";
+import { useLongPress, LongPressEventType } from "use-long-press";
 
 const MIN_LONG_PRESS_DURATION_MS = 1200;
 const MAX_SHORT_PRESS_DURATION_MS = 400;
@@ -124,7 +124,7 @@ export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration 
             threshold: longPressDuration,
             captureEvent: true,
             cancelOnMovement: true,
-            detect: LongPressDetectEvents.BOTH
+            detect: LongPressEventType.Pointer
         });
 
     return {
