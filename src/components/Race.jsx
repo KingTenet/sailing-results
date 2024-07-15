@@ -1,10 +1,10 @@
 import { Box, Center, Flex, Heading, Spacer } from "@chakra-ui/react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 
 import { useAppState, useServices } from "../useAppState";
-import { getURLDate, parseURLDate, useBack } from "../common";
+import { getURLDate, parseURLDate } from "../common";
 import StoreRace from "../store/types/Race";
 import HelmResult from "../store/types/HelmResult";
 import Result from "../store/types/Result";
@@ -13,13 +13,13 @@ import { PursuitStartTimesWrapper, RaceResultsView } from "./RaceResultsView";
 import { BackButton, GreenButton, BlueButton, YellowButton } from "./Buttons";
 import { DroppableContext, DroppableList } from "./Droppable";
 import { RegisteredListItem, FinisherListItem, OODListItem, PursuitFinishListItem, DNFListItem } from "./ListItems";
-import { RegisteredCard, DeleteCard, DNFCard, FinishersCard, PlaceholderCard } from "./Cards";
-import { RegisteredDroppableHeader, DeleteDroppableHeader, DNFDroppableHeader, FinishedDroppableHeader, OODDroppableHeader } from "./CardHeaders";
+import { RegisteredCard, DNFCard, FinishersCard } from "./Cards";
+import { RegisteredDroppableHeader, DNFDroppableHeader, FinishedDroppableHeader, OODDroppableHeader } from "./CardHeaders";
 import MutableRaceResult from "../store/types/MutableRaceResult";
 import CommitResultsDialog from "./CommitResultsDialog";
 import CopyFromPreviousRace from "./CopyFromPreviousRace";
 
-import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, ResetTiming, wrapDeleteOnSwipe } from "./DeleteItems";
+import { DeleteFinisher, DeleteOOD, DeletePursuitFinish, wrapDeleteOnSwipe } from "./DeleteItems";
 import BackHeader from "./BackHeader";
 
 
