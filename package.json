@@ -1,74 +1,47 @@
 {
-    "name": "sailing-results",
-    "version": "0.1.0",
+    "name": "my-app",
     "private": true,
-    "homepage": "./",
+    "version": "0.0.0",
     "type": "module",
     "dependencies": {
-        "@chakra-ui/icons": "^1.1.1",
-        "@chakra-ui/react": "^1.7.2",
-        "@choc-ui/chakra-autocomplete": "^4.13.0",
-        "@emotion/css": "^11.5.0",
-        "@emotion/react": "^11",
-        "@emotion/styled": "^11",
-        "@react-spring/web": "<9.7.0",
-        "@testing-library/jest-dom": "^5.11.4",
-        "@testing-library/react": "^11.1.0",
-        "@testing-library/user-event": "^12.1.10",
-        "@use-gesture/react": "^10.2.27",
-        "cheerio": "^1.0.0-rc.10",
-        "crypto-js": "^4.1.1",
-        "downshift": "^6.1.7",
-        "framer-motion": "^4",
-        "fuzzysort": "^1.1.4",
-        "google-spreadsheet": "^3.2.0",
-        "node-fetch": "^3.2.0",
-        "node-localstorage": "^2.2.1",
-        "react": "^17.0.2",
-        "react-beautiful-dnd": "^13.1.0",
-        "react-dom": "^17.0.2",
-        "react-emotion": "^10.0.0",
-        "react-router-dom": "^6.2.1",
-        "react-scripts": "4.0.3",
-        "use-long-press": "^2.0.2",
-        "web-vitals": "^0.2.4",
-        "workbox-background-sync": "^5.1.3",
-        "workbox-broadcast-update": "^5.1.3",
-        "workbox-cacheable-response": "^5.1.3",
-        "workbox-core": "^5.1.3",
-        "workbox-expiration": "^5.1.3",
-        "workbox-google-analytics": "^5.1.3",
-        "workbox-navigation-preload": "^5.1.3",
-        "workbox-precaching": "^5.1.3",
-        "workbox-range-requests": "^5.1.3",
-        "workbox-routing": "^5.1.3",
-        "workbox-strategies": "^5.1.3",
-        "workbox-streams": "^5.1.3"
+        "@chakra-ui/icons": "^2.1.1",
+        "@chakra-ui/react": "^2.8.2",
+        "@emotion/react": "^11.11.4",
+        "@emotion/styled": "^11.11.5",
+        "@react-spring/web": "^9.7.3",
+        "@use-gesture/react": "^10.3.1",
+        "crypto-js": "^4.2.0",
+        "downshift": "^9.0.6",
+        "framer-motion": "^11.3.2",
+        "fuzzysort": "^3.0.2",
+        "google-auth-library": "^9.11.0",
+        "google-spreadsheet": "^4.1.2",
+        "node-localstorage": "^3.0.5",
+        "react": "^18.3.1",
+        "react-beautiful-dnd": "^13.1.1",
+        "react-dom": "^18.3.1",
+        "react-router-dom": "^6.24.1",
+        "use-long-press": "^3.2.0",
+        "vite-plugin-node-polyfills": "^0.22.0"
     },
     "scripts": {
-        "start": "react-scripts start",
-        "build": "export PUBLIC_URL=https://nhebsc.org.uk/results/app/ && react-scripts build",
-        "staging": "export PUBLIC_URL=https://nhebsc.org.uk/results/test/ && react-scripts build",
-        "local": "export PUBLIC_URL=http://localhost:5000/ && react-scripts build",
-        "test": "node tests/testCorrectedResults.js",
-        "eject": "react-scripts eject"
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "build-staging": "tsc -b && vite build --mode staging",
+        "build-local": "tsc -b && vite build --mode localbuild",
+        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "preview": "vite preview"
     },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
-    },
-    "browserslist": {
-        "production": [
-            "last 5 chrome version",
-            "last 5 firefox version",
-            "last 5 safari version"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
+    "devDependencies": {
+        "@types/react": "^18.3.3",
+        "@types/react-dom": "^18.3.0",
+        "@typescript-eslint/eslint-plugin": "^7.13.1",
+        "@typescript-eslint/parser": "^7.13.1",
+        "@vitejs/plugin-react": "^4.3.1",
+        "eslint": "^8.57.0",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "eslint-plugin-react-refresh": "^0.4.7",
+        "typescript": "^5.2.2",
+        "vite": "^5.3.1"
     }
 }
