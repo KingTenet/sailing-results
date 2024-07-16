@@ -31,12 +31,13 @@ async function initialiseServicesFromToken(token, refreshCache) {
         resultsSheetId,
     } = parsedToken;
 
+    console.log("Read/Write");
     console.log(`https://docs.google.com/spreadsheets/d/${resultsSheetId}`);
-
     return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId, true);
 }
 
 async function initialiseReadOnlyServices(refreshCache) {
+    console.log(`https://docs.google.com/spreadsheets/d/${liveSourceResultsSheetId}`);
     return await StoreFunctions.create(refreshCache, readOnlyAuth, liveSourceResultsSheetId);
 }
 
