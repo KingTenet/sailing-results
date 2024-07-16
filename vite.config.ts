@@ -7,5 +7,8 @@ export default defineConfig({
     plugins: [
         react(),
         nodePolyfills(), // https://www.npmjs.com/package/vite-plugin-node-polyfills
-    ]
+    ],
+    server: {
+        host: "0.0.0.0"
+    }
 })
