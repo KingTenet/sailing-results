@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 export function DroppableContext({ onDragEnd, children }) {
     const handleDragEnd = (...props) => {
