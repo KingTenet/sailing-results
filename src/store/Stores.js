@@ -546,6 +546,7 @@ export class StoreFunctions {
 
     static async create(forceRefresh, auth, raceResultsSheetId, editableRaceDateStr, superUser, isLive, hasToken) {
         const readOnly = Boolean(!hasToken);
+        console.log("Read only: " + readOnly);
         const stores = await Stores.create(
             auth,
             raceResultsSheetId,
