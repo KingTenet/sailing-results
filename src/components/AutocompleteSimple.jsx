@@ -8,7 +8,6 @@ import {
     Heading,
     Input,
     InputGroup,
-    InputRightElement,
     Spacer,
     Collapse,
     Alert,
@@ -70,7 +69,6 @@ export default function ({ customClassName = "input-container-1 input-container"
         isOpen,
         getMenuProps,
         getInputProps,
-        getComboboxProps,
         highlightedIndex,
         getItemProps,
     } = useCombobox({
@@ -152,29 +150,13 @@ export default function ({ customClassName = "input-container-1 input-container"
 
     return (
         <>
-            {/* {exactMatch &&
-                <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
-                    <Flex direction={"row"}>
-                        <Box minWidth="110px" paddingTop="5px">
-                            <Text fontSize={"lg"}>{heading}</Text>
-                        </Box>
-                        <Box {...getComboboxProps()} width="100%">
-                            <InputGroup>
-                                <Input bgColor="white" {...getInputProps()} readOnly={true} width="100%" onFocus="this.blur()" tabIndex="-1" />
-                                <InputRightElement children={<CheckCircleIcon color='green.500' />} />
-                            </InputGroup>
-                        </Box>
-                    </Flex>
-                </Box>
-            } */}
-
             <Box borderRadius={"12px"} borderWidth="1px" width="100%" style={{ padding: "8px 15px 8px 15px" }} className={customClassName}>
                 <Flex direction={"column"}>
                     <Flex direction={"row"} className={"autocomplete-input"}>
                         <Box minWidth="110px" paddingTop="5px">
                             <Text fontSize={"lg"}>{heading}</Text>
                         </Box>
-                        <Box {...getComboboxProps()} width="100%">
+                        <Box width="100%">
                             <InputGroup>
                                 <Input bgColor="white" {...getInputProps()} autoFocus placeholder={placeholder} type={type} />
                             </InputGroup>
