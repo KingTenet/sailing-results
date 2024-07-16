@@ -5,10 +5,8 @@ import './index.css'
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 // import * as serviceWorker from './serviceWorkerRegistration';
-// import initArrayAtPolyfill from "./polyfills.js";
 // import version from "./version.js";
 // serviceWorker.register();
-// initArrayAtPolyfill();
 
 // function App() {
 //     return <div>HelloWorld</div>;
