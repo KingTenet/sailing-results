@@ -8,10 +8,10 @@
 // service worker, and the Workbox build step will be skipped.
 
 import { clientsClaim } from 'workbox-core';
-import { ExpirationPlugin } from 'workbox-expiration';
+// import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+// import { StaleWhileRevalidate } from 'workbox-strategies';
 
 clientsClaim();
 
@@ -45,7 +45,7 @@ registerRoute(
 
         return true;
     },
-    createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
+    createHandlerBoundToURL(process.env.VITE_APP_URL + '/index.html')
 );
 
 // An example runtime caching route for requests that aren't handled by the

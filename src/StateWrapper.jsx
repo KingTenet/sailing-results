@@ -43,6 +43,10 @@ async function initialiseReadOnlyServices(refreshCache) {
 
 async function initialiseServices(token) {
     console.log("Initialising services");
+    console.log(`Running with
+        import.meta.env.MODE: ${import.meta.env.MODE}
+        process.env.NODE_ENV: ${process.env.NODE_ENV}
+    `);
     const started = Date.now();
 
     const refreshCache = localStorage.getItem("forceRefreshCaches");
