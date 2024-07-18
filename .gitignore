@@ -50,7 +50,6 @@ yarn-error.log*
 fleet.json
 oods.json
 pursuits.json
-src/auth.js
 
 
 .vscode
