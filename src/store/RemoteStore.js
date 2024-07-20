@@ -68,7 +68,7 @@ export default class RemoteStore {
                 console.log(err);
                 console.log("Network error in store creation.. will sleep a bit and retry.")
                 await promiseSleep(20000);
-                return RemoteStore.retryCreateRemoteStore(sheetId, auth);
+                return await RemoteStore.retryCreateSheetsDoc(sheetId, auth);
             }
         }
     }

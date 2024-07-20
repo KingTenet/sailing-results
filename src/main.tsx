@@ -1,11 +1,8 @@
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import './index.css'
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
-import * as serviceWorker from './serviceWorkerRegistration';
 import version from "./version.js";
-serviceWorker.register();
 
 console.log(`Version ${version()}`);
 
