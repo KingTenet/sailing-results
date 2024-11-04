@@ -6,6 +6,13 @@
 /* Your existing custom styles */
 :root {
   --screen-height: 100px;
+
+  --text-highlight: 216, 42, 141;
+  --text-body: 0, 0, 0;
+  --dusky-blue: 0, 87, 109;
+  --green-blue: 104, 221, 196;
+  --teal: 32, 155, 168, 0.1;
+  --light-blue: 133, 202, 225;
 }
 
 button,

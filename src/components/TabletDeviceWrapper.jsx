@@ -9,7 +9,7 @@ export const TabletDeviceWrapper = ({ children }) => {
   const TABLET_HEIGHT = 888;
   
   // Scale factor (e.g., 0.75 = 75% of original size)
-  const SCALE = 0.6;
+  const SCALE = 0.75;
   
   // Calculate scaled dimensions
   const scaledWidth = TABLET_WIDTH * SCALE;
@@ -33,8 +33,6 @@ export const TabletDeviceWrapper = ({ children }) => {
     return <>{children}</>;
   }
 
-//   <div className="relative">
-{/* Tablet Frame */}
   return (
         <div className="bg-gray-800 rounded-[40px] p-8 shadow-xl">
           {/* Camera */}
@@ -61,19 +59,13 @@ style={{
                   width: `${(100/SCALE)}%`,
                   height: `${(100/SCALE)}%`,
                   position: 'absolute',
-                //   left: `${offsetX}px`,
-                //   top: `${offsetY}px`
                 }}
             >
               {children}
             </div>
           </div>
-
-          {/* Home Button */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full border-4 border-gray-700" />
         </div>
   );
-      {/* </div> */}
 };
 
 export default TabletDeviceWrapper;
