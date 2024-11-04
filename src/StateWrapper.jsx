@@ -2,20 +2,16 @@ import { Outlet, useSearchParams } from "react-router-dom";
 import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState.js";
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
-import { getSheetIdFromURL } from "./common";
 import { Box, Text } from "@chakra-ui/react";
 import { RedButton } from "./components/Buttons";
 import Spinner from "./components/Spinner";
 import { StoreFunctions } from "./store/Stores";
 import StoresSync from "./StoresSync";
 import readOnlyAuth from "./auth";
+import { SHEET_ID } from "./sheetIds.js";
+
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
-const liveSourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
-const liveSourceResultsSheetId = getSheetIdFromURL(liveSourceResultsURL);
-
-const liveBackupResultsURL = "https://docs.google.com/spreadsheets/d/1rkP8dagZxVZKTLOOPHr1c02wQc0VmKw485w7rMv-02I";
-const liveBackupResultsSheetId = getSheetIdFromURL(liveBackupResultsURL);
 
 function getTokenExpiry(token) {
     return tokenParser(token).expiry;
@@ -33,12 +29,12 @@ async function initialiseServicesFromToken(token, refreshCache) {
 
     console.log("Read/Write");
     console.log(`https://docs.google.com/spreadsheets/d/${resultsSheetId}`);
-    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId, true);
+    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === SHEET_ID, true);
 }
 
 async function initialiseReadOnlyServices(refreshCache) {
-    console.log(`https://docs.google.com/spreadsheets/d/${liveSourceResultsSheetId}`);
-    return await StoreFunctions.create(refreshCache, readOnlyAuth, liveSourceResultsSheetId);
+    console.log(`https://docs.google.com/spreadsheets/d/${SHEET_ID}`);
+    return await StoreFunctions.create(refreshCache, readOnlyAuth, SHEET_ID);
 }
 
 async function initialiseServices(token) {
