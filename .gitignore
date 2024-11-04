@@ -51,8 +51,9 @@ fleet.json
 oods.json
 pursuits.json
 
-
 .vscode
 
 .env
 .env*
+
+codebase.md
