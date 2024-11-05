@@ -3,7 +3,7 @@ import { Text, Spinner, Flex } from "@chakra-ui/react";
 
 function SpinnerPage() {
     return (
-        <Flex width="100vw" height="100vh" align={"center"} justify={"center"} direction="column">
+        <Flex height="100vh" align={"center"} justify={"center"} direction="column">
             <Spinner color='blue.500' size="xl" />
             <Text marginLeft={"10px"} marginTop={"20px"}>Loading...</Text>
         </Flex>

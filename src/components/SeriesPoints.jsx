@@ -182,9 +182,9 @@ export default function SeriesPoints() {
 
                 <Flex direction="column" width="100%" marginTop="20px">
                     {Boolean(personalHandicapRaces) &&
-                        <GreenButton maxWidth="100vw" onClick={() => updateResultsByPersonalHandicap(!resultsByPersonalHandicap)} autoFocus>{resultsByPersonalHandicap ? "Show points by class handicap" : "Show points by personal handicap"}</GreenButton>
+                        <GreenButton onClick={() => updateResultsByPersonalHandicap(!resultsByPersonalHandicap)} autoFocus>{resultsByPersonalHandicap ? "Show points by class handicap" : "Show points by personal handicap"}</GreenButton>
                     }
-                    <BackButton maxWidth="100vw">{"Back to series"}</BackButton>
+                    <BackButton>{"Back to series"}</BackButton>
                 </Flex>
             </Flex >
             {/* </Center> */}

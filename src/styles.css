@@ -5,8 +5,8 @@
 
 /* Your existing custom styles */
 :root {
-  --screen-height: 100px;
-
+  --screen-height: 888px;
+  --screen-width: 600px;
   --text-highlight: 216, 42, 141;
   --text-body: 0, 0, 0;
   --dusky-blue: 0, 87, 109;
@@ -34,37 +34,13 @@ a {
   padding-bottom: 20px;
 }
 
-:root {
-  --screen-height: 100px;
-}
-
-button,
-textarea,
-input,
-select,
-a {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.device-height {
-  /* min-height: 754px; */
-  min-height: 888px;
-  /* min-height: var(--screen-height); */
-  padding-bottom: 20px;
+.device-width {
+  min-width: var(--screen-width);
 }
 
 .fixed-height {
   position: fixed;
-  /* height: 100%; */
-
-  /* height: var(--screen-height); */
-  height: 888px;
+  height: var(--screen-height);
   overflow: hidden;
 }
 
@@ -317,6 +293,7 @@ input {
 }
 
 .page-container {
+  min-height: var(--screen-height);
   background: linear-gradient(
     180deg,
     hsl(219, 69%, 45%, 0.15) 0%,
@@ -409,4 +386,25 @@ input {
   height: 30px;
   width: 27px;
   color: rgba(127, 54, 54, 0.598);
+}
+
+button.nav-button {
+  margin-bottom: 20px;
+  width: var(--screen-width);
+  max-width: var(--screen-width);
+}
+
+.preview-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.preview-scroll-container {
+  /* max-width: var(--screen-width); */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tablet-screen-container .chakra-modal__content-container {
+  max-width: 100%;
+  max-height: 100%;
 }

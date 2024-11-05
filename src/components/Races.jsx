@@ -211,7 +211,7 @@ export default function Races({ editableOnly = false }) {
     const services = useServices();
     const [appState] = useAppState();
 
-    const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(services.isLive));
+    const [[mutableRaces, immutableRaces]] = useState(() => services.getRaces(false));
     const latestImmutableRaceDate = immutableRaces.sort((raceA, raceB) => raceB.sortByRaceAsc(raceA)).at(0).getDate();
 
     // Don't show editable races before the last race that was committed to the store

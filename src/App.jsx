@@ -59,6 +59,7 @@ function NavWrapper() {
 }
 
 const ROOT_PATHNAME = "/";
+
 const ROUTES = [
     {
         path: ROOT_PATHNAME, element: <StateWrapper />, children: [

@@ -18,10 +18,8 @@ export function BackButton({ children, ...props }) {
 export function RedButton({ children, ...props }) {
     return (
         <Button
+            className="nav-button"
             backgroundColor="red.500"
-            marginBottom="20px"
-            width="80vw"
-            maxWidth="600px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>
@@ -32,10 +30,8 @@ export function RedButton({ children, ...props }) {
 export function GreenButton({ children, ...props }) {
     return (
         <Button
+            className="nav-button"
             backgroundColor="green.500"
-            marginBottom="20px"
-            width="80vw"
-            maxWidth="600px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>
@@ -46,10 +42,8 @@ export function GreenButton({ children, ...props }) {
 export function BlueButton({ children, ...props }) {
     return (
         <Button
+            className="nav-button"
             backgroundColor="blue.500"
-            marginBottom="20px"
-            width="80vw"
-            maxWidth="600px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>
@@ -60,10 +54,8 @@ export function BlueButton({ children, ...props }) {
 export function YellowButton({ children, ...props }) {
     return (
         <Button
+           className="nav-button"
             backgroundColor="yellow.500"
-            marginBottom="20px"
-            width="80vw"
-            maxWidth="600px"
             {...props}
         >
             <Text fontSize={"lg"}>{children}</Text>

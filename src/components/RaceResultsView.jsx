@@ -30,8 +30,8 @@ const COLUMN_1_DIMENSIONS = {
         "SAIL_NUMBER",
     ],
     "FINISH_TIME": [
-        "SAIL_NUMBER",
         "NAME",
+        "SAIL_NUMBER",
     ],
     "PURSUIT_POSITIONS": [
         "NAME",
