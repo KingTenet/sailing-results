@@ -44,9 +44,9 @@ export default class Store {
     //     console.log(`${this.storeName}: Local last synced ${this.getLastSyncDate()}`);
     // }
 
-    if (inBrowser && localStoreIsStale) {
-      this.services.forceRefreshCaches();
-    }
+    // if (inBrowser && localStoreIsStale) {
+    //   this.services.forceRefreshCaches();
+    // }
   }
 
   async init(forceRefresh) {

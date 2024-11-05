@@ -64,10 +64,10 @@ export class Stores {
     }
   }
 
-  async forceRefreshCaches() {
-    localStorage.setItem("forceRefreshCaches", true);
-    window.location.reload();
-  }
+//   async forceRefreshCaches() {
+//     localStorage.setItem("forceRefreshCaches", true);
+//     window.location.reload();
+//   }
 
   async init(forceCacheRefresh) {
     await promiseSleep(10); // Required to get spinner to render!?

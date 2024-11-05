@@ -63,7 +63,7 @@ async function initialiseDemoServices(refreshCache) {
   );
 }
 
-async function initialiseServices(token) {
+async function initialiseServices() {
   console.log("Initialising services");
   console.log(`Running with
         import.meta.env.MODE: ${import.meta.env.MODE}
@@ -71,12 +71,10 @@ async function initialiseServices(token) {
     `);
   const started = Date.now();
 
-  const refreshCache = localStorage.getItem("forceRefreshCaches");
-  localStorage.removeItem("forceRefreshCaches");
+  //   const refreshCache = localStorage.getItem("forceRefreshCaches");
+  //   localStorage.removeItem("forceRefreshCaches");
 
-  const storeFunctions = token
-    ? await initialiseServicesFromToken(token, refreshCache)
-    : await initialiseDemoServices(refreshCache);
+  const storeFunctions = await initialiseDemoServices(false);
 
   console.log(
     `Finished initialising services in ${Math.round(Date.now() - started)}ms`
@@ -120,50 +118,12 @@ const DEFAULT_SERVICE_STATE = {
 
 export default function TokenWrapper() {
   const servicesManager = useState(DEFAULT_SERVICE_STATE);
-  const [token, updateToken] = useCachedState(undefined, undefined, "token");
-  const [urlToken, updateUrlToken] = useState();
-  const [readOnly, updateReadOnly] = useState(false);
-  let [searchParams, setSearchParams] = useSearchParams();
-
-  useEffect(() => {
-    if (!urlToken) {
-      const newUrlToken = searchParams.get("token");
-      if (newUrlToken) {
-        updateUrlToken(newUrlToken);
-        setSearchParams();
-      } else if (!token) {
-        updateReadOnly(true);
-      } else {
-        updateUrlToken(token.body);
-      }
-    } else {
-      if (token && token.body === urlToken) {
-        console.log("Not updating token as it's unchanged.");
-        return;
-      }
-
-      const tokenExpiry = getTokenExpiry(urlToken);
-      console.log("Replacing token");
-      updateToken({
-        expiry: tokenExpiry,
-        body: urlToken,
-      });
-    }
-  }, [urlToken]);
-
-  if (!readOnly && (!urlToken || !token || token.body !== urlToken)) {
-    return (
-      <>
-        <p>Awaiting token...</p>
-      </>
-    );
-  }
 
   return (
     <>
       <Box className="page-container">
         <ServicesContext.Provider value={servicesManager}>
-          <ServicesWrapper token={token && token.body} />
+          <ServicesWrapper token={undefined} />
         </ServicesContext.Provider>
       </Box>
     </>
@@ -211,20 +171,18 @@ function StateWrapper() {
 }
 
 function StateOutlet() {
-  const [state, updateAppState] = useAppState(DEFAULT_STATE);
+  const [state] = useAppState(DEFAULT_STATE);
   const services = useServices();
 
   useEffect(() => {
     services.updateStoresStatus();
   }, [state]);
 
-  return (
-    <>
-      {!state && <p>Loading state...</p>}
-      {!services.ready && <p>Initialising services...</p>}
-      {state && services.ready && <Outlet />}
-    </>
-  );
+  if (!state || !services.ready) {
+    return <Spinner />;
+  }
+
+  return <Outlet />;
 }
 
 function StoreSync({ store }) {
