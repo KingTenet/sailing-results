@@ -8,7 +8,7 @@ export const ScaledDiv = ({ children, ...props }) => {
   const TABLET_HEIGHT = 888;
 
   // Scale factor (e.g., 0.75 = 75% of original size)
-  const SCALE = isMobile ? 0.46 : 0.5;
+  const SCALE = isMobile ? 0.46 : 0.7;
 
   // Calculate scaled dimensions
   const scaledWidth = TABLET_WIDTH * SCALE;

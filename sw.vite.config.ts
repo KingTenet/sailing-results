@@ -11,8 +11,8 @@ function getPWAOptions(base: string) {
         base: base,
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'maskable_icon_x512.png'],
         manifest: {
-            name: 'NHEBSC Racing Results',
-            short_name: 'NHEBSC Results',
+            name: 'WindSheet',
+            short_name: 'WindSheet',
             theme_color: '#000000',
             background_color: "#ffffff",
             start_url: ".",

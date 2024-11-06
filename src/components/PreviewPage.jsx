@@ -3,15 +3,15 @@ import TabletDeviceWrapper from "./TabletDeviceWrapper";
 
 const Feature = ({ title, children }) => {
   return (
-    <div className="feature-item mt-4">
-      <h3 className="lg:text-xl lg:mb-2 font-semibold">{title}</h3>
-      <p className="lg:text-xl text-sm ">{children}</p>
+    <div className="feature-item lg:mb-6 my-6">
+      <h3 className="lg:text-xl font-semibold">{title}</h3>
+      <p className="lg:text-lg text-sm ">{children}</p>
     </div>
   );
 };
 
-const FeatureList = () => (
-  <div className="text-gray-100 lg:space-y-8 max-w-xl ">
+const FeatureList = ({ isMobile }) => (
+  <div className="text-gray-100 lg:space-y-4 space-y-6 max-w-xl ">
     <div className="flex lg:w-auto w-full justify-center lg:justify-normal">
       <div className="lg:h-24 lg:w-24 h-10 w-10 translate-y-3 mr-2 rotate-90 fill-slate-100">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
@@ -23,13 +23,13 @@ const FeatureList = () => (
         <h1 className="lg:text-7xl xl:text-8xl text-6xl w-full font-extralight font-h1 uppercase tracking-widest">
           WindSheet
         </h1>
-        <h2 className="lg:text-2xl xl:text-3xl text-xl w-full xl:ml-3 lg:ml-2 ml-1 font-light lg:mb-8 mb-2 font-h2 ">
+        <h2 className="lg:text-2xl xl:text-3xl text-xl w-full xl:ml-3 lg:ml-2 ml-1 font-light lg:mb-2 mb-2 font-h2 ">
           Racing results, refined
         </h2>
       </div>
     </div>
 
-    <div className="lg:space-y-6 px-2 lg:ml-6">
+    <div className="px-2 lg:ml-6">
       <Feature title={"Advanced Handicap System"}>
         {
           <>
@@ -65,6 +65,7 @@ const FeatureList = () => (
           </>
         }
       </Feature>
+      {isMobile === false && <GitHubLink />}
     </div>
   </div>
 );
@@ -114,23 +115,29 @@ const PreviewPage = ({ children }) => {
       </div>
 
       <div className="relative z-10 lg:max-w-screen-lg mx-auto px-4 my-5 lg:my-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="flex justify-center pr-8 col-span-6">
-            <FeatureList />
+        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-12 items-center">
+          <div className="flex justify-center lg:pr-8 col-span-6 mb-4">
+            <FeatureList isMobile={isMobile} />
           </div>
           <div className="flex flex-col items-center justify-center xl:pl-8 col-span-6">
-            {isMobile || isMobile === undefined ? (
+            {isMobile === undefined ? (
               <>
                 <TabletDeviceWrapper>
                   <img src="/tablet-preview.png" alt="App preview" />
                 </TabletDeviceWrapper>
+              </>
+            ) : isMobile ? (
+              <>
+                <TabletDeviceWrapper>
+                  <img src="/tablet-preview.png" alt="App preview" />
+                </TabletDeviceWrapper>
+                <GitHubLink />
               </>
             ) : (
               <div className="origin-center">
                 <TabletDeviceWrapper>{children}</TabletDeviceWrapper>
               </div>
             )}
-            <GitHubLink />
           </div>
         </div>
       </div>

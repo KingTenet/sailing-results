@@ -161,15 +161,15 @@ function getAppRoutes(rootPath) {
 }
 
 const ROOT_PATH = "/";
-const APP_PATH = "/app";
-const PREVIEW_PATH = "/preview";
+// const APP_PATH = "/app";
+const PREVIEW_PATH = "";
 
 const ROUTES = [
-  {
-    path: APP_PATH,
-    element: <StateWrapper />,
-    children: getAppRoutes(APP_PATH),
-  },
+  //   {
+  //     path: APP_PATH,
+  //     element: <StateWrapper />,
+  //     children: getAppRoutes(APP_PATH),
+  //   },
   {
     path: PREVIEW_PATH,
     element: (

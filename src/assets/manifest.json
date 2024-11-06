@@ -1,6 +1,6 @@
 {
-    "short_name": "NHEBSC Results",
-    "name": "NHEBSC Racing Results",
+    "short_name": "WindSheet",
+    "name": "WindSheet",
     "icons": [
         {
             "src": "./android-chrome-192x192.png",
