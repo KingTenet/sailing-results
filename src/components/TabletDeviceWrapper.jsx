@@ -32,7 +32,7 @@ export const TabletDeviceWrapper = ({ children }) => {
   return (
     <div className="relative bg-gray-800 lg:rounded-[40px] rounded-[20px] lg:p-[32px] p-[20px] shadow-xl">
       {/* Camera */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-700" />
+      <div className="absolute lg:top-4 top-2 left-1/2 -translate-x-1/2 lg:w-2 lg:h-2 w-1 h-1 rounded-full bg-gray-700" />
 
       {/* Screen Container - Fixed size of tablet */}
       <ScaledDiv

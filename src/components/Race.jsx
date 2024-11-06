@@ -382,7 +382,7 @@ export default function Race({ backButtonText }) {
     updateEditingRace(false);
     setRaceIsMutable(services.isRaceMutable(raceDate, raceNumber));
     setCommittingResults(false);
-    navigateTo("/races/");
+    navigateTo("../../"); // /races
   };
 
   const committingResultsFailed = (err) => {

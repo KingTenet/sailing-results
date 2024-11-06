@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import TabletDeviceWrapper from "./TabletDeviceWrapper";
 
 const Feature = ({ title, children }) => {
@@ -10,7 +10,6 @@ const Feature = ({ title, children }) => {
   );
 };
 
-// Feature list component - displays app features on the left side
 const FeatureList = () => (
   <div className="text-gray-100 lg:space-y-8 max-w-xl ">
     <div className="flex lg:w-auto w-full justify-center lg:justify-normal">
@@ -70,17 +69,41 @@ const FeatureList = () => (
   </div>
 );
 
+const GitHubLink = () => (
+  <a
+    href="https://github.com/kingtenet/sailing-results"
+    className="mt-8 inline-flex items-center px-6 py-3 border-dashed bg-white/20 border border-slate-700 backdrop-blur-sm bg-gradient-to-tr from-slate-300/10 via-50% via-slate-500/10 to-slate-700/10 text-slate-900 rounded-lg font-semibold text-lg hover:brightness-110 transition-all duration-200 group"
+  >
+    <img
+      src="/github.svg"
+      alt="GitHub"
+      className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform duration-200"
+    />
+    <span>Check out the project on GitHub</span>
+  </a>
+);
+
 const PreviewPage = ({ children }) => {
+  const [isMobile, setIsMobile] = useState(undefined);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+    return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
+
   return (
     <div className="min-h-screen w-full relative overflow-hidden flex items-center">
-      {/* Background Image with Color Filter */}
       <div
         className="absolute inset-0 bg-cover bg-center z-0 bg-white saturate-200 brightness-100 opacity-80"
         style={{
-          backgroundImage: "url(/sailing-background.jpg)", // You'll need to add this image
+          backgroundImage: "url(/sailing-background.jpg)",
         }}
       >
-        {/* Color Overlay - adjust hue by changing the color and opacity */}
         <div
           className="absolute inset-0 brightness-90 bg-gradient-to-tr from-[rgb(var(--dusky-blue))] via-50% via-slate-500 to-[rgb(var(--teal))]"
           style={{
@@ -90,21 +113,24 @@ const PreviewPage = ({ children }) => {
         />
       </div>
 
-      {/* Content Container */}
       <div className="relative z-10 lg:max-w-screen-lg mx-auto px-4 my-5 lg:my-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Side - Features */}
           <div className="flex justify-center pr-8 col-span-6">
             <FeatureList />
           </div>
-          {/* Right Side - Tablet Preview */}
-          <div className="flex justify-center xl:pl-8 col-span-6">
-            <div className="hidden lg:block origin-center">
-              <TabletDeviceWrapper>{children}</TabletDeviceWrapper>
-            </div>
-            <div className="lg:hidden origin-center">
-              <TabletDeviceWrapper>Try it out</TabletDeviceWrapper>
-            </div>
+          <div className="flex flex-col items-center justify-center xl:pl-8 col-span-6">
+            {isMobile || isMobile === undefined ? (
+              <>
+                <TabletDeviceWrapper>
+                  <img src="/tablet-preview.png" alt="App preview" />
+                </TabletDeviceWrapper>
+              </>
+            ) : (
+              <div className="origin-center">
+                <TabletDeviceWrapper>{children}</TabletDeviceWrapper>
+              </div>
+            )}
+            <GitHubLink />
           </div>
         </div>
       </div>

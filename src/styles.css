@@ -44,10 +44,6 @@ a {
   overflow: hidden;
 }
 
-body {
-  overscroll-behavior-y: contain;
-}
-
 .status-bar {
   width: 100%;
   position: fixed;
