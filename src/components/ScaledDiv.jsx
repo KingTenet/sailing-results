@@ -8,7 +8,7 @@ export const ScaledDiv = ({ children, ...props }) => {
   const TABLET_HEIGHT = 888;
 
   // Scale factor (e.g., 0.75 = 75% of original size)
-  const SCALE = isMobile ? 0.4 : 0.6;
+  const SCALE = isMobile ? 0.46 : 0.6;
 
   // Calculate scaled dimensions
   const scaledWidth = TABLET_WIDTH * SCALE;
@@ -23,10 +23,6 @@ export const ScaledDiv = ({ children, ...props }) => {
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
-
-  if (isMobile) {
-    return <>{children}</>;
-  }
 
   return (
     <div

@@ -91,7 +91,7 @@ const PreviewPage = ({ children }) => {
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 max-w-screen-lg max-w-8xl mx-auto px-4 my-5 lg:my-0">
+      <div className="relative z-10 lg:max-w-screen-lg mx-auto px-4 my-5 lg:my-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Side - Features */}
           <div className="flex justify-center pr-8 col-span-6">
@@ -99,8 +99,11 @@ const PreviewPage = ({ children }) => {
           </div>
           {/* Right Side - Tablet Preview */}
           <div className="flex justify-center xl:pl-8 col-span-6">
-            <div className="transform scale-100 origin-center">
+            <div className="hidden lg:block origin-center">
               <TabletDeviceWrapper>{children}</TabletDeviceWrapper>
+            </div>
+            <div className="lg:hidden origin-center">
+              <TabletDeviceWrapper>Try it out</TabletDeviceWrapper>
             </div>
           </div>
         </div>

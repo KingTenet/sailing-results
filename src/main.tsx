@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import version from "./version.js";
-import PreviewPage from "./components/PreviewPage.jsx";
 
 console.log(`Version ${version()}`);
 
@@ -31,8 +30,6 @@ const theme = extendTheme({ colors, config });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <ChakraProvider theme={theme}>
-    <PreviewPage>
-      <App />
-    </PreviewPage>
+    <App />
   </ChakraProvider>
 );

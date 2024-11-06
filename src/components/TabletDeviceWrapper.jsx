@@ -30,7 +30,7 @@ export const TabletDeviceWrapper = ({ children }) => {
   //   }
 
   return (
-    <div className="bg-gray-800 rounded-[40px] p-8 shadow-xl">
+    <div className="relative bg-gray-800 lg:rounded-[40px] rounded-[20px] lg:p-[32px] p-[20px] shadow-xl">
       {/* Camera */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-700" />
 
@@ -40,7 +40,8 @@ export const TabletDeviceWrapper = ({ children }) => {
         preview-scroll-container
         relative
         bg-white
-        rounded-[20px]
+        lg:rounded-[20px]
+        rounded-[10px]
         overflow-y-scroll
       `}
       >
