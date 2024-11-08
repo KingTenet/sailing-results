@@ -111,7 +111,7 @@ export default function CopyFromPreviousRace({ race, previousRace }) {
             </AlertDialogHeader>
             <AlertDialogBody>
               {
-                "It is recommended to use the helms/OODs registered from the previous race. Those that are not taking part or have changed rig/boat can be deleted. New helms can still be added."
+                "It is recommended to use the helms and race officers registered from the previous race. Those that are not taking part or have changed rig/boat can be deleted. New helms can still be added."
               }
             </AlertDialogBody>
             <AlertDialogFooter>

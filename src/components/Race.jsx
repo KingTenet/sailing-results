@@ -37,6 +37,7 @@ import {
   wrapDeleteOnSwipe,
 } from "./DeleteItems";
 import BackHeader from "./BackHeader";
+import { RaceNotes } from "./RaceNotes";
 
 const PURSUIT_RACE_LENGTHS = [60, 55, 50, 45, 40, 35, 30];
 
@@ -531,12 +532,19 @@ export default function Race({ backButtonText }) {
               View results
             </GreenButton>
           )}
+
+          <RaceNotes
+            raceRegistered={raceRegistered}
+            finished={finished}
+            dnf={dnf}
+            oods={oods}
+          />
           <Spacer />
-          <GreenButton onClick={() => navigateTo("ood")}>
-            Register OOD
-          </GreenButton>
           <GreenButton onClick={() => navigateTo("register")} autoFocus>
             Register Helms
+          </GreenButton>
+          <GreenButton onClick={() => navigateTo("ood")}>
+            Register Race Officer
           </GreenButton>
         </Wrapped>
       </>
