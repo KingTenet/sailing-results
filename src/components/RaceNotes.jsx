@@ -4,7 +4,6 @@ function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
   const numberOfHelms = [...raceRegistered, ...finished, ...dnf, ...oods]
     .length;
   const numberFinished = [...finished, ...dnf].length;
-  //   console.log({ raceRegistered, finished, dnf, oods });
   return (
     <div className="m-auto w-full">
       <div
@@ -19,7 +18,7 @@ function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
           <ListItem>Swipe left to mark as DNF (Did Not Finish)</ListItem>
         </UnorderedList>
         <Text mb={2} mt={4}>
-          To see race results:
+          To view calculated race results:
         </Text>
         <UnorderedList>
           <ListItem>
@@ -37,9 +36,10 @@ function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
             `}
             </Text>
           </ListItem>
-          <ListItem>
-            <Text mb={2}>
-              {`
+          {numberOfHelms && (
+            <ListItem>
+              <Text mb={2}>
+                {`
             Add finish times or DNFs to all registered helms
             ${!raceRegistered.length ? "✅" : "❌"}
             ${
@@ -50,8 +50,9 @@ function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
                 : ""
             }
             `}
-            </Text>
-          </ListItem>
+              </Text>
+            </ListItem>
+          )}
         </UnorderedList>
       </div>
     </div>
@@ -82,7 +83,7 @@ export function RaceNotes(props) {
     .length;
 
   if (!numberOfHelms) {
-    <NextSteps />;
+    return <NextSteps />;
   }
 
   return (
