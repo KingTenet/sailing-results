@@ -15,6 +15,7 @@ import { StoreFunctions } from "./store/Stores";
 import StoresSync from "./StoresSync";
 import readOnlyAuth from "./auth";
 import { SHEET_ID } from "./sheetIds.js";
+import { getURLDate } from "./common.js";
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
 
@@ -56,7 +57,7 @@ async function initialiseDemoServices(refreshCache) {
     refreshCache,
     readOnlyAuth,
     SHEET_ID,
-    "",
+    getURLDate(new Date()),
     true,
     true,
     true

@@ -5,6 +5,7 @@ import {
   parseURLDate,
   promiseSleep,
   mapGroupBy,
+  getURLDate,
 } from "../common.js";
 import StoreWrapper from "./StoreWrapper.js";
 import SeriesRace from "./types/SeriesRace.js";
@@ -64,10 +65,33 @@ export class Stores {
     }
   }
 
-//   async forceRefreshCaches() {
-//     localStorage.setItem("forceRefreshCaches", true);
-//     window.location.reload();
-//   }
+  //   async forceRefreshCaches() {
+  //     localStorage.setItem("forceRefreshCaches", true);
+  //     window.location.reload();
+  //   }
+
+  getFakeSeriesRaces() {
+    let currentDate = parseISOString("2024-11-01T00:00:00.000Z");
+    const endDate = parseISOString("2030-01-01T00:00:00.000Z");
+    const seriesRaces = [];
+
+    do {
+      for (let num = 1; num < 4; num++) {
+        seriesRaces.push(
+          SeriesRace.fromStore({
+            Season: `${currentDate.getFullYear()}`,
+            Series: "All races",
+            "Race Date": getURLDate(currentDate),
+            "Race Number": `${num}`,
+            "Is Pursuit": `FALSE`,
+          })
+        );
+      }
+      currentDate = new Date(currentDate.getTime() + 3600 * 24 * 1000);
+    } while (currentDate < endDate);
+
+    return seriesRaces;
+  }
 
   async init(forceCacheRefresh) {
     await promiseSleep(10); // Required to get spinner to render!?
@@ -147,7 +171,21 @@ export class Stores {
     this.clubClassesStore = clubClasses;
     this.ryaClasses = mapGroupBy(ryaClasses.all(), [BoatClass.getClassName]);
     this.clubClasses = mapGroupBy(clubClasses.all(), [BoatClass.getClassName]);
-    this.seriesRaces = seriesRaces;
+
+    const futureRaces = this.getFakeSeriesRaces().sort((a, b) =>
+      a.getRace().sortByRaceAsc(b.getRace())
+    );
+
+    const allSeriesRaces = seriesRaces.all();
+
+    this.seriesRaces = [
+      ...allSeriesRaces.filter((seriesRace) =>
+        seriesRace.getRace().isBefore(futureRaces[0].getRace())
+      ),
+      ...futureRaces,
+    ];
+
+    console.log(this.seriesRaces);
 
     const getOODsFromStore = (result) =>
       HelmResult.fromStore(result, (helmId) => this.helms.get(helmId));
@@ -280,7 +318,7 @@ export class Stores {
       this.oods.all(),
       this.pursuitResults.all(),
       this.results.all(),
-      this.seriesRaces.all(),
+      this.seriesRaces,
       tranformResults
     );
     this.raceFinishes = raceFinishes;
@@ -943,7 +981,6 @@ export class StoreFunctions {
     ]).map(([race]) => race);
 
     const mutableRaces = this.stores.seriesRaces
-      .all()
       .map((seriesRace) => seriesRace.getRace())
       .filter(
         (race) =>
@@ -1129,7 +1166,7 @@ export class StoreFunctions {
     const storedOODs = this.stores.oods.all();
     const storedPursuitResults = this.stores.pursuitResults.all();
     const storedFleetResults = this.stores.results.all();
-    const storedSeriesRaces = this.stores.seriesRaces.all();
+    const storedSeriesRaces = this.stores.seriesRaces;
 
     // const [seriesPoints, raceFinishes, allCorrectedResults] = Stores.processResultsStatic(
     //     [...storedOODs, ...mutableOODs],

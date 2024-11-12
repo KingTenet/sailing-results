@@ -526,19 +526,28 @@ export default function Race({ backButtonText }) {
               {showStartTimes ? "Hide start times" : "Show start times"}
             </GreenButton>
           )}
-          {((isPursuitRace && raceRegistered.length + raceResults.length > 2) ||
-            (!raceRegistered.length && raceResults.length > 2)) && (
-            <GreenButton onClick={() => updateEditingRace(false)} autoFocus>
-              View results
-            </GreenButton>
-          )}
 
           <RaceNotes
             raceRegistered={raceRegistered}
             finished={finished}
             dnf={dnf}
             oods={oods}
-          />
+          >
+            {((isPursuitRace &&
+              raceRegistered.length + raceResults.length > 2) ||
+              (!raceRegistered.length &&
+                raceResults.length > 2 &&
+                Boolean(finished.length))) && (
+              <GreenButton
+                style={{ width: "100%", marginBottom: "5px", marginTop: "2px" }}
+                onClick={() => updateEditingRace(false)}
+                autoFocus
+              >
+                View results
+              </GreenButton>
+            )}
+          </RaceNotes>
+
           <Spacer />
           <GreenButton onClick={() => navigateTo("register")} autoFocus>
             Register Helms

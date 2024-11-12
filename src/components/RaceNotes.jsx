@@ -1,9 +1,9 @@
 import { Text, UnorderedList, ListItem } from "@chakra-ui/react";
 
-function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
-  const numberOfHelms = [...raceRegistered, ...finished, ...dnf, ...oods]
-    .length;
+function ThreeHelms({ raceRegistered, finished, dnf, ...props }) {
+  const numberOfHelms = [...raceRegistered, ...finished, ...dnf].length;
   const numberFinished = [...finished, ...dnf].length;
+
   return (
     <div className="m-auto w-full">
       <div
@@ -36,7 +36,7 @@ function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
             `}
             </Text>
           </ListItem>
-          {numberOfHelms && (
+          {numberOfHelms >= 3 && (
             <ListItem>
               <Text mb={2}>
                 {`
@@ -53,7 +53,18 @@ function ThreeHelms({ raceRegistered, finished, dnf, oods }) {
               </Text>
             </ListItem>
           )}
+          {numberOfHelms >= 3 && !Boolean(finished.length) && (
+            <ListItem>
+              <Text mb={2}>
+                {`
+            Add at least 1 finish time to a registered helm
+            ${finished.length ? "✅" : "❌"}
+            `}
+              </Text>
+            </ListItem>
+          )}
         </UnorderedList>
+        {props.children}
       </div>
     </div>
   );
@@ -78,9 +89,8 @@ function NextSteps() {
 }
 
 export function RaceNotes(props) {
-  const { raceRegistered, finished, dnf, oods } = props;
-  const numberOfHelms = [...raceRegistered, ...finished, ...dnf, ...oods]
-    .length;
+  const { raceRegistered, finished, dnf } = props;
+  const numberOfHelms = [...raceRegistered, ...finished, ...dnf].length;
 
   if (!numberOfHelms) {
     return <NextSteps />;

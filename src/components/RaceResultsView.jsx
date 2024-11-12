@@ -1,5 +1,14 @@
 import { Alert, AlertIcon, AlertTitle, Button } from "@chakra-ui/react";
-import { Box, Flex, Heading, List, ListItem, Text, Grid, GridItem } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Heading,
+  List,
+  ListItem,
+  Text,
+  Grid,
+  GridItem,
+} from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 
 import HelmResult from "../store/types/HelmResult";
@@ -19,467 +28,604 @@ const FLEET_RACE_VIEWS = ["FINISH_TIME", "CLASS_HANDICAP", "PERSONAL_HANDICAP"];
 const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
 const PURSUIT_START_TIMES_VIEW = ["PURSUIT_START_TIMES"];
 
-
 const COLUMN_1_DIMENSIONS = {
-    "PERSONAL_HANDICAP": [
-        "NAME",
-        "SAIL_NUMBER",
-    ],
-    "CLASS_HANDICAP": [
-        "NAME",
-        "SAIL_NUMBER",
-    ],
-    "FINISH_TIME": [
-        "NAME",
-        "SAIL_NUMBER",
-    ],
-    "PURSUIT_POSITIONS": [
-        "NAME",
-        "SAIL_NUMBER",
-    ],
-    "PURSUIT_START_TIMES": [
-        "CLASS_NAME",
-        "CLASS_HANDICAP"
-    ],
+  PERSONAL_HANDICAP: ["NAME", "SAIL_NUMBER"],
+  CLASS_HANDICAP: ["NAME", "SAIL_NUMBER"],
+  FINISH_TIME: ["NAME", "SAIL_NUMBER"],
+  PURSUIT_POSITIONS: ["NAME", "SAIL_NUMBER"],
+  PURSUIT_START_TIMES: ["CLASS_NAME", "CLASS_HANDICAP"],
 };
 
 const COLUMN_2_DIMENSIONS = {
-    "PERSONAL_HANDICAP": [
-        "CLASS_NAME",
-        "PERSONAL_HANDICAP",
-        "CLASS_HANDICAP"
-    ],
-    "CLASS_HANDICAP": [
-        "CLASS_NAME",
-        "CLASS_HANDICAP"
-    ],
-    "FINISH_TIME": [
-        "CLASS_NAME",
-        "CLASS_HANDICAP"
-    ],
-    "PURSUIT_POSITIONS": [
-        "CLASS_NAME",
-        "CLASS_HANDICAP"
-    ],
+  PERSONAL_HANDICAP: ["CLASS_NAME", "PERSONAL_HANDICAP", "CLASS_HANDICAP"],
+  CLASS_HANDICAP: ["CLASS_NAME", "CLASS_HANDICAP"],
+  FINISH_TIME: ["CLASS_NAME", "CLASS_HANDICAP"],
+  PURSUIT_POSITIONS: ["CLASS_NAME", "CLASS_HANDICAP"],
 };
 
 const COLUMN_3_DIMENSIONS = {
-    "PERSONAL_HANDICAP": [
-        "PERSONAL_CORRECTED_TIME",
-        "PERSONAL_HANDICAP_RESULT",
-        "PERSONAL_INTERVAL",
-        // "PERSONAL_INTERVAL_FROM_PH",
-    ],
-    "CLASS_HANDICAP": [
-        "CLASS_CORRECTED_TIME",
-        "RAW_CLASS_CORRECTED_TIME"
-    ],
-    "FINISH_TIME": [
-        "FINISH_TIME",
-        "LAPS",
-    ],
-    "PURSUIT_POSITIONS": [
-        "SAIL_NUMBER"
-    ],
+  PERSONAL_HANDICAP: [
+    "PERSONAL_CORRECTED_TIME",
+    "PERSONAL_HANDICAP_RESULT",
+    "PERSONAL_INTERVAL",
+    // "PERSONAL_INTERVAL_FROM_PH",
+  ],
+  CLASS_HANDICAP: ["CLASS_CORRECTED_TIME", "RAW_CLASS_CORRECTED_TIME"],
+  FINISH_TIME: ["FINISH_TIME", "LAPS"],
+  PURSUIT_POSITIONS: ["SAIL_NUMBER"],
 };
 
 const DIMENSION_LABELS = {
-    "NAME": "Name",
-    "SAIL_NUMBER": "Sail Number",
-    "CLASS_NAME": "Class",
-    "PERSONAL_HANDICAP": "Personal PY",
-    "CLASS_HANDICAP": "Class PY",
-    "PERSONAL_CORRECTED_TIME": "Time",
-    "PERSONAL_HANDICAP_RESULT": "PH",
-    "PERSONAL_INTERVAL": "PI (%)",
-    "PERSONAL_INTERVAL_FROM_PH": "PY/PH (%)",
-    "CLASS_CORRECTED_TIME": "Time",
-    "RAW_CLASS_CORRECTED_TIME": "Seconds",
-    "FINISH_TIME": "Time",
-    "LAPS": "Laps",
+  NAME: "Name",
+  SAIL_NUMBER: "Sail Number",
+  CLASS_NAME: "Class",
+  PERSONAL_HANDICAP: "Personal PY",
+  CLASS_HANDICAP: "Class PY",
+  PERSONAL_CORRECTED_TIME: "Time",
+  PERSONAL_HANDICAP_RESULT: "PH",
+  PERSONAL_INTERVAL: "PI (%)",
+  PERSONAL_INTERVAL_FROM_PH: "PY/PH (%)",
+  CLASS_CORRECTED_TIME: "Time",
+  RAW_CLASS_CORRECTED_TIME: "Seconds",
+  FINISH_TIME: "Time",
+  LAPS: "Laps",
 };
 
 const SECONDS_IN_MINUTE = 60;
 
 function secondsToMinutesSeconds(totalSeconds) {
-    const roundedSeconds = Math.round(totalSeconds);
-    var minutes = Math.floor(roundedSeconds / SECONDS_IN_MINUTE);
-    var seconds = roundedSeconds % SECONDS_IN_MINUTE;
-    return [minutes, seconds];
+  const roundedSeconds = Math.round(totalSeconds);
+  var minutes = Math.floor(roundedSeconds / SECONDS_IN_MINUTE);
+  var seconds = roundedSeconds % SECONDS_IN_MINUTE;
+  return [minutes, seconds];
 }
 
 function formatMinutesSeconds([minutes, seconds]) {
-    const pad = (v) => {
-        return `0${Math.round(v)}`.slice(v > 100 ? -3 : -2);
-    }
-    return [pad(minutes), pad(seconds)].join(":");
+  const pad = (v) => {
+    return `0${Math.round(v)}`.slice(v > 100 ? -3 : -2);
+  };
+  return [pad(minutes), pad(seconds)].join(":");
 }
 
 function formatBoatClass(className) {
-    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
-    return className.split(" ").map((word) => capitalize(word.toLowerCase())).join(" ");
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+  return className
+    .split(" ")
+    .map((word) => capitalize(word.toLowerCase()))
+    .join(" ");
 }
 
 function formatPI(personalInterval) {
-    return Math.round((personalInterval + Number.EPSILON) * 100) / 100;
+  return Math.round((personalInterval + Number.EPSILON) * 100) / 100;
 }
 
 function ResultDimension({ children, ...props }) {
-    return (
-        <GridItem
-            height='20px'
-            {...props}>
-            <Text isTruncated>{children}</Text>
-        </GridItem>
-    );
+  return (
+    <GridItem height="20px" {...props}>
+      <Text isTruncated>{children}</Text>
+    </GridItem>
+  );
 }
 
-function HeadingRow({ toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3 }) {
-    const dimension1Label = DIMENSION_LABELS[dimension1];
-    const dimension2Label = DIMENSION_LABELS[dimension2];
-    const dimension3Label = DIMENSION_LABELS[dimension3];
+function HeadingRow({
+  toggleDimension1,
+  toggleDimension2,
+  toggleDimension3,
+  dimension1,
+  dimension2,
+  dimension3,
+}) {
+  const dimension1Label = DIMENSION_LABELS[dimension1];
+  const dimension2Label = DIMENSION_LABELS[dimension2];
+  const dimension3Label = DIMENSION_LABELS[dimension3];
 
-    return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg="white">
-            <Flex>
-                <Grid
-                    templateColumns='repeat(16, 1fr)'
-                    gap={3}
-                    width={"100%"}>
-                    <ResultDimension colSpan={1}></ResultDimension>
-                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{dimension1Label}</ResultDimension>
-                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{dimension2Label}</ResultDimension>
-                    <ResultDimension colSpan={3} onClick={toggleDimension3}>{dimension3Label}</ResultDimension>
-                </Grid>
-            </Flex>
-        </Box>
+  return (
+    <>
+      <Box
+        padding={"10px"}
+        borderRadius={"12px"}
+        borderWidth={"1px"}
+        borderColor={"grey"}
+        bg="white"
+      >
+        <Flex>
+          <Grid templateColumns="repeat(16, 1fr)" gap={3} width={"100%"}>
+            <ResultDimension colSpan={1}></ResultDimension>
+            <ResultDimension colSpan={6} onClick={toggleDimension1}>
+              {dimension1Label}
+            </ResultDimension>
+            <ResultDimension colSpan={6} onClick={toggleDimension2}>
+              {dimension2Label}
+            </ResultDimension>
+            <ResultDimension colSpan={3} onClick={toggleDimension3}>
+              {dimension3Label}
+            </ResultDimension>
+          </Grid>
+        </Flex>
+      </Box>
     </>
+  );
 }
 
 function getDimensionValue(dimension, result, sct, correctedLaps) {
-    switch (dimension) {
-        case "NAME":
-            return Result.getHelmId(result);
-        case "SAIL_NUMBER":
-            return result.getSailNumber();
-        case "CLASS_NAME":
-            return formatBoatClass(result.getBoatClass().getClassName());
-        case "PERSONAL_HANDICAP":
-            return result.getRollingPersonalHandicapBeforeRace();
-        case "CLASS_HANDICAP":
-            return result.getBoatClass().getPY();
-        case "PERSONAL_CORRECTED_TIME":
-            return result.isValidFinish()
-                ? formatMinutesSeconds(secondsToMinutesSeconds(result.getPersonalCorrectedFinishTime()))
-                : "DNF"
-        case "PERSONAL_HANDICAP_RESULT":
-            return result.isValidFinish()
-                ? result.getPersonalHandicapFromRace()
-                : "DNF"
-        case "PERSONAL_INTERVAL":
-            return result.isValidFinish()
-                ? formatPI(calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()))
-                : "DNF"
-        case "PERSONAL_INTERVAL_FROM_PH":
-            return formatPI(calculatePIFromPersonalHandicap(result.getRollingPersonalHandicapBeforeRace(), result.getPersonalHandicapFromRace()));
-        case "CLASS_CORRECTED_TIME":
-            return result.isValidFinish()
-                ? formatMinutesSeconds(secondsToMinutesSeconds(result.getClassCorrectedTime()))
-                : "DNF"
-        case "RAW_CLASS_CORRECTED_TIME":
-            return result.isValidFinish()
-                ? `${round2sf(result.getClassCorrectedTime() / correctedLaps)}`
-                : "DNF"
-        case "FINISH_TIME":
-            return result.isValidFinish()
-                ? formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()))
-                : "DNF"
-        case "LAPS":
-            return result.getLaps();
-        default:
-            return dimension;
-    }
+  switch (dimension) {
+    case "NAME":
+      return Result.getHelmId(result);
+    case "SAIL_NUMBER":
+      return result.getSailNumber();
+    case "CLASS_NAME":
+      return formatBoatClass(result.getBoatClass().getClassName());
+    case "PERSONAL_HANDICAP":
+      return result.getRollingPersonalHandicapBeforeRace();
+    case "CLASS_HANDICAP":
+      return result.getBoatClass().getPY();
+    case "PERSONAL_CORRECTED_TIME":
+      return result.isValidFinish()
+        ? formatMinutesSeconds(
+            secondsToMinutesSeconds(result.getPersonalCorrectedFinishTime())
+          )
+        : "DNF";
+    case "PERSONAL_HANDICAP_RESULT":
+      return result.isValidFinish()
+        ? result.getPersonalHandicapFromRace()
+        : "DNF";
+    case "PERSONAL_INTERVAL":
+      return result.isValidFinish()
+        ? formatPI(
+            calculatePIFromPersonalHandicap(
+              result.getBoatClass().getPY(),
+              result.getPersonalHandicapFromRace()
+            )
+          )
+        : "DNF";
+    case "PERSONAL_INTERVAL_FROM_PH":
+      return formatPI(
+        calculatePIFromPersonalHandicap(
+          result.getRollingPersonalHandicapBeforeRace(),
+          result.getPersonalHandicapFromRace()
+        )
+      );
+    case "CLASS_CORRECTED_TIME":
+      return result.isValidFinish()
+        ? formatMinutesSeconds(
+            secondsToMinutesSeconds(result.getClassCorrectedTime())
+          )
+        : "DNF";
+    case "RAW_CLASS_CORRECTED_TIME":
+      return result.isValidFinish()
+        ? `${round2sf(result.getClassCorrectedTime() / correctedLaps)}`
+        : "DNF";
+    case "FINISH_TIME":
+      return result.isValidFinish()
+        ? formatMinutesSeconds(secondsToMinutesSeconds(result.getFinishTime()))
+        : "DNF";
+    case "LAPS":
+      return result.getLaps();
+    default:
+      return dimension;
+  }
 }
 
-function ResultListItem({ result, position, toggleDimension1, toggleDimension2, toggleDimension3, dimension1, dimension2, dimension3, sct, correctedLaps }) {
-    return <>
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} marginBottom={"5px"} backgroundColor="white">
-            <Flex>
-                <Grid
-                    templateColumns='repeat(16, 1fr)'
-                    gap={3}
-                    width={"100%"}>
-                    <ResultDimension colSpan={1}>{position}</ResultDimension>
-                    <ResultDimension colSpan={6} onClick={toggleDimension1}>{getDimensionValue(dimension1, result, sct, correctedLaps)}</ResultDimension>
-                    <ResultDimension colSpan={6} onClick={toggleDimension2}>{getDimensionValue(dimension2, result, sct, correctedLaps)}</ResultDimension>
-                    <ResultDimension colSpan={3} onClick={toggleDimension3}>{getDimensionValue(dimension3, result, sct, correctedLaps)}</ResultDimension>
-                </Grid>
-            </Flex>
-        </Box>
+function ResultListItem({
+  result,
+  position,
+  toggleDimension1,
+  toggleDimension2,
+  toggleDimension3,
+  dimension1,
+  dimension2,
+  dimension3,
+  sct,
+  correctedLaps,
+}) {
+  return (
+    <>
+      <Box
+        padding={"10px"}
+        borderRadius={"12px"}
+        borderWidth={"1px"}
+        borderColor={"grey"}
+        marginBottom={"5px"}
+        backgroundColor="white"
+      >
+        <Flex>
+          <Grid templateColumns="repeat(16, 1fr)" gap={3} width={"100%"}>
+            <ResultDimension colSpan={1}>{position}</ResultDimension>
+            <ResultDimension colSpan={6} onClick={toggleDimension1}>
+              {getDimensionValue(dimension1, result, sct, correctedLaps)}
+            </ResultDimension>
+            <ResultDimension colSpan={6} onClick={toggleDimension2}>
+              {getDimensionValue(dimension2, result, sct, correctedLaps)}
+            </ResultDimension>
+            <ResultDimension colSpan={3} onClick={toggleDimension3}>
+              {getDimensionValue(dimension3, result, sct, correctedLaps)}
+            </ResultDimension>
+          </Grid>
+        </Flex>
+      </Box>
     </>
+  );
 }
 
 function OODListItem({ ood }) {
-    const helmName = Result.getHelmId(ood);
+  const helmName = Result.getHelmId(ood);
 
-    return (
-        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} backgroundColor="white" >
-            <ResultDimension colSpan={1}>{helmName}</ResultDimension>
-        </Box>
-    );
+  return (
+    <Box
+      padding={"10px"}
+      borderRadius={"12px"}
+      borderWidth={"1px"}
+      borderColor={"grey"}
+      backgroundColor="white"
+    >
+      <ResultDimension colSpan={1}>{helmName}</ResultDimension>
+    </Box>
+  );
 }
 
 function OODView({ oods, ...props }) {
-    return (
-        <ResultsList {...props}>
-            {oods.map((ood) =>
-                <ListItem key={HelmResult.getId(ood)}>
-                    <OODListItem ood={ood} />
-                </ListItem>
-            )}
-        </ResultsList>
-    );
+  return (
+    <ResultsList {...props}>
+      {oods.map((ood) => (
+        <ListItem key={HelmResult.getId(ood)}>
+          <OODListItem ood={ood} />
+        </ListItem>
+      ))}
+    </ResultsList>
+  );
 }
 
 function ResultsList({ children, isDisabled, ...props }) {
-    return (
-        <Box {...props}>
-            <List spacing="5px">
-                {children}
-            </List>
-        </Box>
-    )
+  return (
+    <Box {...props}>
+      <List spacing="5px">{children}</List>
+    </Box>
+  );
 }
 
-export function RaceResultsView({ results, oods, race, raceIsMutable, ...props }) {
-    const [raceFinish, byFinishTime, byClassFinishTime, byPersonalFinishTime, correctedLaps, SCT, isPursuitRace] = useSortedResults(results, race);
-    const RACE_VIEWS = isPursuitRace
-        ? PURSUIT_RACE_VIEW
-        : FLEET_RACE_VIEWS
-    const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
-    const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
-    const [dimension2, toggleDimension2] = useDimensionsToggle(COLUMN_2_DIMENSIONS[raceView]);
-    const [dimension3, toggleDimension3] = useDimensionsToggle(COLUMN_3_DIMENSIONS[raceView]);
+export function RaceResultsView({
+  results,
+  oods,
+  race,
+  raceIsMutable,
+  ...props
+}) {
+  const [
+    raceFinish,
+    byFinishTime,
+    byClassFinishTime,
+    byPersonalFinishTime,
+    correctedLaps,
+    SCT,
+    isPursuitRace,
+  ] = useSortedResults(results, race);
+  const RACE_VIEWS = isPursuitRace ? PURSUIT_RACE_VIEW : FLEET_RACE_VIEWS;
+  const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
+  const [dimension1, toggleDimension1] = useDimensionsToggle(
+    COLUMN_1_DIMENSIONS[raceView]
+  );
+  const [dimension2, toggleDimension2] = useDimensionsToggle(
+    COLUMN_2_DIMENSIONS[raceView]
+  );
+  const [dimension3, toggleDimension3] = useDimensionsToggle(
+    COLUMN_3_DIMENSIONS[raceView]
+  );
 
+  const sortedResults =
+    raceView === "FINISH_TIME"
+      ? byFinishTime.map((result, key) => [result, key + 1])
+      : raceView === "CLASS_HANDICAP"
+      ? byClassFinishTime
+      : byPersonalFinishTime;
 
-    const sortedResults =
-        raceView === "FINISH_TIME" ? byFinishTime.map((result, key) => [result, key + 1])
-            : raceView === "CLASS_HANDICAP" ? byClassFinishTime
-                : byPersonalFinishTime;
+  const heading =
+    raceView === "FINISH_TIME"
+      ? "Finish times"
+      : raceView === "CLASS_HANDICAP"
+      ? `Corrected to ${correctedLaps} laps by class PY`
+      : `Corrected to ${correctedLaps} laps by personal PY`;
 
-    const heading =
-        raceView === "FINISH_TIME" ? "Finish times"
-            : raceView === "CLASS_HANDICAP" ? `Corrected to ${correctedLaps} laps by class PY`
-                : `Corrected to ${correctedLaps} laps by personal PY`;
+  const nextRaceView =
+    RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length];
 
-    const nextRaceView = RACE_VIEWS[(RACE_VIEWS.indexOf(raceView) + 1) % RACE_VIEWS.length];
+  const fleetViewButtonMsg =
+    nextRaceView === "FINISH_TIME"
+      ? "Show results by finish time"
+      : nextRaceView === "CLASS_HANDICAP"
+      ? "Show results by class handicap"
+      : "Show results by personal handicap";
 
-    const fleetViewButtonMsg =
-        nextRaceView === "FINISH_TIME" ? "Show results by finish time"
-            : nextRaceView === "CLASS_HANDICAP" ? "Show results by class handicap"
-                : "Show results by personal handicap";
+  const toggleResultsView = (event) => {
+    event.preventDefault();
+    updateRaceView(nextRaceView);
+  };
 
-    const toggleResultsView = (event) => {
-        event.preventDefault();
-        updateRaceView(nextRaceView);
-    }
-
-    if (!raceFinish) {
-        return (
-            <Alert status='error' marginBottom="20px">
-                <AlertIcon />
-                <AlertTitle mr={2}>{"Race cannot be viewed/edited by current user"}</AlertTitle>
-            </Alert>
-        );
-    }
-
-    if (isPursuitRace) {
-        return (
-            <>
-                <RegisteredCard>
-                    <DroppableHeader heading="Pursuit finish points" />
-                    <Box style={{ marginBottom: "10px" }} />
-                    <ResultsList marginBottom="20px" >
-                        <HeadingRow raceView={"PURSUIT_FINISH_POSITIONS"} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
-                        {byClassFinishTime.map(([result, position]) =>
-                            <ListItem key={HelmResult.getId(result)}>
-                                <ResultListItem
-                                    result={result}
-                                    raceView={"PURSUIT_FINISH_POSITIONS"}
-                                    position={position}
-                                    dimension1={dimension1}
-                                    dimension2={dimension2}
-                                    dimension3={dimension3}
-                                    toggleDimension1={toggleDimension1}
-                                    toggleDimension2={toggleDimension2}
-                                    toggleDimension3={toggleDimension3} />
-                            </ListItem>
-                        )}
-                    </ResultsList>
-                    {Boolean(oods.length) &&
-                        <>
-                            <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                            <OODView marginBottom="20px" oods={oods} />
-                        </>
-                    }
-                </RegisteredCard>
-            </>
-        );
-    }
-
+  if (!raceFinish) {
     return (
-        <>
-            <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">{`${heading} `}</Heading>
-            <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
-                <>
-                    <HeadingRow raceView={raceView} dimension1={dimension1} dimension2={dimension2} dimension3={dimension3} toggleDimension1={toggleDimension1} toggleDimension2={toggleDimension2} toggleDimension3={toggleDimension3} />
-                    {sortedResults.map(([result, position]) =>
-                        <ListItem key={HelmResult.getId(result)}>
-                            <ResultListItem
-                                result={result}
-                                raceView={raceView}
-                                position={position}
-                                dimension1={dimension1}
-                                dimension2={dimension2}
-                                dimension3={dimension3}
-                                toggleDimension1={toggleDimension1}
-                                toggleDimension2={toggleDimension2}
-                                toggleDimension3={toggleDimension3}
-                                sct={SCT}
-                                correctedLaps={correctedLaps}
-                            />
-                        </ListItem>
-                    )}
-                </>
-            </ResultsList>
-            {/* <Box>{`SCT: ${SCT / correctedLaps} `}</Box> */}
-            {Boolean(oods.length) &&
-                <>
-                    <Heading size={"lg"} marginBottom="10px">OODs</Heading>
-                    <OODView marginBottom="20px" oods={oods} />
-                </>
-            }
-            <GreenButton onClick={toggleResultsView} autoFocus {...props}>{fleetViewButtonMsg}</GreenButton>
-        </>
+      <Alert status="error" marginBottom="20px">
+        <AlertIcon />
+        <AlertTitle mr={2}>
+          {"Race cannot be viewed/edited by current user"}
+        </AlertTitle>
+      </Alert>
     );
-}
+  }
 
+  if (isPursuitRace) {
+    return (
+      <>
+        <RegisteredCard>
+          <DroppableHeader heading="Pursuit finish points" />
+          <Box style={{ marginBottom: "10px" }} />
+          <ResultsList marginBottom="20px">
+            <HeadingRow
+              raceView={"PURSUIT_FINISH_POSITIONS"}
+              dimension1={dimension1}
+              dimension2={dimension2}
+              dimension3={dimension3}
+              toggleDimension1={toggleDimension1}
+              toggleDimension2={toggleDimension2}
+              toggleDimension3={toggleDimension3}
+            />
+            {byClassFinishTime.map(([result, position]) => (
+              <ListItem key={HelmResult.getId(result)}>
+                <ResultListItem
+                  result={result}
+                  raceView={"PURSUIT_FINISH_POSITIONS"}
+                  position={position}
+                  dimension1={dimension1}
+                  dimension2={dimension2}
+                  dimension3={dimension3}
+                  toggleDimension1={toggleDimension1}
+                  toggleDimension2={toggleDimension2}
+                  toggleDimension3={toggleDimension3}
+                />
+              </ListItem>
+            ))}
+          </ResultsList>
+          {Boolean(oods.length) && (
+            <>
+              <Heading size={"lg"} marginBottom="10px">
+                Race Officers
+              </Heading>
+              <OODView marginBottom="20px" oods={oods} />
+            </>
+          )}
+        </RegisteredCard>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Heading
+        paddingLeft="20px"
+        paddingBottom="20px"
+        size={"md"}
+        width="100%"
+      >{`${heading} `}</Heading>
+      <ResultsList
+        marginBottom="20px"
+        width="100%"
+        paddingLeft="5px"
+        paddingRight="5px"
+      >
+        <>
+          <HeadingRow
+            raceView={raceView}
+            dimension1={dimension1}
+            dimension2={dimension2}
+            dimension3={dimension3}
+            toggleDimension1={toggleDimension1}
+            toggleDimension2={toggleDimension2}
+            toggleDimension3={toggleDimension3}
+          />
+          {sortedResults.map(([result, position]) => (
+            <ListItem key={HelmResult.getId(result)}>
+              <ResultListItem
+                result={result}
+                raceView={raceView}
+                position={position}
+                dimension1={dimension1}
+                dimension2={dimension2}
+                dimension3={dimension3}
+                toggleDimension1={toggleDimension1}
+                toggleDimension2={toggleDimension2}
+                toggleDimension3={toggleDimension3}
+                sct={SCT}
+                correctedLaps={correctedLaps}
+              />
+            </ListItem>
+          ))}
+        </>
+      </ResultsList>
+      {/* <Box>{`SCT: ${SCT / correctedLaps} `}</Box> */}
+      {Boolean(oods.length) && (
+        <>
+          <Heading size={"lg"} marginBottom="10px">
+            Race Officers
+          </Heading>
+          <OODView marginBottom="20px" oods={oods} />
+        </>
+      )}
+      <GreenButton onClick={toggleResultsView} autoFocus {...props}>
+        {fleetViewButtonMsg}
+      </GreenButton>
+    </>
+  );
+}
 
 function getPursuitStartTimes(results, race, raceLengthSeconds) {
-    if (!results.length || results.some((result) => Race.getId(result.getRace()) !== Race.getId(race))) {
-        return [];
-    }
+  if (
+    !results.length ||
+    results.some((result) => Race.getId(result.getRace()) !== Race.getId(race))
+  ) {
+    return [];
+  }
 
-    const getPY = (result) => result.getBoatClass().getPY();
-    const roundDown = (num) => -Math.round(-num);
+  const getPY = (result) => result.getBoatClass().getPY();
+  const roundDown = (num) => -Math.round(-num);
 
-    const resultsByBoatClass = groupBy(results, [Result.getBoatClassName])
-        .map(([, results]) => results.at(0));
+  const resultsByBoatClass = groupBy(results, [Result.getBoatClassName]).map(
+    ([, results]) => results.at(0)
+  );
 
-    const slowestClassPY = Math.max(...resultsByBoatClass.map(getPY));
+  const slowestClassPY = Math.max(...resultsByBoatClass.map(getPY));
 
-    const newResults = resultsByBoatClass
-        .map((result) => Result.fromMutableRaceResult(
-            MutableRaceResult.fromResult(result),
-            1,
-            undefined,
-            roundDown(raceLengthSeconds * getPY(result) / slowestClassPY)
-        ))
+  const newResults = resultsByBoatClass.map((result) =>
+    Result.fromMutableRaceResult(
+      MutableRaceResult.fromResult(result),
+      1,
+      undefined,
+      roundDown((raceLengthSeconds * getPY(result)) / slowestClassPY)
+    )
+  );
 
-    return MutableRaceFinish.fromResults(newResults, () => []).getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a));
+  return MutableRaceFinish.fromResults(newResults, () => [])
+    .getCorrectedResults()
+    .sort((a, b) => b.sortByFinishTimeDesc(a));
 }
 
 function PursuitStartTimes({ results, race, raceLengthMinutes }) {
-    const raceLengthSeconds = raceLengthMinutes * SECONDS_IN_MINUTE;
-    const [pseudoResults, updatePsuedoResults] = useState(() => getPursuitStartTimes(results, race, raceLengthSeconds));
+  const raceLengthSeconds = raceLengthMinutes * SECONDS_IN_MINUTE;
+  const [pseudoResults, updatePsuedoResults] = useState(() =>
+    getPursuitStartTimes(results, race, raceLengthSeconds)
+  );
 
-    useEffect(() => updatePsuedoResults(getPursuitStartTimes(results, race, raceLengthSeconds)),
-        [results, race, raceLengthSeconds]);
+  useEffect(
+    () =>
+      updatePsuedoResults(
+        getPursuitStartTimes(results, race, raceLengthSeconds)
+      ),
+    [results, race, raceLengthSeconds]
+  );
 
-    const raceView = PURSUIT_START_TIMES_VIEW[0];
-    const [dimension1, toggleDimension1] = useDimensionsToggle(COLUMN_1_DIMENSIONS[raceView]);
+  const raceView = PURSUIT_START_TIMES_VIEW[0];
+  const [dimension1, toggleDimension1] = useDimensionsToggle(
+    COLUMN_1_DIMENSIONS[raceView]
+  );
 
-    if (!pseudoResults.length) {
-        return <></>;
-    }
+  if (!pseudoResults.length) {
+    return <></>;
+  }
 
-    return <>
-        <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">
-            {`Pursuit start times for ${raceLengthMinutes} minute race, ${formatBoatClass(pseudoResults.at(-1).getBoatClass().getClassName())} start.`}
-        </Heading>
-        <ResultsList marginBottom="20px" width="100%" paddingLeft="5px" paddingRight="5px">
-            <>
-                <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg="white">
-                    <Flex>
-                        <Grid
-                            templateColumns='repeat(16, 1fr)'
-                            gap={3}
-                            width={"100%"}>
-                            <ResultDimension colSpan={8} onClick={toggleDimension1}>{DIMENSION_LABELS[dimension1]}</ResultDimension>
-                            <ResultDimension colSpan={8} >{"Start time"}</ResultDimension>
-                        </Grid>
-                    </Flex>
-                </Box>
-                {[...pseudoResults].reverse().map((result) =>
-                    <ListItem key={HelmResult.getId(result)}>
-                        <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} marginBottom={"5px"} backgroundColor="white">
-                            <Flex>
-                                <Grid
-                                    templateColumns='repeat(16, 1fr)'
-                                    gap={3}
-                                    width={"100%"}>
-                                    <ResultDimension colSpan={8} onClick={toggleDimension1}>{getDimensionValue(dimension1, result)}</ResultDimension>
-                                    <ResultDimension colSpan={8}>{formatMinutesSeconds(secondsToMinutesSeconds(raceLengthSeconds - result.getFinishTime()))}</ResultDimension>
-                                </Grid>
-                            </Flex>
-                        </Box>
-                    </ListItem>
-                )}
-            </>
-        </ResultsList>
-    </>
-
-}
-
-export function PursuitStartTimesWrapper({ results, race, raceLengthMinutes, updateRaceLengthMinutes, allRaceLengths }) {
-
-    return (
+  return (
+    <>
+      <Heading paddingLeft="20px" paddingBottom="20px" size={"md"} width="100%">
+        {`Pursuit start times for ${raceLengthMinutes} minute race, ${formatBoatClass(
+          pseudoResults.at(-1).getBoatClass().getClassName()
+        )} start.`}
+      </Heading>
+      <ResultsList
+        marginBottom="20px"
+        width="100%"
+        paddingLeft="5px"
+        paddingRight="5px"
+      >
         <>
-            <PursuitStartTimes results={results} race={race} raceLengthMinutes={raceLengthMinutes} />
-            <div style={{
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                padding: "5vw",
-                alignItems: "center",
-                justifyItems: "center",
-                justifyContent: "center",
-                alignContent: "center",
-            }}>
-                {allRaceLengths.map((minutes) =>
-                    <MinutesButton
-                        selected={minutes === raceLengthMinutes}
-                        minutes={minutes}
-                        onClick={updateRaceLengthMinutes}
-                        key={minutes}
-                    />
-                )
-                }
-            </div>
+          <Box
+            padding={"10px"}
+            borderRadius={"12px"}
+            borderWidth={"1px"}
+            borderColor={"grey"}
+            bg="white"
+          >
+            <Flex>
+              <Grid templateColumns="repeat(16, 1fr)" gap={3} width={"100%"}>
+                <ResultDimension colSpan={8} onClick={toggleDimension1}>
+                  {DIMENSION_LABELS[dimension1]}
+                </ResultDimension>
+                <ResultDimension colSpan={8}>{"Start time"}</ResultDimension>
+              </Grid>
+            </Flex>
+          </Box>
+          {[...pseudoResults].reverse().map((result) => (
+            <ListItem key={HelmResult.getId(result)}>
+              <Box
+                padding={"10px"}
+                borderRadius={"12px"}
+                borderWidth={"1px"}
+                borderColor={"grey"}
+                marginBottom={"5px"}
+                backgroundColor="white"
+              >
+                <Flex>
+                  <Grid
+                    templateColumns="repeat(16, 1fr)"
+                    gap={3}
+                    width={"100%"}
+                  >
+                    <ResultDimension colSpan={8} onClick={toggleDimension1}>
+                      {getDimensionValue(dimension1, result)}
+                    </ResultDimension>
+                    <ResultDimension colSpan={8}>
+                      {formatMinutesSeconds(
+                        secondsToMinutesSeconds(
+                          raceLengthSeconds - result.getFinishTime()
+                        )
+                      )}
+                    </ResultDimension>
+                  </Grid>
+                </Flex>
+              </Box>
+            </ListItem>
+          ))}
         </>
-    );
+      </ResultsList>
+    </>
+  );
 }
 
+export function PursuitStartTimesWrapper({
+  results,
+  race,
+  raceLengthMinutes,
+  updateRaceLengthMinutes,
+  allRaceLengths,
+}) {
+  return (
+    <>
+      <PursuitStartTimes
+        results={results}
+        race={race}
+        raceLengthMinutes={raceLengthMinutes}
+      />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "wrap",
+          padding: "5vw",
+          alignItems: "center",
+          justifyItems: "center",
+          justifyContent: "center",
+          alignContent: "center",
+        }}
+      >
+        {allRaceLengths.map((minutes) => (
+          <MinutesButton
+            selected={minutes === raceLengthMinutes}
+            minutes={minutes}
+            onClick={updateRaceLengthMinutes}
+            key={minutes}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
 
 function MinutesButton({ selected, minutes, onClick }) {
-    return <Button
-        backgroundColor={selected ? "red.500" : "yellow.500"}
-        marginBottom="20px"
-        maxWidth="600px"
-        margin="1vh"
-        width="100px"
-        onClick={() => onClick(minutes)}
+  return (
+    <Button
+      backgroundColor={selected ? "red.500" : "yellow.500"}
+      marginBottom="20px"
+      maxWidth="600px"
+      margin="1vh"
+      width="100px"
+      onClick={() => onClick(minutes)}
     >
-        <Text fontSize={"lg"}>{`${minutes} mins`}</Text>
+      <Text fontSize={"lg"}>{`${minutes} mins`}</Text>
     </Button>
+  );
 }

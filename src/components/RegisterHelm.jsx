@@ -302,8 +302,8 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                   customClassName="input-container-3 input-container"
                   heading={"Sail Number"}
                   data={sailNumberIndex.data}
-                  itemToString={({ sailNumber }) =>
-                    sailNumber !== undefined ? sailNumber : ""
+                  itemToString={(stuff) =>
+                    stuff && stuff.sailNumber !== undefined ? sailNumber : ""
                   }
                   filterData={(inputValue) => {
                     const matches = sailNumberIndex.search(inputValue);
