@@ -37,7 +37,7 @@ export class Stores {
       true,
       ["Last Updated"]
     ).then((remoteStore) => (this.metaStore = remoteStore));
-    this.promiseStoresLastUpdated = this.getStoreLastUpdated();
+    // this.promiseStoresLastUpdated = this.getStoreLastUpdated();
   }
 
   async getStoreLastUpdated() {
@@ -184,8 +184,6 @@ export class Stores {
       ),
       ...futureRaces,
     ];
-
-    console.log(this.seriesRaces);
 
     const getOODsFromStore = (result) =>
       HelmResult.fromStore(result, (helmId) => this.helms.get(helmId));

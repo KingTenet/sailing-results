@@ -303,7 +303,9 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                   heading={"Sail Number"}
                   data={sailNumberIndex.data}
                   itemToString={(stuff) =>
-                    stuff && stuff.sailNumber !== undefined ? sailNumber : ""
+                    stuff && stuff.sailNumber !== undefined
+                      ? stuff.sailNumber
+                      : ""
                   }
                   filterData={(inputValue) => {
                     const matches = sailNumberIndex.search(inputValue);
