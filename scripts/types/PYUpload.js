@@ -71,37 +71,6 @@ export default class PYUpload extends StoreObject {
     return `${seasonName} ${seriesName}`;
   }
 
-  //   static fromStore(storeResult, getHelm, getBoatClassForRace) {
-  // /*
-
-  //             // "Date": getURLDate(this.race.getDate()),
-  //             // "Race Number": this.race.getNumber(),
-  //             // "Helm": Helm.getId(this.helm),
-  //             "Sail Number": this.boatSailNumber,
-  //             "Class": this.boatClass.getClassName(),
-  //             "Laps": this.laps,
-  //             "Pursuit Finish Position": this.pursuitFinishPosition,
-  //             "Finish Time": this.finishTime,
-  //             "Finish Code": this.finishCode.getCode(),
-  //             ...super.toStore(this),
-  //             */
-
-  //     let {
-  //         "Date": dateString,
-  //         "Race Number": raceNumber,
-  //         "Helm": helmId,
-  //         "Sail Number": boatSailNumber,
-  //         "Class": boatClassName,
-  //         "Laps": laps,
-  //         "Pursuit Finish Position": pursuitFinishPosition,
-  //         "Finish Time": finishTime,
-  //         "Finish Code": finishCodeString,
-  //     } = storeResult;
-  //     const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
-  //     const finishCode = new FinishCode(finishCodeString);
-  //     return new Result(race, getHelm(helmId), getBoatClassForRace(boatClassName, race), parseInt(boatSailNumber), parseIntOrUndefined(laps), parseIntOrUndefined(pursuitFinishPosition), parseIntOrUndefined(finishTime), finishCode, StoreObject.fromStore(storeResult));
-  // }
-
   toStore() {
     return {
       "Event Name": this.getEventName(),
