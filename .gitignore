@@ -57,3 +57,5 @@ pursuits.json
 .env*
 
 codebase.md
+
+auth.js
