@@ -97,7 +97,7 @@ async function run(outputDnfsStr = "true", forceRefreshStr = "true") {
 
   const filterLastCompletedSeason = getFilterLastCompletedSeason(stores);
   const [, , latestCompletedYear] = getCompletedSeasons(stores).at(-1);
-  const sheetName = `ff${latestCompletedYear - 1}/${latestCompletedYear}`;
+  const sheetName = `${latestCompletedYear - 1}/${latestCompletedYear}`;
 
   const metaStore = await RemoteStore.retryCreateRemoteStore(
     analysisDocument,
