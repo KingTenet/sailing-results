@@ -41,8 +41,9 @@ export default class PYUpload extends StoreObject {
   }
 
   static sheetHeaders() {
+    //Class	Race Number	Race Date	Start Name	Rank	SailNo	Helm	Crew	pn	Laps	Elapsed	Corrected	Persons	Rig	Spin
     return [
-      "Event Name",
+      "Class",
       "Race Number",
       "Race Date",
       "Start Name",
@@ -50,14 +51,13 @@ export default class PYUpload extends StoreObject {
       "SailNo",
       "Helm",
       "Crew",
-      "Class",
       "pn",
-      "laps",
-      "elapsed",
-      "corrected",
-      "persons",
-      "rig",
-      "spin",
+      "Laps",
+      "Elapsed",
+      "Corrected",
+      "Persons",
+      "Rig",
+      "Spin",
     ];
   }
 
@@ -73,7 +73,7 @@ export default class PYUpload extends StoreObject {
 
   toStore() {
     return {
-      "Event Name": this.getEventName(),
+      Class: this.correctedResult.getBoatClass().getClassName(),
       "Race Number": this.correctedResult.race.getNumber(),
       "Race Date": getURLDate(this.correctedResult.race.getDate()),
       "Start Name": "Handicap",
@@ -84,14 +84,13 @@ export default class PYUpload extends StoreObject {
         this.correctedResult.getBoatClass().boatConfiguration.crew > 1
           ? "Unknown"
           : "",
-      Class: this.correctedResult.getBoatClass().getClassName(),
       pn: this.correctedResult.getBoatClass().getPY(),
-      laps: this.correctedResult.laps,
-      elapsed: this.correctedResult.finishTime,
-      corrected: this.correctedResult.classCorrectedTime,
-      persons: this.correctedResult.getBoatClass().boatConfiguration.crew,
-      rig: this.correctedResult.getBoatClass().boatConfiguration.rig,
-      spin: this.correctedResult.getBoatClass().boatConfiguration.spinnaker,
+      Laps: this.correctedResult.laps,
+      Elapsed: this.correctedResult.finishTime,
+      Corrected: this.correctedResult.classCorrectedTime,
+      Persons: this.correctedResult.getBoatClass().boatConfiguration.crew,
+      Rig: this.correctedResult.getBoatClass().boatConfiguration.rig,
+      Spin: this.correctedResult.getBoatClass().boatConfiguration.spinnaker,
     };
   }
 

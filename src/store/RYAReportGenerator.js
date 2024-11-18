@@ -51,16 +51,19 @@ async function newReportReady(metaStore, latestSeason) {
 function generateResultsForReport(stores, completedSeasons) {
   const results = [];
 
-  const firstPossibleRaceOfCompletedSeason = getNextPossibleRace(
-    completedSeasons.at(-2)[0]
-  );
+  const firstPossibleRaceOfCompletedSeason =
+    completedSeasons.length > 1
+      ? getNextPossibleRace(completedSeasons.at(-2)[0])
+      : undefined;
+
   const firstPossibleRaceOfCurrentSeason = getNextPossibleRace(
     completedSeasons.at(-1)[0]
   );
 
   const filterLastCompletedSeason = (race) =>
     race.isBefore(firstPossibleRaceOfCurrentSeason) &&
-    firstPossibleRaceOfCompletedSeason.isBefore(race);
+    (!firstPossibleRaceOfCompletedSeason ||
+      firstPossibleRaceOfCompletedSeason.isBefore(race));
 
   stores.seriesPoints.map(([, seriesPoints]) => {
     seriesPoints.getPoints();
