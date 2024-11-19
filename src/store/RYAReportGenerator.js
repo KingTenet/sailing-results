@@ -108,9 +108,9 @@ export class RYAReportGenerator {
     await this.promiseMetaStore;
     const completedSeasons = getCompletedSeasons(this.stores);
     const [, , latestCompletedYear] = completedSeasons.at(-1);
-    const sheetName = `${
+    const sheetName = `Frostbite ${
       latestCompletedYear - 1
-    }/${latestCompletedYear}-to-Autumn`;
+    } to ${latestCompletedYear}`;
 
     const metaStore = await this.metaStore;
     if (!(await newReportReady(metaStore, sheetName))) {
