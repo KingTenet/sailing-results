@@ -7,7 +7,7 @@ import Race from "./types/Race.js";
 const OUTPUT_DNFS = false;
 
 function getCompletedSeasons(stores, now = new Date()) {
-  const lastSeasonSeries = "Icicle";
+  const lastSeasonSeries = "Autumn";
   const tomorrowsRace = new Race(
     new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
     1
@@ -108,7 +108,9 @@ export class RYAReportGenerator {
     await this.promiseMetaStore;
     const completedSeasons = getCompletedSeasons(this.stores);
     const [, , latestCompletedYear] = completedSeasons.at(-1);
-    const sheetName = `${latestCompletedYear - 1}/${latestCompletedYear}`;
+    const sheetName = `${
+      latestCompletedYear - 1
+    }/${latestCompletedYear}-to-Autumn`;
 
     const metaStore = await this.metaStore;
     if (!(await newReportReady(metaStore, sheetName))) {
