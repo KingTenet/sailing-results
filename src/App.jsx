@@ -20,6 +20,7 @@ import Series from "./components/Series";
 import SeriesPoints from "./components/SeriesPoints";
 import RegisterAnotherButtons from "./components/RegisterAnotherButtons";
 import { ForceSpinner } from "./components/Spinner";
+import Helms from "./components/Helms";
 
 import StateWrapper from "./StateWrapper";
 import { useNavigate } from "react-router-dom";
@@ -166,6 +167,13 @@ const ROUTES = [
                             },
                         ],
                     },
+                ],
+            },
+            {
+                path: "/helms/",
+                element: <NavWrapper />,
+                children: [
+                    { path: "/helms/", element: <Helms />, index: true },
                 ],
             },
         ],
