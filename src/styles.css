@@ -1,5 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-    --screen-height: 100px;
+  --screen-height: 100px;
 }
 
 button,
@@ -7,128 +11,131 @@ textarea,
 input,
 select,
 a {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    -webkit-tap-highlight-color: transparent;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .device-height {
-    /* min-height: 754px; */
-    min-height: 888px;
-    /* min-height: var(--screen-height); */
-    padding-bottom: 20px;
+  /* min-height: 754px; */
+  min-height: 888px;
+  /* min-height: var(--screen-height); */
+  padding-bottom: 20px;
 }
 
 .fixed-height {
-    position: fixed;
-    /* height: 100%; */
+  position: fixed;
+  /* height: 100%; */
 
-    /* height: var(--screen-height); */
-    height: 888px;
-    overflow: hidden;
+  /* height: var(--screen-height); */
+  height: 888px;
+  overflow: hidden;
 }
 
 body {
-    overscroll-behavior-y: contain;
+  overscroll-behavior-y: contain;
 }
 
 .status-bar {
-    width: 100%;
-    position: fixed;
-    bottom: 0;
-    height: 10px;
-    background: linear-gradient(to right, rgba(77, 0, 0, 0.766) 0%, rgba(255, 255, 255, 0) 100%);
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  height: 10px;
+  background: linear-gradient(
+    to right,
+    rgba(77, 0, 0, 0.766) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
 }
 
 .status-bar-version {
-    z-index: 1;
-    position: fixed;
-    bottom: 0px;
-    height: 10px;
-    padding-left: 10px;
-    padding-right: 300px;
-    color: white;
-    font-size: 9px;
-    font-weight: 800;
-    line-height: 10px;
+  z-index: 1;
+  position: fixed;
+  bottom: 0px;
+  height: 10px;
+  padding-left: 10px;
+  padding-right: 300px;
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 10px;
 }
 
 .status-bar-version p {
-    width: 200px;
+  width: 200px;
 }
 
 .status-bar-viewport {
-    position: fixed;
-    bottom: 0px;
-    height: 10px;
-    padding-right: 10px;
-    color: white;
-    background-size: 100%;
-    width: 100%;
-    font-size: 9px;
-    font-weight: 800;
-    line-height: 10px;
-    text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.7);
+  position: fixed;
+  bottom: 0px;
+  height: 10px;
+  padding-right: 10px;
+  color: white;
+  background-size: 100%;
+  width: 100%;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 10px;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 @media only screen and (max-height: 700px) {
-    .status-bar {
-        display: none !important;
-    }
+  .status-bar {
+    display: none !important;
+  }
 
-    .status-bar-version {
-        display: none;
-    }
+  .status-bar-version {
+    display: none;
+  }
 
-    .status-bar-viewport {
-        display: none;
-    }
+  .status-bar-viewport {
+    display: none;
+  }
 }
 
 .list-item {
-    padding: 10px;
-    height: 100%;
-    border-radius: 12px;
-    border-width: 1px;
-    border-color: grey;
-    width: 100%;
-    background-color: white;
+  padding: 10px;
+  height: 100%;
+  border-radius: 12px;
+  border-width: 1px;
+  border-color: grey;
+  width: 100%;
+  background-color: white;
 }
 
 .list-item:active {
-    border-width: 2px;
-    padding: 9px;
+  border-width: 2px;
+  padding: 9px;
 }
 
 .item {
-    border-radius: 12px;
-    width: 100%;
-    height: 45px;
-    margin-bottom: 3px;
-    position: relative;
-    pointer-events: auto;
-    /* transform-origin: 50% 50% 0px; */
-    box-sizing: border-box;
-    display: grid;
-    align-items: center;
-    text-align: center;
-    -webkit-user-select: none;
-    user-select: none;
+  border-radius: 12px;
+  width: 100%;
+  height: 45px;
+  margin-bottom: 3px;
+  position: relative;
+  pointer-events: auto;
+  /* transform-origin: 50% 50% 0px; */
+  box-sizing: border-box;
+  display: grid;
+  align-items: center;
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .fg {
-    cursor: -webkit-grab;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: grid;
-    align-items: center;
-    text-align: center;
+  cursor: -webkit-grab;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-items: center;
+  text-align: center;
 }
 
 /* 
@@ -137,19 +144,24 @@ body {
 } */
 
 .fg:active {
-    cursor: -webkit-grabbing;
+  cursor: -webkit-grabbing;
 }
 
 .slide-handle {
-    width: calc(100% - 40px);
-    touch-action: pan-y;
+  width: calc(100% - 40px);
+  touch-action: pan-y;
 }
 
 .slider-background {
-    background: linear-gradient(to right, rgba(219, 17, 17, 0.76) 0%, rgba(50, 50, 220, 0.8) 50%, rgba(253, 249, 24, 0.84) 100%);
-    width: 100%;
-    display: flex;
-    align-items: space-between;
+  background: linear-gradient(
+    to right,
+    rgba(219, 17, 17, 0.76) 0%,
+    rgba(50, 50, 220, 0.8) 50%,
+    rgba(253, 249, 24, 0.84) 100%
+  );
+  width: 100%;
+  display: flex;
+  align-items: space-between;
 }
 
 /* .fg>* {
@@ -157,174 +169,276 @@ body {
 } */
 
 .av {
-    margin-left: 2px;
-    margin-right: 2px;
-    width: 42px;
-    height: 42px;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.362);
+  margin-left: 2px;
+  margin-right: 2px;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.362);
 }
 
 .container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .input-container-1 {
-    background: linear-gradient(135deg, hsla(113, 100%, 25%, 0.442) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    hsla(113, 100%, 25%, 0.442) 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
 }
 
 .input-container-2 {
-    background: linear-gradient(135deg, hsl(165, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(165, 100%, 25%, 0.45) 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
 }
 
 .input-container-3 {
-    background: linear-gradient(135deg, hsl(195, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(195, 100%, 25%, 0.45) 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
 }
 
 .input-container-4 {
-    background: linear-gradient(135deg, hsl(243, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(243, 100%, 25%, 0.45) 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
 }
 
 .input-container-5 {
-    background: linear-gradient(135deg, hsl(275, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(275, 100%, 25%, 0.45) 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
 }
 
 .input-container-6 {
-    background: linear-gradient(135deg, hsl(300, 100%, 25%, 0.45) 0%, rgba(255, 255, 255, 0.5) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(300, 100%, 25%, 0.45) 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
 }
 
 .input-container {
-    background-size: 300%;
-    border: 1;
-    border-color: black;
+  background-size: 300%;
+  border: 1;
+  border-color: black;
 }
 
 .input-container:not(:focus-within) {
-    opacity: 0.8;
-    border-color: transparent;
+  opacity: 0.8;
+  border-color: transparent;
 }
 
 input {
-    background-color: white;
-    opacity: 1 !important;
+  background-color: white;
+  opacity: 1 !important;
 }
 
 .hidden-input {
-    /* hide it visually */
-    opacity: 0 !important;
-    /* avoid unintended clicks */
-    z-index: -1;
-    /* don't affect other elements positioning */
-    position: absolute;
+  /* hide it visually */
+  opacity: 0 !important;
+  /* avoid unintended clicks */
+  z-index: -1;
+  /* don't affect other elements positioning */
+  position: absolute;
 }
 
 .autocomplete-error {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .back-header {
-    padding-top: 20px;
-    padding-bottom: 5px;
-    padding-right: 10px;
-    padding-left: 20px;
-    /* overflow: hidden; */
-    /* background-color: blue; */
+  padding-top: 20px;
+  padding-bottom: 5px;
+  padding-right: 10px;
+  padding-left: 20px;
+  /* overflow: hidden; */
+  /* background-color: blue; */
 }
 
 .back-header .back-button-container {
-    background-color: rgba(0, 0, 0, 0.03);
-    background-size: 100%;
-    border-width: 0px;
-    border-color: black;
-    border-radius: 15px;
-    padding: 5px 8px 6px 8px;
-    position: relative;
-    top: -7px;
-
+  background-color: rgba(0, 0, 0, 0.03);
+  background-size: 100%;
+  border-width: 0px;
+  border-color: black;
+  border-radius: 15px;
+  padding: 5px 8px 6px 8px;
+  position: relative;
+  top: -7px;
 }
 
 .back-header .back-button-container:active {
-    background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .page-container {
-    background: linear-gradient(180deg, hsl(219, 69%, 45%, 0.15) 0%, rgba(255, 255, 255, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    hsl(219, 69%, 45%, 0.15) 0%,
+    rgba(255, 255, 255, 1) 100%
+  );
 }
 
 .race-list-item {
-    padding: 5px;
-    border-radius: 12px;
-    border-width: 1px;
-    border-color: grey;
-    height: 48px;
-    background: linear-gradient(355deg, rgba(255, 255, 255, 1) 0%, rgba(210, 225, 233, 0.684) 100%);
+  padding: 5px;
+  border-radius: 12px;
+  border-width: 1px;
+  border-color: grey;
+  height: 48px;
+  background: linear-gradient(
+    355deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(210, 225, 233, 0.684) 100%
+  );
 }
 
 .winners-container {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.025) 0%, rgba(255, 255, 255, 0.112) 100%);
-    /* background-color: blue; */
-    /* padding: 0px 0px 0px 5px; */
-    border-radius: 8px;
-    /* border-width: 1px; */
-    width: 100%;
-    /* height: 100%; */
-    overflow: hidden;
-
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.025) 0%,
+    rgba(255, 255, 255, 0.112) 100%
+  );
+  /* background-color: blue; */
+  /* padding: 0px 0px 0px 5px; */
+  border-radius: 8px;
+  /* border-width: 1px; */
+  width: 100%;
+  /* height: 100%; */
+  overflow: hidden;
 }
 
 .winners-container .label {
-    /* width: 50px; */
+  /* width: 50px; */
 
-    /* margin-left: 10px; */
-    /* border-width: 1px; */
-    border-radius: 9px 0px 0px 9px;
-    font-weight: 700;
-    overflow: hidden;
+  /* margin-left: 10px; */
+  /* border-width: 1px; */
+  border-radius: 9px 0px 0px 9px;
+  font-weight: 700;
+  overflow: hidden;
 }
 
 .winners-container .name {
-    padding: 5px;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.07) 0%, rgba(224, 209, 253, 0.3) 100%);
-    border-radius: 0px 9px 9px 0px;
-    border-width: 1px;
-    border-color: rgba(246, 246, 246, 0.824);
-    max-width: 23vw;
+  padding: 5px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.07) 0%,
+    rgba(224, 209, 253, 0.3) 100%
+  );
+  border-radius: 0px 9px 9px 0px;
+  border-width: 1px;
+  border-color: rgba(246, 246, 246, 0.824);
+  max-width: 23vw;
 }
 
 .label.ph {
-    background-color: rgba(197, 82, 166, 0.574);
+  background-color: rgba(197, 82, 166, 0.574);
 }
 
 .label.ch {
-    background-color: rgba(197, 122, 82, 0.574);
+  background-color: rgba(197, 122, 82, 0.574);
 }
 
 .label.winners {
-    padding: 5px;
-    margin: 0;
-    font-weight: 700;
+  padding: 5px;
+  margin: 0;
+  font-weight: 700;
 }
 
 .trophy-container {
-    position: relative !important;
+  position: relative !important;
 }
 
 .trophy-container p {
-    position: absolute !important;
-    top: 6px;
-    left: 7px;
-    color: rgba(0, 0, 0, 0.72);
-    font-size: 9pt !important;
+  position: absolute !important;
+  top: 6px;
+  left: 7px;
+  color: rgba(0, 0, 0, 0.72);
+  font-size: 9pt !important;
 }
 
 .trophy-container svg {
-    margin-top: 3px;
-    margin-left: 3px;
-    margin-right: 3px;
-    margin-bottom: 3px;
-    height: 30px;
-    width: 27px;
-    color: rgba(127, 54, 54, 0.598);
+  margin-top: 3px;
+  margin-left: 3px;
+  margin-right: 3px;
+  margin-bottom: 3px;
+  height: 30px;
+  width: 27px;
+  color: rgba(127, 54, 54, 0.598);
+}
+
+/*********************************** Shad CN starts here ******************************************/
+@layer base {
+  .shadcn-root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .shadcn-root.dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  .shadcn * {
+    @apply border-border;
+  }
+  .shadcn body {
+    @apply bg-background text-foreground;
+  }
 }
