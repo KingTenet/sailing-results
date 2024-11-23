@@ -3,8 +3,8 @@ import { useCombobox } from "downshift";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { ShadCNWrapper } from "@/components/ShadCNWrapper";
-import { cn } from "@/lib/utils";
+import { ShadCNWrapper } from "@/components/shadcn/ShadCNWrapper";
+import { cn } from "@/components/shadcn/utils/cn";
 
 function CollapseEx({ children, isOpen }) {
     if (!isOpen) return null;
