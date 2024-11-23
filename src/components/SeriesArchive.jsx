@@ -91,14 +91,12 @@ const ARCHIVE_SERIES = [
     "2012 Early Summer.htm",
     "2012 Autumn.htm",
     "2011-12-26- Boxing Day.htm",
-    "2011-09-18_ Laser_ Open.htm"
+    "2011-09-18_ Laser_ Open.htm",
 ];
 
 function SeriesDimension({ children, ...props }) {
     return (
-        <GridItem
-            height='20px'
-            {...props}>
+        <GridItem height="20px" {...props}>
             <Text isTruncated>{children}</Text>
         </GridItem>
     );
@@ -110,14 +108,23 @@ function ArchiveLink({ baseUrl, seriesTitle }) {
 
     return (
         <ListItem>
-            <a href={url} >
-                <Box padding={"10px"} borderRadius={"12px"} borderWidth={"1px"} borderColor={"grey"} bg={"white"} >
+            <a href={url}>
+                <Box
+                    padding={"10px"}
+                    borderRadius={"12px"}
+                    borderWidth={"1px"}
+                    borderColor={"grey"}
+                    bg={"white"}
+                >
                     <Flex>
                         <Grid
                             templateColumns={`repeat(2, 1fr)`}
                             gap={5}
-                            width={"100%"}>
-                            <SeriesDimension colSpan={1}>{title}</SeriesDimension>
+                            width={"100%"}
+                        >
+                            <SeriesDimension colSpan={1}>
+                                {title}
+                            </SeriesDimension>
                             <SeriesDimension colSpan={1}></SeriesDimension>
                         </Grid>
                     </Flex>
@@ -130,9 +137,13 @@ function ArchiveLink({ baseUrl, seriesTitle }) {
 export default function SeriesArchive() {
     return (
         <>
-            {ARCHIVE_SERIES.map((seriesTitle, index) =>
-                <ArchiveLink baseUrl={ARCHIVE_BASE_URL} seriesTitle={seriesTitle} key={index} />
-            )}
+            {ARCHIVE_SERIES.map((seriesTitle, index) => (
+                <ArchiveLink
+                    baseUrl={ARCHIVE_BASE_URL}
+                    seriesTitle={seriesTitle}
+                    key={index}
+                />
+            ))}
         </>
     );
 }

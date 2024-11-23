@@ -1,6 +1,14 @@
 import StoreObject from "./StoreObject.js";
 import Race from "./Race.js";
-import { assertType, parseURLDate, getURLDate, generateId, parseISOString, getISOStringFromDate, parseBoolean } from "../../common.js";
+import {
+    assertType,
+    parseURLDate,
+    getURLDate,
+    generateId,
+    parseISOString,
+    getISOStringFromDate,
+    parseBoolean,
+} from "../../common.js";
 import Series from "./Series.js";
 
 export default class SeriesRace extends StoreObject {
@@ -14,7 +22,10 @@ export default class SeriesRace extends StoreObject {
 
     static getId(seriesRace) {
         assertType(seriesRace, SeriesRace);
-        return generateId("SeriesRace", [Series.getId(seriesRace.series), Race.getId(seriesRace.race)]);
+        return generateId("SeriesRace", [
+            Series.getId(seriesRace.series),
+            Race.getId(seriesRace.race),
+        ]);
     }
 
     static getRaceId(seriesRace) {
@@ -51,9 +62,14 @@ export default class SeriesRace extends StoreObject {
 
         const race = new Race(parseURLDate(raceDate), parseInt(raceNumber));
         const raceSeries = new Series(season, series);
-        return new SeriesRace(raceSeries, race, parseISOString(lastImported, new Date(0)), parseBoolean(isPursuit), StoreObject.fromStore(storeSeriesRace));
+        return new SeriesRace(
+            raceSeries,
+            race,
+            parseISOString(lastImported, new Date(0)),
+            parseBoolean(isPursuit),
+            StoreObject.fromStore(storeSeriesRace),
+        );
     }
-
 
     isPursuit() {
         return this.isPursuitRace;

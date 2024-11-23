@@ -1,4 +1,10 @@
-import { assertType, generateId, fromId, parseISOString, groupBy } from "../../common.js";
+import {
+    assertType,
+    generateId,
+    fromId,
+    parseISOString,
+    groupBy,
+} from "../../common.js";
 import HelmResult from "./HelmResult.js";
 import Result from "./Result.js";
 
@@ -31,14 +37,14 @@ export default class Race {
         // const prettyNumber = ["1st", "2nd", "3rd"];
         // const prettyDate = this.date.toISOString().slice(0, 10)
         // return `${prettyDate}, ${prettyNumber[this.raceNumber]} race`;
-        return `Date=${this.date.toISOString().slice(0, 10)}, Number=${this.raceNumber}`
+        return `Date=${this.date.toISOString().slice(0, 10)}, Number=${this.raceNumber}`;
     }
 
     prettyPrintTable() {
         let year = this.date.getUTCFullYear();
         let month = this.date.getUTCMonth();
         let date = this.date.getUTCDate();
-        return `${date}/${month + 1}, ${this.raceNumber}`
+        return `${date}/${month + 1}, ${this.raceNumber}`;
     }
 
     getDate() {
@@ -51,9 +57,7 @@ export default class Race {
 
     sortByRaceAsc(secondRace) {
         assertType(secondRace, Race);
-        return this.isBefore(secondRace)
-            ? -1
-            : 1;
+        return this.isBefore(secondRace) ? -1 : 1;
     }
 
     isBefore(race) {
@@ -66,12 +70,15 @@ export default class Race {
 
     static fromResult(result) {
         assertType(result, Result);
-        return new Race(result.raceDate, result.raceNumber)
+        return new Race(result.raceDate, result.raceNumber);
     }
 
     static groupResultsByRaceAsc(results) {
         return groupBy(results, HelmResult.getRaceId)
-            .map(([raceId, raceResults]) => [raceResults.at(0).getRace(), raceResults])
+            .map(([raceId, raceResults]) => [
+                raceResults.at(0).getRace(),
+                raceResults,
+            ])
             .sort(([raceA], [raceB]) => raceA.sortByRaceAsc(raceB));
     }
 }

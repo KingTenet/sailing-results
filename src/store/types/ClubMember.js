@@ -3,7 +3,7 @@ import { assertType } from "../../common.js";
 
 export default class ClubMember extends StoreObject {
     constructor(fullName, firstNames, lastName, yearOfBirth, metaData) {
-        super(metaData)
+        super(metaData);
         this.fullName = assertType(fullName, "string");
         this.name = assertType(fullName, "string");
         this.firstNames = assertType(firstNames, "string");
@@ -22,7 +22,7 @@ export default class ClubMember extends StoreObject {
             "First Name(s)",
             "Last Name",
             "Year Of Birth",
-            ...StoreObject.sheetHeaders()
+            ...StoreObject.sheetHeaders(),
         ];
     }
 
@@ -33,11 +33,23 @@ export default class ClubMember extends StoreObject {
             "Last Name": lastName,
             "Year Of Birth": yearOfBirth,
         } = storeHelm;
-        return new ClubMember(fullName, firstNames, lastName, parseInt(yearOfBirth || 1970), StoreObject.fromStore(storeHelm));
+        return new ClubMember(
+            fullName,
+            firstNames,
+            lastName,
+            parseInt(yearOfBirth || 1970),
+            StoreObject.fromStore(storeHelm),
+        );
     }
 
     static fromName(helmName) {
-        return new ClubMember(helmName, "", "", 1970, StoreObject.fromStore({}));
+        return new ClubMember(
+            helmName,
+            "",
+            "",
+            1970,
+            StoreObject.fromStore({}),
+        );
     }
 
     getName() {

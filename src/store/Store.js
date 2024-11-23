@@ -1,10 +1,19 @@
 import LocalStore from "./LocalStore.js";
 import RemoteStore from "./RemoteStore.js";
-import { parseISOString, getISOStringFromDate, isOnline } from "../common.js"
+import { parseISOString, getISOStringFromDate, isOnline } from "../common.js";
 import inBrowser from "../inBrowser.js";
 
 export default class Store {
-    constructor(storeName, sheetsDoc, toStore, fromStore, getKeyFromObj, services, createSheetIfMissing, headers) {
+    constructor(
+        storeName,
+        sheetsDoc,
+        toStore,
+        fromStore,
+        getKeyFromObj,
+        services,
+        createSheetIfMissing,
+        headers,
+    ) {
         this.storeName = storeName;
         this.services = services;
         this.toStore = toStore;
@@ -13,14 +22,20 @@ export default class Store {
         this.metadataKey = `metadata::${this.storeName}`;
         this.getLastSyncDate();
         this.localStore = new LocalStore(storeName, toStore, fromStore, this);
-        this.promiseRemoteStore = RemoteStore.retryCreateRemoteStore(sheetsDoc, storeName, createSheetIfMissing, headers)
-            .then((remoteStore) => this.remoteStore = remoteStore);
+        this.promiseRemoteStore = RemoteStore.retryCreateRemoteStore(
+            sheetsDoc,
+            storeName,
+            createSheetIfMissing,
+            headers,
+        ).then((remoteStore) => (this.remoteStore = remoteStore));
     }
 
     async handleStaleStatus() {
         const storeLastUpdated = await this.services.promiseStoresLastUpdated;
         const localStoreIsStale = storeLastUpdated > this.getLastSyncDate();
-        console.log(`${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`)
+        console.log(
+            `${this.storeName}: Local state is ${localStoreIsStale ? "stale." : "up to date."}`,
+        );
 
         // if (localStoreIsStale) {
         //     console.log(`${this.storeName}: Remote last updated ${storeLastUpdated}`);
@@ -50,10 +65,12 @@ export default class Store {
             if (this.services.readOnly || this.storesInSync()) {
                 console.log("Forcing refresh of " + this.storeName);
                 shouldForceRefresh = true;
-            }
-            else {
+            } else {
                 // not read only and local state has changes
-                console.log("Ignoring forced refresh, local state has changes: " + this.storeName);
+                console.log(
+                    "Ignoring forced refresh, local state has changes: " +
+                        this.storeName,
+                );
             }
         }
 
@@ -70,19 +87,28 @@ export default class Store {
 
     syncLocalStateToRemoteState(storeObjects) {
         this.localStore.bootstrap(
-            storeObjects.map((storeObject) => [this.getKeyFromObj(storeObject), storeObject])
+            storeObjects.map((storeObject) => [
+                this.getKeyFromObj(storeObject),
+                storeObject,
+            ]),
         );
         this.setLastSyncDate();
     }
 
     setLastSyncDate() {
         this.lastSyncDate = new Date();
-        localStorage.setItem(this.metadataKey, getISOStringFromDate(this.lastSyncDate));
+        localStorage.setItem(
+            this.metadataKey,
+            getISOStringFromDate(this.lastSyncDate),
+        );
     }
 
     getLastSyncDate() {
         if (!this.lastSyncDate) {
-            this.lastSyncDate = parseISOString(localStorage.getItem(this.metadataKey), new Date(0));
+            this.lastSyncDate = parseISOString(
+                localStorage.getItem(this.metadataKey),
+                new Date(0),
+            );
         }
         return this.lastSyncDate;
     }
@@ -91,8 +117,7 @@ export default class Store {
     storesInSync() {
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
-        let created = allLocal
-            .filter((obj) => obj.createdAfterDate(syncDate));
+        let created = allLocal.filter((obj) => obj.createdAfterDate(syncDate));
 
         let updated = allLocal
             .filter((obj) => obj.updatedAfterDate(syncDate))
@@ -105,8 +130,7 @@ export default class Store {
         console.log(`Syncing store ${this.storeName}`);
         const syncDate = this.getLastSyncDate();
         const allLocal = this.all();
-        let created = allLocal
-            .filter((obj) => obj.createdAfterDate(syncDate));
+        let created = allLocal.filter((obj) => obj.createdAfterDate(syncDate));
 
         let updated = allLocal
             .filter((obj) => obj.updatedAfterDate(syncDate))
@@ -114,11 +138,14 @@ export default class Store {
 
         if (!updated.length && !created.length) {
             console.log(`No items require updates ${this.storeName}`);
-        }
-        else {
-            const objUpdatedAfterSync = (await this.pullRemoteState()).find((obj) => obj.updatedAfterDate(syncDate))
+        } else {
+            const objUpdatedAfterSync = (await this.pullRemoteState()).find(
+                (obj) => obj.updatedAfterDate(syncDate),
+            );
             if (objUpdatedAfterSync) {
-                throw new Error(`Cannot sync store ${this.storeName} because remote state was updated at ${objUpdatedAfterSync.lastUpdated.toISOString()} and was last pulled at ${syncDate.toISOString()}`);
+                throw new Error(
+                    `Cannot sync store ${this.storeName} because remote state was updated at ${objUpdatedAfterSync.lastUpdated.toISOString()} and was last pulled at ${syncDate.toISOString()}`,
+                );
             }
 
             if (updated.length && force) {
@@ -126,9 +153,13 @@ export default class Store {
                 // await this.remoteStore.append(updated.map((obj) => this.toStore(obj)));
             }
             if (created.length) {
-                await this.remoteStore.append(created.map((obj) => this.toStore(obj)));
+                await this.remoteStore.append(
+                    created.map((obj) => this.toStore(obj)),
+                );
             }
-            console.log(`Successfully updated remote state for store: ${this.storeName}`);
+            console.log(
+                `Successfully updated remote state for store: ${this.storeName}`,
+            );
         }
         this.setLastSyncDate();
     }

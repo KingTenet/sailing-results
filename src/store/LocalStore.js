@@ -1,6 +1,6 @@
-import StoreObject from "./types/StoreObject.js"
+import StoreObject from "./types/StoreObject.js";
 import inBrowser from "../inBrowser.js";
-const KEY_SEP = "##"
+const KEY_SEP = "##";
 
 export default class LocalStore {
     constructor(storeName, toStore, fromStore, store) {
@@ -14,8 +14,7 @@ export default class LocalStore {
         this.newKeys = [];
         try {
             this.fillCache();
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
             this.clearCache();
             this.fillCache();
@@ -23,7 +22,13 @@ export default class LocalStore {
     }
 
     dump() {
-        console.log(JSON.stringify([...this.cache.values()].map((obj) => this.toStore(obj)), null, 4))
+        console.log(
+            JSON.stringify(
+                [...this.cache.values()].map((obj) => this.toStore(obj)),
+                null,
+                4,
+            ),
+        );
     }
 
     keyToStoreKey(key) {
@@ -44,7 +49,9 @@ export default class LocalStore {
 
     add(key, value, bootstrap = false) {
         if (this.cache.has(key)) {
-            throw new Error(`Cannot add object with key ${key} to store as it already exists`);
+            throw new Error(
+                `Cannot add object with key ${key} to store as it already exists`,
+            );
         }
         let newValue = !bootstrap ? StoreObject.addCreatedDate(value) : value;
         let storeValue = this.toStore(newValue);
@@ -55,7 +62,9 @@ export default class LocalStore {
 
     update(key, newValue) {
         if (!this.cache.has(key)) {
-            throw new Error(`Cannot update object with key ${key} to store as it doesn't exist`);
+            throw new Error(
+                `Cannot update object with key ${key} to store as it doesn't exist`,
+            );
         }
         let valueWithMeta = StoreObject.addModifiedDate(newValue);
         let storeValue = this.toStore(valueWithMeta);
@@ -66,7 +75,9 @@ export default class LocalStore {
     updateLocalStorage(key, newValue) {
         let storeKey = this.keyToStoreKey(key);
         if (!this.localStorage.getItem(storeKey)) {
-            throw new Error(`Attempting to update object with key ${key} to local storage when it doesn't exist`);
+            throw new Error(
+                `Attempting to update object with key ${key} to local storage when it doesn't exist`,
+            );
         }
 
         this.localStorage.setItem(storeKey, JSON.stringify(newValue));
@@ -75,7 +86,9 @@ export default class LocalStore {
     deleteLocalStorage(key) {
         let storeKey = this.keyToStoreKey(key);
         if (!this.localStorage.getItem(storeKey)) {
-            throw new Error(`Attempting to delete object with key ${key} from local storage when it doesn't exist`);
+            throw new Error(
+                `Attempting to delete object with key ${key} from local storage when it doesn't exist`,
+            );
         }
 
         this.localStorage.removeItem(storeKey);
@@ -84,7 +97,9 @@ export default class LocalStore {
     addToLocalStorage(key, value) {
         let storeKey = this.keyToStoreKey(key);
         if (this.localStorage.getItem(storeKey)) {
-            throw new Error(`Attempting to add object with key ${key} to local storage when it already exists`);
+            throw new Error(
+                `Attempting to add object with key ${key} to local storage when it already exists`,
+            );
         }
         this.localStorage.setItem(storeKey, JSON.stringify(value));
     }
@@ -95,14 +110,18 @@ export default class LocalStore {
 
     get(key) {
         if (!this.cache.has(key)) {
-            throw new Error(`Cannot get object with key ${key} from store as it doesn't exist`);
+            throw new Error(
+                `Cannot get object with key ${key} from store as it doesn't exist`,
+            );
         }
         return this.cache.get(key);
     }
 
     delete(key) {
         if (!this.cache.has(key)) {
-            throw new Error(`Cannot delete object with key ${key} to store as it doesn't exist`);
+            throw new Error(
+                `Cannot delete object with key ${key} to store as it doesn't exist`,
+            );
         }
         this.cache.delete(key);
         this.deleteLocalStorage(key);
@@ -115,7 +134,7 @@ export default class LocalStore {
     clearCache() {
         const keys = inBrowser
             ? Object.keys(this.localStorage)
-            : this.localStorage._keys
+            : this.localStorage._keys;
 
         let i = keys.length;
 
@@ -134,7 +153,7 @@ export default class LocalStore {
     fillCache() {
         const keys = inBrowser
             ? Object.keys(this.localStorage)
-            : this.localStorage._keys
+            : this.localStorage._keys;
 
         let i = keys.length;
         const keyValues = [];
@@ -145,15 +164,19 @@ export default class LocalStore {
                 continue;
             }
 
-            keyValues.push([key, JSON.parse(this.localStorage.getItem(keys[i]))]);
+            keyValues.push([
+                key,
+                JSON.parse(this.localStorage.getItem(keys[i])),
+            ]);
         }
 
-        let mappedValues = this.fromStore(keyValues.map(([, values]) => values));
+        let mappedValues = this.fromStore(
+            keyValues.map(([, values]) => values),
+        );
 
-        mappedValues
-            .forEach((mappedValue, i) => {
-                mappedValue.setStore(this.store);
-                this.cache.set(keyValues[i][0], mappedValue);
-            });
+        mappedValues.forEach((mappedValue, i) => {
+            mappedValue.setStore(this.store);
+            this.cache.set(keyValues[i][0], mappedValue);
+        });
     }
 }

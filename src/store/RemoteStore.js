@@ -1,20 +1,24 @@
 import { isOnline, promiseSleep, getGoogleSheetDoc } from "../common.js";
 
-class RemoteStoreNoNetwork extends Error { }
-class RemoteStoreNoAccess extends Error { }
-class RemoteStoreNoSheet extends Error { }
+class RemoteStoreNoNetwork extends Error {}
+class RemoteStoreNoAccess extends Error {}
+class RemoteStoreNoSheet extends Error {}
 
 export default class RemoteStore {
     constructor(sheetsDoc, sheetName) {
         this.sheetsDoc = sheetsDoc;
         this.sheetName = sheetName;
-
     }
 
     async getAllRows() {
         const sheet = await this.getSheet();
         const allRows = await sheet.getRows();
-        return allRows.map((row) => row._worksheet._headerValues.reduce((prev, key) => ({ ...prev, [key]: row.get(key) }), {}));
+        return allRows.map((row) =>
+            row._worksheet._headerValues.reduce(
+                (prev, key) => ({ ...prev, [key]: row.get(key) }),
+                {},
+            ),
+        );
     }
 
     async append(rows) {
@@ -32,7 +36,9 @@ export default class RemoteStore {
     async getSheet() {
         const sheet = this.sheetsDoc.sheetsByTitle[this.sheetName];
         if (!sheet) {
-            throw new RemoteStoreNoSheet(`Couldn't get sheet named ${this.sheetName}, check it exists in the spreadsheet`);
+            throw new RemoteStoreNoSheet(
+                `Couldn't get sheet named ${this.sheetName}, check it exists in the spreadsheet`,
+            );
         }
         return sheet;
     }
@@ -44,7 +50,10 @@ export default class RemoteStore {
             await this.sheetsDoc.loadInfo();
             const newSheet = this.sheetsDoc.sheetsByTitle[this.sheetName];
             if (newSheet.gridProperties.columnCount < headers.length) {
-                await newSheet.resize({ rowCount: newSheet.gridProperties.rowCount, columnCount: headers.length });
+                await newSheet.resize({
+                    rowCount: newSheet.gridProperties.rowCount,
+                    columnCount: headers.length,
+                });
             }
             console.log(`Creating sheet ${this.sheetName} with headers:`);
             console.log(headers);
@@ -59,39 +68,67 @@ export default class RemoteStore {
     static async retryCreateSheetsDoc(sheetId, auth) {
         while (true) {
             try {
-                return await getGoogleSheetDoc(sheetId, auth.clientEmail, auth.privateKey);
-            }
-            catch (err) {
-                if (err?.code === "ENOTFOUND" || (err.request && err.response)) {
+                return await getGoogleSheetDoc(
+                    sheetId,
+                    auth.clientEmail,
+                    auth.privateKey,
+                );
+            } catch (err) {
+                if (
+                    err?.code === "ENOTFOUND" ||
+                    (err.request && err.response)
+                ) {
                     throw err;
                 }
                 console.log(err);
-                console.log("Network error in store creation.. will sleep a bit and retry.")
+                console.log(
+                    "Network error in store creation.. will sleep a bit and retry.",
+                );
                 await promiseSleep(20000);
                 return await RemoteStore.retryCreateSheetsDoc(sheetId, auth);
             }
         }
     }
 
-    static async retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers) {
+    static async retryCreateRemoteStore(
+        promiseSheetsDoc,
+        sheetName,
+        createSheetIfMissing,
+        headers,
+    ) {
         try {
-            return await RemoteStore.createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
-        }
-        catch (err) {
+            return await RemoteStore.createRemoteStore(
+                promiseSheetsDoc,
+                sheetName,
+                createSheetIfMissing,
+                headers,
+            );
+        } catch (err) {
             if (err instanceof RemoteStoreNoNetwork) {
-                console.log("Network error in store creation.. will sleep a bit and retry.")
+                console.log(
+                    "Network error in store creation.. will sleep a bit and retry.",
+                );
                 do {
                     await promiseSleep(20000);
                 } while (!isOnline());
-                return await RemoteStore.retryCreateRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers);
+                return await RemoteStore.retryCreateRemoteStore(
+                    promiseSheetsDoc,
+                    sheetName,
+                    createSheetIfMissing,
+                    headers,
+                );
             }
             throw err;
         }
     }
 
-    static async createRemoteStore(promiseSheetsDoc, sheetName, createSheetIfMissing, headers) {
+    static async createRemoteStore(
+        promiseSheetsDoc,
+        sheetName,
+        createSheetIfMissing,
+        headers,
+    ) {
         try {
-
             let sheetsDoc = await promiseSheetsDoc;
             const remoteStore = new RemoteStore(sheetsDoc, sheetName);
             if (createSheetIfMissing) {
@@ -99,14 +136,15 @@ export default class RemoteStore {
             }
             await remoteStore.getSheet();
             return remoteStore;
-        }
-        catch (err) {
+        } catch (err) {
             // TODO - this does not capture all non-network errors. Eg. RemoteStoreNoSheet error
             if (err?.code === "ENOTFOUND" || (err.request && err.response)) {
                 throw err;
             }
             console.log(err);
-            throw new RemoteStoreNoNetwork("No network connection so couldn't create remote store");
+            throw new RemoteStoreNoNetwork(
+                "No network connection so couldn't create remote store",
+            );
         }
     }
 }

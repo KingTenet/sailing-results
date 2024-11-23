@@ -1,5 +1,5 @@
-import ReactDOM from 'react-dom/client'
-import App from './App'
+import ReactDOM from "react-dom/client";
+import App from "./App";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import version from "./version.js";
@@ -17,19 +17,19 @@ const colors = {
         600: "#3c4178",
         700: "#2a2f57",
         800: "#181c37",
-        900: "#080819"
-    }
+        900: "#080819",
+    },
 };
 
 const config = {
     initialColorMode: "light",
-    useSystemColorMode: false
+    useSystemColorMode: false,
 };
 
 const theme = extendTheme({ colors, config });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
     <ChakraProvider theme={theme}>
         <App />
-    </ChakraProvider>
-)
+    </ChakraProvider>,
+);

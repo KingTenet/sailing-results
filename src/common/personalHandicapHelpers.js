@@ -1,11 +1,20 @@
-import { groupBy, assertType, average, parseISOString, logDebug } from "../common.js";
+import {
+    groupBy,
+    assertType,
+    average,
+    parseISOString,
+    logDebug,
+} from "../common.js";
 import BoatClass from "../store/types/BoatClass.js";
 import CorrectedResult from "../store/types/CorrectedResult.js";
 import Race from "../store/types/Race.js";
 import Result from "../store/types/Result.js";
 
 const PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP = 10;
-const FIRST_RACE_FOR_ADVANCED_SCT_CALC = new Race(parseISOString("2016-11-06T00:00:00.000Z"), 1); // First Frostbite 2016 race (when advanced SCT brought in)
+const FIRST_RACE_FOR_ADVANCED_SCT_CALC = new Race(
+    parseISOString("2016-11-06T00:00:00.000Z"),
+    1,
+); // First Frostbite 2016 race (when advanced SCT brought in)
 /*
 Average corrected time ACT = average of Class handicap corrected times of top 2/3rd finishers, where the number of results to use is rounded up, i.e. 2/3 of 8 = 5.333 and the top 6 results are averaged.
 The Standard Corrected Time is then calculated as:
@@ -24,8 +33,9 @@ The values of PH in each race are shown on the race results, and saved in a data
 export function calculateSCTFromRaceResults(raceResults, debug) {
     const log = (msg) => logDebug(msg, debug);
 
-    const finishers = raceResults
-        .filter((result) => result.finishCode.validFinish());
+    const finishers = raceResults.filter((result) =>
+        result.finishCode.validFinish(),
+    );
 
     let compliesWithRYA = true;
 
@@ -40,9 +50,16 @@ export function calculateSCTFromRaceResults(raceResults, debug) {
 
     log("Complies with RYA " + compliesWithRYA);
 
-    if (raceResults.some((result) => result.getRace().isBefore(FIRST_RACE_FOR_ADVANCED_SCT_CALC))) {
+    if (
+        raceResults.some((result) =>
+            result.getRace().isBefore(FIRST_RACE_FOR_ADVANCED_SCT_CALC),
+        )
+    ) {
         log("Using basic SCT calculation");
-        return [...calculateBasicSCTFromRaceResults(raceResults), compliesWithRYA];
+        return [
+            ...calculateBasicSCTFromRaceResults(raceResults),
+            compliesWithRYA,
+        ];
     }
 
     log("Valid finishers " + finishers.length);
@@ -52,7 +69,7 @@ export function calculateSCTFromRaceResults(raceResults, debug) {
 
     // The previous system has variously used Math.round and Math.ceil for this calculation
     // the documentation suggests it should be Math.ceil
-    const numResultsToCountForACT = Math.ceil(finishers.length * 2 / 3);
+    const numResultsToCountForACT = Math.ceil((finishers.length * 2) / 3);
 
     log(`Number of results to count for ACT: ${numResultsToCountForACT}`);
 
@@ -61,7 +78,9 @@ export function calculateSCTFromRaceResults(raceResults, debug) {
         .sort((a, b) => b - a);
 
     log(`Class corrected times: ${finishTimes}`);
-    log(`Class corrected times per lap: ${finishTimes.map((ft) => ft / raceMaxLaps)}`);
+    log(
+        `Class corrected times per lap: ${finishTimes.map((ft) => ft / raceMaxLaps)}`,
+    );
 
     const resultsToCountForACT = finishTimes.slice(-numResultsToCountForACT);
     log(`Results to count for ACT: ${resultsToCountForACT}`);
@@ -71,7 +90,9 @@ export function calculateSCTFromRaceResults(raceResults, debug) {
     log(`ACT: ${ACT}`);
     log(`ACT per lap: ${ACT / raceMaxLaps}`);
 
-    const resultsToCountForSCT = finishTimes.filter((time) => time < (ACT * 1.05));
+    const resultsToCountForSCT = finishTimes.filter(
+        (time) => time < ACT * 1.05,
+    );
     log(`Number of results to count for SCT: ${resultsToCountForSCT.length}`);
     log(`Results to count for SCT: ${resultsToCountForSCT}`);
     const SCT = average(resultsToCountForSCT);
@@ -79,19 +100,22 @@ export function calculateSCTFromRaceResults(raceResults, debug) {
     log(`SCT: ${SCT}`);
     log(`SCT per lap: ${SCT / raceMaxLaps}`);
     log(`SCT x 105%: ${SCT * 1.05}`);
-    log(`SCT per lap x 105%: ${SCT / raceMaxLaps * 1.05}`);
+    log(`SCT per lap x 105%: ${(SCT / raceMaxLaps) * 1.05}`);
 
-    log(`Results < 105% SCT: ${finishTimes.filter((time) => time < (SCT * 1.05))}`)
+    log(
+        `Results < 105% SCT: ${finishTimes.filter((time) => time < SCT * 1.05)}`,
+    );
 
     return [SCT, raceMaxLaps, compliesWithRYA];
 }
 
 export function calculateBasicSCTFromRaceResults(raceResults) {
-    const finishers = raceResults
-        .filter((result) => result.finishCode.validFinish());
+    const finishers = raceResults.filter((result) =>
+        result.finishCode.validFinish(),
+    );
     const raceMaxLaps = getLapsForNormalisation(finishers);
 
-    const resultsToCountForACT = Math.round(finishers.length * 2 / 3);
+    const resultsToCountForACT = Math.round((finishers.length * 2) / 3);
 
     const finishTimes = finishers
         .map((result) => result.getClassCorrectedTime(raceMaxLaps))
@@ -110,32 +134,53 @@ export function getRollingPIFromResults(previousResults, boatClass, initialPI) {
     assertType(boatClass, BoatClass);
     previousResults.forEach((result) => assertType(result, CorrectedResult));
 
-    const allPreviousResults = previousResults
-        .filter((result) => result.getPersonalHandicapFromRace() !== undefined);
+    const allPreviousResults = previousResults.filter(
+        (result) => result.getPersonalHandicapFromRace() !== undefined,
+    );
 
     if (!allPreviousResults.length) {
         return initialPI;
     }
 
-    return getRollingMetric(transformPersonalHandicapToPI(allPreviousResults, boatClass));
+    return getRollingMetric(
+        transformPersonalHandicapToPI(allPreviousResults, boatClass),
+    );
 }
 
-export function getRollingPersonalHandicapFromResults(previousResults, boatClass, initialPI) {
+export function getRollingPersonalHandicapFromResults(
+    previousResults,
+    boatClass,
+    initialPI,
+) {
     assertType(boatClass, BoatClass);
     previousResults.forEach((result) => assertType(result, CorrectedResult));
 
     const classPreviousResults = previousResults
         .filter((result) => result.getPersonalHandicapFromRace() !== undefined)
-        .filter((result) => result.getBoatClass().getClassName() === boatClass.getClassName());
+        .filter(
+            (result) =>
+                result.getBoatClass().getClassName() ===
+                boatClass.getClassName(),
+        );
 
     if (!classPreviousResults.length) {
-        const overallRollingPI = getRollingPIFromResults(previousResults, boatClass, initialPI);
-        return calculatePersonalHandicapFromPI(boatClass.getPY(), overallRollingPI);
+        const overallRollingPI = getRollingPIFromResults(
+            previousResults,
+            boatClass,
+            initialPI,
+        );
+        return calculatePersonalHandicapFromPI(
+            boatClass.getPY(),
+            overallRollingPI,
+        );
     }
 
-    const initialClassPH = classPreviousResults.at(0).getRollingPersonalHandicapBeforeRace();
-    const classPreviousResultsPH = classPreviousResults
-        .map((result) => result.getPersonalHandicapFromRace())
+    const initialClassPH = classPreviousResults
+        .at(0)
+        .getRollingPersonalHandicapBeforeRace();
+    const classPreviousResultsPH = classPreviousResults.map((result) =>
+        result.getPersonalHandicapFromRace(),
+    );
 
     // TODO - changed for consistency with previous system.
     return getRollingMetric([...classPreviousResultsPH]);
@@ -143,8 +188,13 @@ export function getRollingPersonalHandicapFromResults(previousResults, boatClass
 }
 
 function getRollingMetric(allMetrics) {
-    const metricsToCount = allMetrics.slice(-PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP);
-    const worst = metricsToCount.reduce((prevMax, current) => Math.max(prevMax, current), -Infinity);
+    const metricsToCount = allMetrics.slice(
+        -PREVIOUS_RACES_TO_COUNT_FOR_PERSONAL_HANDICAP,
+    );
+    const worst = metricsToCount.reduce(
+        (prevMax, current) => Math.max(prevMax, current),
+        -Infinity,
+    );
     const sum = metricsToCount.reduce((sum, current) => sum + current, 0);
 
     if (metricsToCount.length < 2) {
@@ -160,7 +210,7 @@ function getRollingMetric(allMetrics) {
 }
 
 export function calculatePersonalHandicapFromPI(classPY, PI) {
-    return classPY * (100 + PI) / 100;
+    return (classPY * (100 + PI)) / 100;
 }
 
 export function calculatePIFromPersonalHandicap(classPY, PH) {
@@ -177,18 +227,38 @@ function transformPersonalHandicapToPI(validResults, boatClass) {
 
     return [
         //calculatePIFromPersonalHandicap(firstResult.getBoatClass().getPY(), initialPersonalHandicap),
-        ...validResults.map((result) => calculatePIFromPersonalHandicap(result.getBoatClass().getPY(), result.getPersonalHandicapFromRace()))
+        ...validResults.map((result) =>
+            calculatePIFromPersonalHandicap(
+                result.getBoatClass().getPY(),
+                result.getPersonalHandicapFromRace(),
+            ),
+        ),
     ];
 }
 
 export function getRollingHandicaps(previousResults, result) {
     assertType(result, Result);
     previousResults.forEach((result) => assertType(result, CorrectedResult));
-    const rollingPH = Math.round(getRollingPersonalHandicapFromResults(previousResults, result.getBoatClass(), result.getHelm().getInitialPI()));
-    const rollingPI = Math.round(getRollingPIFromResults(previousResults, result.getBoatClass(), result.getHelm().getInitialPI()));
+    const rollingPH = Math.round(
+        getRollingPersonalHandicapFromResults(
+            previousResults,
+            result.getBoatClass(),
+            result.getHelm().getInitialPI(),
+        ),
+    );
+    const rollingPI = Math.round(
+        getRollingPIFromResults(
+            previousResults,
+            result.getBoatClass(),
+            result.getHelm().getInitialPI(),
+        ),
+    );
     return [rollingPH, rollingPI];
 }
 
-export function calculatePersonalInterval(classCorrectedTime, standardCorrectedTime) {
+export function calculatePersonalInterval(
+    classCorrectedTime,
+    standardCorrectedTime,
+) {
     return (classCorrectedTime / standardCorrectedTime - 1) * 100;
 }

@@ -1,5 +1,11 @@
 import { Outlet, useSearchParams } from "react-router-dom";
-import { useAppState, useServices, ServicesContext, CachedContext, useCachedState } from "./useAppState.js";
+import {
+    useAppState,
+    useServices,
+    ServicesContext,
+    CachedContext,
+    useCachedState,
+} from "./useAppState.js";
 import { tokenParser } from "./token.js";
 import React, { useEffect, useState } from "react";
 import { getSheetIdFromURL } from "./common";
@@ -11,10 +17,12 @@ import StoresSync from "./StoresSync";
 import readOnlyAuth from "./auth";
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
-const liveSourceResultsURL = "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
+const liveSourceResultsURL =
+    "https://docs.google.com/spreadsheets/d/1Q5fuKvddf8cM6OK7mN6ZfnMzTmXGvU8z3npRlR56SoQ";
 const liveSourceResultsSheetId = getSheetIdFromURL(liveSourceResultsURL);
 
-const liveBackupResultsURL = "https://docs.google.com/spreadsheets/d/1rkP8dagZxVZKTLOOPHr1c02wQc0VmKw485w7rMv-02I";
+const liveBackupResultsURL =
+    "https://docs.google.com/spreadsheets/d/1rkP8dagZxVZKTLOOPHr1c02wQc0VmKw485w7rMv-02I";
 const liveBackupResultsSheetId = getSheetIdFromURL(liveBackupResultsURL);
 
 function getTokenExpiry(token) {
@@ -33,12 +41,26 @@ async function initialiseServicesFromToken(token, refreshCache) {
 
     console.log("Read/Write");
     console.log(`https://docs.google.com/spreadsheets/d/${resultsSheetId}`);
-    return await StoreFunctions.create(refreshCache, { privateKey, clientEmail }, resultsSheetId, raceDateString, superUser, resultsSheetId === liveSourceResultsSheetId, true);
+    return await StoreFunctions.create(
+        refreshCache,
+        { privateKey, clientEmail },
+        resultsSheetId,
+        raceDateString,
+        superUser,
+        resultsSheetId === liveSourceResultsSheetId,
+        true,
+    );
 }
 
 async function initialiseReadOnlyServices(refreshCache) {
-    console.log(`https://docs.google.com/spreadsheets/d/${liveSourceResultsSheetId}`);
-    return await StoreFunctions.create(refreshCache, readOnlyAuth, liveSourceResultsSheetId);
+    console.log(
+        `https://docs.google.com/spreadsheets/d/${liveSourceResultsSheetId}`,
+    );
+    return await StoreFunctions.create(
+        refreshCache,
+        readOnlyAuth,
+        liveSourceResultsSheetId,
+    );
 }
 
 async function initialiseServices(token) {
@@ -56,19 +78,32 @@ async function initialiseServices(token) {
         ? await initialiseServicesFromToken(token, refreshCache)
         : await initialiseReadOnlyServices(refreshCache);
 
-    console.log(`Finished initialising services in ${Math.round(Date.now() - started)}ms`);
+    console.log(
+        `Finished initialising services in ${Math.round(Date.now() - started)}ms`,
+    );
     return {
         ...storeFunctions,
     };
 }
 
-const STATE_DESERIALISER = ({ registered, results, oods, newHelms }, services) => {
-    const deserialisedHelms = newHelms.map((newHelm) => services.deserialiseHelm(newHelm));
+const STATE_DESERIALISER = (
+    { registered, results, oods, newHelms },
+    services,
+) => {
+    const deserialisedHelms = newHelms.map((newHelm) =>
+        services.deserialiseHelm(newHelm),
+    );
 
     return {
-        registered: registered.map((registeredResult) => services.deserialiseRegistered(registeredResult, deserialisedHelms)),
-        results: results.map((result) => services.deserialiseResult(result, deserialisedHelms)),
-        oods: oods.map((ood) => services.deserialiseOOD(ood, deserialisedHelms)),
+        registered: registered.map((registeredResult) =>
+            services.deserialiseRegistered(registeredResult, deserialisedHelms),
+        ),
+        results: results.map((result) =>
+            services.deserialiseResult(result, deserialisedHelms),
+        ),
+        oods: oods.map((ood) =>
+            services.deserialiseOOD(ood, deserialisedHelms),
+        ),
         newHelms: deserialisedHelms,
     };
 };
@@ -98,15 +133,12 @@ export default function TokenWrapper() {
             if (newUrlToken) {
                 updateUrlToken(newUrlToken);
                 setSearchParams();
-            }
-            else if (!token) {
+            } else if (!token) {
                 updateReadOnly(true);
-            }
-            else {
+            } else {
                 updateUrlToken(token.body);
             }
-        }
-        else {
+        } else {
             if (token && token.body === urlToken) {
                 console.log("Not updating token as it's unchanged.");
                 return;
@@ -131,17 +163,17 @@ export default function TokenWrapper() {
 
     return (
         <>
-            <Box className="page-container" minHeight="100vh" >
+            <Box className="page-container" minHeight="100vh">
                 <ServicesContext.Provider value={servicesManager}>
                     <ServicesWrapper token={token && token.body} />
                 </ServicesContext.Provider>
             </Box>
         </>
-    )
+    );
 }
 
 function ServicesWrapper({ token }) {
-    const services = useServices(async () => initialiseServices(token))
+    const services = useServices(async () => initialiseServices(token));
 
     if (services.error) {
         console.log(services.error);
@@ -157,18 +189,15 @@ function ServicesWrapper({ token }) {
         return <Spinner />;
     }
 
-    return (
-        <StateWrapper />
-    );
+    return <StateWrapper />;
 }
 
 function StateWrapper() {
     const services = useServices();
     const cachedStateManager = useCachedState(DEFAULT_STATE, (value) => {
         try {
-            return STATE_DESERIALISER(value, services)
-        }
-        catch (err) {
+            return STATE_DESERIALISER(value, services);
+        } catch (err) {
             console.log(err);
             return DEFAULT_STATE;
         }
@@ -176,9 +205,7 @@ function StateWrapper() {
     return (
         <>
             <CachedContext.Provider value={cachedStateManager}>
-                {!services.readOnly &&
-                    <StoresSync />
-                }
+                {!services.readOnly && <StoresSync />}
                 <StateOutlet />
             </CachedContext.Provider>
         </>
@@ -195,17 +222,11 @@ function StateOutlet() {
 
     return (
         <>
-            {!state &&
-                <p>Loading state...</p>
-            }
-            {!services.ready &&
-                <p>Initialising services...</p>
-            }
-            {state && services.ready &&
-                <Outlet />
-            }
+            {!state && <p>Loading state...</p>}
+            {!services.ready && <p>Initialising services...</p>}
+            {state && services.ready && <Outlet />}
         </>
-    )
+    );
 }
 
 function StoreSync({ store }) {
@@ -215,19 +236,29 @@ function StoreSync({ store }) {
 
     const syncStore = (store) => {
         updateSyncronizing(true);
-        services.syncroniseStore(store)
+        services
+            .syncroniseStore(store)
             .then(() => updateSyncronizing(false))
             .catch(() => updateFailed(true));
-    }
+    };
 
-    return <>
-        {!failed &&
-            <RedButton onClick={(() => syncStore(store))} isLoading={syncronizing} loadingText={`Syncronizing Store: ${store}`}>{`Synchronise store: ${store}`}</RedButton>
-        }
-        {failed &&
-            <RedButton onClick={(() => syncStore(store))} disabled={true}>{`Synchronise store: ${store} failed`}</RedButton>
-        }
-    </>
+    return (
+        <>
+            {!failed && (
+                <RedButton
+                    onClick={() => syncStore(store)}
+                    isLoading={syncronizing}
+                    loadingText={`Syncronizing Store: ${store}`}
+                >{`Synchronise store: ${store}`}</RedButton>
+            )}
+            {failed && (
+                <RedButton
+                    onClick={() => syncStore(store)}
+                    disabled={true}
+                >{`Synchronise store: ${store} failed`}</RedButton>
+            )}
+        </>
+    );
 }
 
 var maxHeight = 0;
@@ -235,9 +266,12 @@ var maxHeight = 0;
 const updateHeight = () => {
     if (window.innerHeight > maxHeight) {
         maxHeight = window.innerHeight;
-        document.documentElement.style.setProperty('--screen-height', `${window.innerHeight}px`);
+        document.documentElement.style.setProperty(
+            "--screen-height",
+            `${window.innerHeight}px`,
+        );
     }
-}
+};
 
 updateHeight();
-window.addEventListener('resize', () => updateHeight());
+window.addEventListener("resize", () => updateHeight());

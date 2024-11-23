@@ -1,5 +1,10 @@
 import auth from "./auth.js";
-import { flattenMap, limitSheetsRequest, getGoogleSheetDoc, parseISOString } from "../src/common.js"
+import {
+    flattenMap,
+    limitSheetsRequest,
+    getGoogleSheetDoc,
+    parseISOString,
+} from "../src/common.js";
 import { SheetsAPI } from "../src/SheetsAPI.js";
 
 // This helps filter out invalid rows..
@@ -41,39 +46,76 @@ class AutoMap extends Map {
     upsert(obj, transform = (prev, obj, key) => obj) {
         let key = this.getKey(obj);
         if (!this.has(key) && this.getDefaultValue !== undefined) {
-            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
+            return this.set(
+                key,
+                transform(this.getDefaultValue(obj), obj, key),
+            );
         }
-        return this.set(key, transform(super.get(key), obj, key))
+        return this.set(key, transform(super.get(key), obj, key));
     }
 }
 
-const mapFullRowToClass = (year) => ({ "Class Name": className, "No. of Crew": crew, "Rig": rig, "Spinnaker": spinnaker, "Number": PY, "Type": type, ...rest }) => ({
-    className: className.trim(),
-    crew,
-    rig,
-    spinnaker,
-    PY,
-    change: rest[Object.keys(rest).find((key) => key.toLowerCase().includes("change"))],
-    type,
-    unique: [className.trim(), crew, rig, spinnaker].join(":::"),
-    year,
-    dateUpdated: parseISOString(`${parseInt(year)}-01-01T00:00:00.000Z`),
-});
+const mapFullRowToClass =
+    (year) =>
+    ({
+        "Class Name": className,
+        "No. of Crew": crew,
+        Rig: rig,
+        Spinnaker: spinnaker,
+        Number: PY,
+        Type: type,
+        ...rest
+    }) => ({
+        className: className.trim(),
+        crew,
+        rig,
+        spinnaker,
+        PY,
+        change: rest[
+            Object.keys(rest).find((key) =>
+                key.toLowerCase().includes("change"),
+            )
+        ],
+        type,
+        unique: [className.trim(), crew, rig, spinnaker].join(":::"),
+        year,
+        dateUpdated: parseISOString(`${parseInt(year)}-01-01T00:00:00.000Z`),
+    });
 
 async function getClassesForSheet(sheetId, mapRow) {
-    const doc = await getGoogleSheetDoc(sheetId, auth.clientEmail, auth.privateKey);
+    const doc = await getGoogleSheetDoc(
+        sheetId,
+        auth.clientEmail,
+        auth.privateKey,
+    );
     const sheet = doc.sheetsByIndex[0];
     return (await limitSheetsRequest(() => sheet.getRows()))
         .map(mapRow)
-        .filter(({ className, PY, type }) => className.length && parseInt(PY) > MIN_PY && parseInt(PY) < MAX_PY && (!type || ALLOWED_TYPES.includes(type)));
+        .filter(
+            ({ className, PY, type }) =>
+                className.length &&
+                parseInt(PY) > MIN_PY &&
+                parseInt(PY) < MAX_PY &&
+                (!type || ALLOWED_TYPES.includes(type)),
+        );
 }
 
 function getFullClassId({ className, crew, rig, spinnaker }) {
-    return JSON.stringify([className, crew, rig, spinnaker])
+    return JSON.stringify([className, crew, rig, spinnaker]);
 }
 
-async function appendClassesSheet(classes, sheetId, clientEmail, privateKey, sheetName) {
-    let sheetsAPI = await SheetsAPI.initSheetsAPI(sheetId, clientEmail, privateKey);
+async function appendClassesSheet(
+    classes,
+    sheetId,
+    clientEmail,
+    privateKey,
+    sheetName,
+) {
+    let sheetsAPI = await SheetsAPI.initSheetsAPI(
+        sheetId,
+        clientEmail,
+        privateKey,
+    );
     return await sheetsAPI.appendClasses(classes, sheetName);
 }
 
@@ -83,38 +125,45 @@ async function updateSheet(outputSheetURL) {
     const outputSheetId = getSheetIdFromURL(outputSheetURL);
 
     for (let [year, sheetId] of allYearsFull) {
-        for (let boatClass of (await getClassesForSheet(sheetId, mapFullRowToClass(year)))) {
+        for (let boatClass of await getClassesForSheet(
+            sheetId,
+            mapFullRowToClass(year),
+        )) {
             allRows.push(boatClass);
             // Group by class
-            fullClasses.upsert(boatClass)
+            fullClasses.upsert(boatClass);
         }
     }
 
     const yearsOfInterest = [
-        2014,
-        2015,
-        2016,
-        2017,
-        2018,
-        2019,
-        2020,
-        2021,
-        2022
+        2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
     ];
 
-    const fullYearsOfInterest = new AutoMap(getFullClassId, () => [])
+    const fullYearsOfInterest = new AutoMap(getFullClassId, () => []);
     for (let [classId] of [...fullClasses]) {
         for (let year of yearsOfInterest) {
-            let matchedYearForClass = allRows
-                .find((thisClass) => classId === getFullClassId(thisClass) && thisClass.dateUpdated.getUTCFullYear() === year);
+            let matchedYearForClass = allRows.find(
+                (thisClass) =>
+                    classId === getFullClassId(thisClass) &&
+                    thisClass.dateUpdated.getUTCFullYear() === year,
+            );
 
             if (matchedYearForClass) {
-                fullYearsOfInterest.upsert(matchedYearForClass, (prev, obj) => [...prev, { validYear: year, ...obj }]);
+                fullYearsOfInterest.upsert(matchedYearForClass, (prev, obj) => [
+                    ...prev,
+                    { validYear: year, ...obj },
+                ]);
             }
         }
     }
 
-    await appendClassesSheet(flattenMap(fullYearsOfInterest), outputSheetId, auth.clientEmail, auth.privateKey, "RYA Full List");
+    await appendClassesSheet(
+        flattenMap(fullYearsOfInterest),
+        outputSheetId,
+        auth.clientEmail,
+        auth.privateKey,
+        "RYA Full List",
+    );
 }
 
 updateSheet(...process.argv.slice(2))

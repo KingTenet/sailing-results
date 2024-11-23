@@ -5,7 +5,6 @@ import { GreenButton, RedButton } from "./components/Buttons";
 import getVersion from "./version";
 import { useStoreStatus, useAdminToggle } from "./common/hooks";
 
-
 function StoreSync({ store }) {
     const [syncronizing, updateSyncronizing] = useState(false);
     const [failed, updateFailed] = useState(false);
@@ -13,21 +12,30 @@ function StoreSync({ store }) {
 
     const syncStore = (store) => {
         updateSyncronizing(true);
-        services.syncroniseStore(store)
+        services
+            .syncroniseStore(store)
             .then(() => updateSyncronizing(false))
             .catch(() => updateFailed(true));
-    }
+    };
 
-    return <>
-        {!failed &&
-            <RedButton onClick={(() => syncStore(store))} isLoading={syncronizing} loadingText={`Syncronizing Store: ${store}`}>{`Synchronise store: ${store}`}</RedButton>
-        }
-        {failed &&
-            <RedButton onClick={(() => syncStore(store))} disabled={true}>{`Synchronise store: ${store} failed`}</RedButton>
-        }
-    </>
+    return (
+        <>
+            {!failed && (
+                <RedButton
+                    onClick={() => syncStore(store)}
+                    isLoading={syncronizing}
+                    loadingText={`Syncronizing Store: ${store}`}
+                >{`Synchronise store: ${store}`}</RedButton>
+            )}
+            {failed && (
+                <RedButton
+                    onClick={() => syncStore(store)}
+                    disabled={true}
+                >{`Synchronise store: ${store} failed`}</RedButton>
+            )}
+        </>
+    );
 }
-
 
 export default function StoresSync({ verbose }) {
     const services = useServices();
@@ -39,7 +47,9 @@ export default function StoresSync({ verbose }) {
 
     useEffect(() => {
         if (!syncing && storesStatus) {
-            if (Object.entries(storesStatus).some(([store, synced]) => !synced)) {
+            if (
+                Object.entries(storesStatus).some(([store, synced]) => !synced)
+            ) {
                 console.log("Stores are not synced");
                 updateSyncing(true);
             }
@@ -48,12 +58,14 @@ export default function StoresSync({ verbose }) {
 
     useEffect(() => {
         if (syncing) {
-            const storesToSync = Object.entries(storesStatus)
-                .filter(([, synced]) => !synced);
+            const storesToSync = Object.entries(storesStatus).filter(
+                ([, synced]) => !synced,
+            );
 
             console.log(`Attempting to sync all stores`);
 
-            services.syncroniseStores()
+            services
+                .syncroniseStores()
                 .then(() => {
                     console.log("All stores have synced successfully");
                     updateSyncing(false);
@@ -73,40 +85,52 @@ export default function StoresSync({ verbose }) {
     }
 
     if (VERBOSE) {
-        return <>
-            {Object.entries(storesStatus).map(([store, synced], index) => (
-                <Box key={`StoreSync${index}`}>
-                    {synced &&
-                        <Box>
-                            <GreenButton disabled={true}>{`Store: ${store} is in sync`}</GreenButton>
-                        </Box>
-                    }
-                    {!synced &&
-                        <Box>
-                            <StoreSync store={store} />
-                        </Box>
-                    }
-                </Box>
-            ))}
-        </>;
+        return (
+            <>
+                {Object.entries(storesStatus).map(([store, synced], index) => (
+                    <Box key={`StoreSync${index}`}>
+                        {synced && (
+                            <Box>
+                                <GreenButton
+                                    disabled={true}
+                                >{`Store: ${store} is in sync`}</GreenButton>
+                            </Box>
+                        )}
+                        {!synced && (
+                            <Box>
+                                <StoreSync store={store} />
+                            </Box>
+                        )}
+                    </Box>
+                ))}
+            </>
+        );
     }
 
-    return <>
-        <Flex className="status-bar" bgColor={syncing ? "blue.500" :
-            failed ? "red.500" :
-                "green.100"
-        } />
-        {!Boolean(services.readOnly) &&
-            <>
-                <Box className="status-bar-version" onClick={() => { console.log("Received click") || adminHandler() }}>
-                    <Text>{`${services.isLive ? "LIVE" : "PRACTICE"}: ${getVersion()} ${isAdmin ? ": ADMIN MODE" : ""}`}</Text>
-                </Box>
-                <Viewport />
-            </>
-        }
-    </>
+    return (
+        <>
+            <Flex
+                className="status-bar"
+                bgColor={
+                    syncing ? "blue.500" : failed ? "red.500" : "green.100"
+                }
+            />
+            {!Boolean(services.readOnly) && (
+                <>
+                    <Box
+                        className="status-bar-version"
+                        onClick={() => {
+                            console.log("Received click") || adminHandler();
+                        }}
+                    >
+                        <Text>{`${services.isLive ? "LIVE" : "PRACTICE"}: ${getVersion()} ${isAdmin ? ": ADMIN MODE" : ""}`}</Text>
+                    </Box>
+                    <Viewport />
+                </>
+            )}
+        </>
+    );
 }
-
 
 function Viewport() {
     const [viewport, updateViewport] = useState();
@@ -122,6 +146,6 @@ function Viewport() {
             <Flex justifyContent="flex-end">
                 <Text>{`${viewport}`}</Text>
             </Flex>
-        </Box >
-    )
+        </Box>
+    );
 }

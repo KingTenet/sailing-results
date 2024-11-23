@@ -13,7 +13,10 @@ export default class HelmSeries extends StoreObject {
 
     static getId(helmSeries) {
         assertType(helmSeries, HelmSeries);
-        return generateId("HelmSeries", [Helm.getId(helmSeries.helm), Series.getId(helmSeries.series)]);
+        return generateId("HelmSeries", [
+            Helm.getId(helmSeries.helm),
+            Series.getId(helmSeries.series),
+        ]);
     }
 
     static sheetHeaders() {
@@ -28,16 +31,26 @@ export default class HelmSeries extends StoreObject {
 
     static fromStore(storeResult, getHelm) {
         let {
-            "Season": season,
-            "Series": series,
-            "Helm": helmId,
+            Season: season,
+            Series: series,
+            Helm: helmId,
             "First Series": firstSeries,
         } = storeResult;
-        return new HelmSeries(new Series(season, series), getHelm(helmId), parseBoolean(firstSeries), StoreObject.fromStore(storeResult));
+        return new HelmSeries(
+            new Series(season, series),
+            getHelm(helmId),
+            parseBoolean(firstSeries),
+            StoreObject.fromStore(storeResult),
+        );
     }
 
     static fromSeriesHelm(series, helm, firstSeries) {
-        return new HelmSeries(series, helm, firstSeries, StoreObject.fromStore({}));
+        return new HelmSeries(
+            series,
+            helm,
+            firstSeries,
+            StoreObject.fromStore({}),
+        );
     }
 
     toJSON() {
@@ -46,9 +59,9 @@ export default class HelmSeries extends StoreObject {
 
     toStore() {
         return {
-            "Season": this.series.season,
-            "Series": this.series.series,
-            "Helm": Helm.getId(this.helm),
+            Season: this.series.season,
+            Series: this.series.series,
+            Helm: Helm.getId(this.helm),
             "First Series": this.firstSeries,
             ...super.toStore(this),
         };

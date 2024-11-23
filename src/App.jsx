@@ -1,4 +1,10 @@
-import { useRoutes, Navigate, useLocation, matchRoutes, Outlet } from "react-router-dom";
+import {
+    useRoutes,
+    Navigate,
+    useLocation,
+    matchRoutes,
+    Outlet,
+} from "react-router-dom";
 import { HashRouter as Router } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 
@@ -20,7 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { useServices } from "./useAppState";
 import Debug from "./Debug";
 
-import './styles.css';
+import "./styles.css";
 
 const ADD_ANOTHER_HELM_WORKFLOW = true;
 const BOOTSTRAP_HISTORY = true;
@@ -36,67 +42,141 @@ function Home() {
             console.log(services.readOnly);
             if (!services.readOnly) {
                 navigate("races");
-            }
-            else {
+            } else {
                 navigate("series");
             }
         }
     }, [appState]);
 
     if (!appState?.adminMode) {
-        return (
-            <></>
-        )
+        return <></>;
     }
 
-    return (
-        <Debug />
-    )
+    return <Debug />;
 }
 
 function NavWrapper() {
-    return <Outlet />
+    return <Outlet />;
 }
 
 const ROOT_PATHNAME = "/";
 const ROUTES = [
     {
-        path: ROOT_PATHNAME, element: <StateWrapper />, children: [
+        path: ROOT_PATHNAME,
+        element: <StateWrapper />,
+        children: [
             { path: ROOT_PATHNAME, element: <Home />, index: true },
             {
-                path: '/races/', element: <NavWrapper />, children: [
-                    { path: '/races/', element: <ForceSpinner>{() => <Races editableOnly={true} />}</ForceSpinner>, index: true },
+                path: "/races/",
+                element: <NavWrapper />,
+                children: [
                     {
-                        path: '/races/:raceDate/:raceNumber', element: <NavWrapper />, children: [
-                            { path: '/races/:raceDate/:raceNumber', element: <ForceSpinner>{() => <Race backButtonText="Back to races" />}</ForceSpinner>, index: true },
-                            { path: '/races/:raceDate/:raceNumber/register', element: <ForceSpinner>{() => <RegisterHelm addAnotherHelmWorkflow={ADD_ANOTHER_HELM_WORKFLOW} />}</ForceSpinner> },
-                            { path: '/races/:raceDate/:raceNumber/registerAnother/:registered', element: <ForceSpinner>{() => <RegisteredHelm backHeading="Register Helm"><RegisterAnotherButtons /></RegisteredHelm>}</ForceSpinner> },
-                            { path: '/races/:raceDate/:raceNumber/ood', element: <ForceSpinner>{() => <RegisterOOD />}</ForceSpinner> },
-                            { path: '/races/:raceDate/:raceNumber/fleetFinish/:registered', element: <ForceSpinner>{() => <RegisteredHelm backHeading="Finish Helm"><FinishHelm /></RegisteredHelm>}</ForceSpinner> },
-                        ]
-                    }
-                ]
+                        path: "/races/",
+                        element: (
+                            <ForceSpinner>
+                                {() => <Races editableOnly={true} />}
+                            </ForceSpinner>
+                        ),
+                        index: true,
+                    },
+                    {
+                        path: "/races/:raceDate/:raceNumber",
+                        element: <NavWrapper />,
+                        children: [
+                            {
+                                path: "/races/:raceDate/:raceNumber",
+                                element: (
+                                    <ForceSpinner>
+                                        {() => (
+                                            <Race backButtonText="Back to races" />
+                                        )}
+                                    </ForceSpinner>
+                                ),
+                                index: true,
+                            },
+                            {
+                                path: "/races/:raceDate/:raceNumber/register",
+                                element: (
+                                    <ForceSpinner>
+                                        {() => (
+                                            <RegisterHelm
+                                                addAnotherHelmWorkflow={
+                                                    ADD_ANOTHER_HELM_WORKFLOW
+                                                }
+                                            />
+                                        )}
+                                    </ForceSpinner>
+                                ),
+                            },
+                            {
+                                path: "/races/:raceDate/:raceNumber/registerAnother/:registered",
+                                element: (
+                                    <ForceSpinner>
+                                        {() => (
+                                            <RegisteredHelm backHeading="Register Helm">
+                                                <RegisterAnotherButtons />
+                                            </RegisteredHelm>
+                                        )}
+                                    </ForceSpinner>
+                                ),
+                            },
+                            {
+                                path: "/races/:raceDate/:raceNumber/ood",
+                                element: (
+                                    <ForceSpinner>
+                                        {() => <RegisterOOD />}
+                                    </ForceSpinner>
+                                ),
+                            },
+                            {
+                                path: "/races/:raceDate/:raceNumber/fleetFinish/:registered",
+                                element: (
+                                    <ForceSpinner>
+                                        {() => (
+                                            <RegisteredHelm backHeading="Finish Helm">
+                                                <FinishHelm />
+                                            </RegisteredHelm>
+                                        )}
+                                    </ForceSpinner>
+                                ),
+                            },
+                        ],
+                    },
+                ],
             },
             {
-                path: '/series/', element: <NavWrapper />, children: [
-                    { path: '/series/', element: <Series />, index: true },
+                path: "/series/",
+                element: <NavWrapper />,
+                children: [
+                    { path: "/series/", element: <Series />, index: true },
                     {
-                        path: '/series/:season/:series', element: <NavWrapper />, children: [
-                            { path: '/series/:season/:series', element: <SeriesPoints />, index: true },
-                            { path: '/series/:season/:series/:raceDate/:raceNumber', element: <Race backButtonText="Back to series" /> },
-                        ]
-                    }
-                ]
+                        path: "/series/:season/:series",
+                        element: <NavWrapper />,
+                        children: [
+                            {
+                                path: "/series/:season/:series",
+                                element: <SeriesPoints />,
+                                index: true,
+                            },
+                            {
+                                path: "/series/:season/:series/:raceDate/:raceNumber",
+                                element: (
+                                    <Race backButtonText="Back to series" />
+                                ),
+                            },
+                        ],
+                    },
+                ],
             },
-        ]
+        ],
     },
-    { path: '/*', element: <Navigate to="/" /> },
+    { path: "/*", element: <Navigate to="/" /> },
 ];
 
 function MyRoutes() {
     let element = useRoutes(ROUTES);
 
-    return element
+    return element;
 }
 
 /**
@@ -107,7 +187,8 @@ function NavigationWrapper({ navStack, updateNavStack, next, index }) {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const stripTrailingSlash = (str) => str.at(-1) === "/" ? str.slice(0, -1) : str;
+    const stripTrailingSlash = (str) =>
+        str.at(-1) === "/" ? str.slice(0, -1) : str;
     const isReady = navStack && index >= navStack.length;
 
     useEffect(() => {
@@ -116,10 +197,16 @@ function NavigationWrapper({ navStack, updateNavStack, next, index }) {
         }
         if (navStack === undefined) {
             const targetMatches = matchRoutes(ROUTES, location);
-            const targetMatchParents = targetMatches && targetMatches
-                .filter((match) => match?.route?.children)
-                .filter((match) => stripTrailingSlash(match.pathname) !== stripTrailingSlash(location.pathname)) // Exclude current location
-                .filter((match) => match.pathname !== ROOT_PATHNAME); // Exclude root path from navigation because it redirects and confuses things
+            const targetMatchParents =
+                targetMatches &&
+                targetMatches
+                    .filter((match) => match?.route?.children)
+                    .filter(
+                        (match) =>
+                            stripTrailingSlash(match.pathname) !==
+                            stripTrailingSlash(location.pathname),
+                    ) // Exclude current location
+                    .filter((match) => match.pathname !== ROOT_PATHNAME); // Exclude root path from navigation because it redirects and confuses things
 
             updateNavStack([...targetMatchParents, location]);
         }
@@ -141,12 +228,11 @@ function NavigationWrapper({ navStack, updateNavStack, next, index }) {
     }, [location]);
 
     if (!isReady) {
-        return <></>
+        return <></>;
     }
 
-    return <MyRoutes />
+    return <MyRoutes />;
 }
-
 
 function App() {
     const [navStack, updateNavStack] = useState();
@@ -155,15 +241,20 @@ function App() {
     if (BOOTSTRAP_HISTORY) {
         return (
             <Router>
-                <NavigationWrapper navStack={navStack} updateNavStack={updateNavStack} next={() => updateIndex((prev) => prev + 1)} index={index} />
+                <NavigationWrapper
+                    navStack={navStack}
+                    updateNavStack={updateNavStack}
+                    next={() => updateIndex((prev) => prev + 1)}
+                    index={index}
+                />
             </Router>
-        )
+        );
     }
 
     return (
         <Router>
             <MyRoutes />
         </Router>
-    )
+    );
 }
 export default App;

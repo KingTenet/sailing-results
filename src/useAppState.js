@@ -26,21 +26,29 @@ export function useServices(initialiseServices) {
     useEffect(() => {
         if (!appServices.error && !appServices?.ready && initialiseServices) {
             initialiseServices()
-                .then((services) => updateAppServices({
-                    ...services,
-                    ready: true,
-                }))
-                .catch((err) => updateAppServices({
-                    error: err,
-                    ready: false,
-                }));
+                .then((services) =>
+                    updateAppServices({
+                        ...services,
+                        ready: true,
+                    }),
+                )
+                .catch((err) =>
+                    updateAppServices({
+                        error: err,
+                        ready: false,
+                    }),
+                );
         }
     });
 
     return appServices;
 }
 
-export function useCachedState(defaultValue, deserialiser, key = LOCAL_STATE_STORAGE_KEY) {
+export function useCachedState(
+    defaultValue,
+    deserialiser,
+    key = LOCAL_STATE_STORAGE_KEY,
+) {
     const [value, setValue] = useState(() => {
         const serialisedValue = localStorage.getItem(key);
         if (serialisedValue === null) {
@@ -52,9 +60,7 @@ export function useCachedState(defaultValue, deserialiser, key = LOCAL_STATE_STO
             localStorage.removeItem(key);
             return defaultValue;
         }
-        return deserialiser
-            ? deserialiser(storedValue)
-            : storedValue;
+        return deserialiser ? deserialiser(storedValue) : storedValue;
     });
 
     useEffect(() => {

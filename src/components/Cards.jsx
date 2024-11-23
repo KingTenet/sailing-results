@@ -18,11 +18,11 @@ const DEFAULT_DROPPABLE_HIGHLIGHT_STYLE = {
     borderStyle: "dashed",
     borderWidth: "2px 2px 2px 2px",
     padding: "8px 3px 8px 3px",
-}
+};
 
 function getDroppableStyleForHighlight(
     highlightStyles = DEFAULT_DROPPABLE_HIGHLIGHT_STYLE,
-    baseStyle = BASE_DROPPABLE_STYLE
+    baseStyle = BASE_DROPPABLE_STYLE,
 ) {
     return (isDraggingOver) => {
         if (!isDraggingOver) {
@@ -38,73 +38,89 @@ function getDroppableStyleForHighlight(
             ...DEFAULT_DROPPABLE_HIGHLIGHT_STYLE,
             ...highlightStyles,
         };
-    }
+    };
 }
 
-const registeredGetDroppableStyle = getDroppableStyleForHighlight({
+const registeredGetDroppableStyle = getDroppableStyleForHighlight(
+    {},
+    {
+        ...BASE_DROPPABLE_STYLE,
+        backgroundColor: "lightBlue",
+    },
+);
 
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    backgroundColor: "lightBlue",
+const defaultGetDroppableStyle = getDroppableStyleForHighlight(
+    {
+        backgroundColor: "lightGreen",
+        borderStyle: "dashed",
+        borderWidth: "2px",
+        // borderRadius: "10px",
+        borderColor: "darkGreen",
+    },
+    {
+        ...BASE_DROPPABLE_STYLE,
+        backgroundColor: "lightGreen",
+    },
+);
+
+const deleteGetDroppableStyle = getDroppableStyleForHighlight(
+    {
+        backgroundColor: "pink",
+        borderStyle: "dashed",
+        borderWidth: "2px",
+        // borderRadius: "10px",
+        borderColor: "red",
+    },
+    {
+        ...BASE_DROPPABLE_STYLE,
+        minHeight: "52px",
+        backgroundColor: "pink",
+    },
+);
+
+const dnfGetDroppableStyle = getDroppableStyleForHighlight(
+    {
+        backgroundColor: "#ffc680",
+        borderStyle: "dashed",
+        borderWidth: "2px",
+        // borderRadius: "10px",
+        borderColor: "DarkOrange",
+    },
+    {
+        ...BASE_DROPPABLE_STYLE,
+        backgroundColor: "#ffc680",
+        // borderColor: "DarkOrange",
+    },
+);
+
+const placeholderStyle = getDroppableStyleForHighlight(undefined, {
+    backgroundColor: "inherit",
 });
-
-const defaultGetDroppableStyle = getDroppableStyleForHighlight({
-    backgroundColor: "lightGreen",
-    borderStyle: "dashed",
-    borderWidth: "2px",
-    // borderRadius: "10px",
-    borderColor: "darkGreen",
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    backgroundColor: "lightGreen",
-});
-
-const deleteGetDroppableStyle = getDroppableStyleForHighlight({
-    backgroundColor: "pink",
-    borderStyle: "dashed",
-    borderWidth: "2px",
-    // borderRadius: "10px",
-    borderColor: "red",
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    minHeight: "52px",
-    backgroundColor: "pink",
-});
-
-const dnfGetDroppableStyle = getDroppableStyleForHighlight({
-    backgroundColor: "#ffc680",
-    borderStyle: "dashed",
-    borderWidth: "2px",
-    // borderRadius: "10px",
-    borderColor: "DarkOrange",
-}, {
-    ...BASE_DROPPABLE_STYLE,
-    backgroundColor: "#ffc680",
-    // borderColor: "DarkOrange",
-});
-
-const placeholderStyle = getDroppableStyleForHighlight(undefined, { backgroundColor: "inherit", });
 
 export function RegisteredCard({ isDraggingOver, ...props }) {
-    return <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
+    return (
+        <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
+    );
 }
 
 export function PlaceholderCard({ isDraggingOver, ...props }) {
-    return <Box style={placeholderStyle(isDraggingOver)} {...props} />
+    return <Box style={placeholderStyle(isDraggingOver)} {...props} />;
 }
 
 export function DeleteCard({ isDraggingOver, ...props }) {
-    return <Box style={deleteGetDroppableStyle(isDraggingOver)} {...props} />
+    return <Box style={deleteGetDroppableStyle(isDraggingOver)} {...props} />;
 }
 
 export function DNFCard({ isDraggingOver, ...props }) {
-    return <Box style={dnfGetDroppableStyle(isDraggingOver)} {...props} />
+    return <Box style={dnfGetDroppableStyle(isDraggingOver)} {...props} />;
 }
 
 export function FinishersCard({ isDraggingOver, ...props }) {
-    return <Box style={defaultGetDroppableStyle(isDraggingOver)} {...props} />
+    return <Box style={defaultGetDroppableStyle(isDraggingOver)} {...props} />;
 }
 
 export function RacesCard({ isDraggingOver, ...props }) {
-    return <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
+    return (
+        <Box style={registeredGetDroppableStyle(isDraggingOver)} {...props} />
+    );
 }

@@ -11,8 +11,18 @@ export default class MutableRaceFinish extends Race {
         results.forEach((result) => assertType(result, Result));
         // (previousResults || []).forEach((result) => assertType(result, CorrectedResult));
         (oods || []).forEach((ood) => assertType(ood, HelmResult));
-        (results || []).forEach((result) => assert(HelmResult.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race."));
-        (oods || []).forEach((ood) => assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race."));
+        (results || []).forEach((result) =>
+            assert(
+                HelmResult.getRaceId(result) === Race.getId(this),
+                "RaceFinish requires that OODs and results are from same race.",
+            ),
+        );
+        (oods || []).forEach((ood) =>
+            assert(
+                HelmResult.getRaceId(ood) === Race.getId(this),
+                "RaceFinish requires that OODs and results are from same race.",
+            ),
+        );
 
         this.results = results;
         // this.previousResults = previousResults;
@@ -27,7 +37,9 @@ export default class MutableRaceFinish extends Race {
             this.validateRaceType();
             if (!this.isPursuitRace()) {
                 if (!this.getHelmResults) {
-                    throw new Error("Cannot process race results without previous results");
+                    throw new Error(
+                        "Cannot process race results without previous results",
+                    );
                 }
                 this.setCorrectedResults();
             }
@@ -36,7 +48,8 @@ export default class MutableRaceFinish extends Race {
     }
 
     calculateSCT() {
-        const [sct, raceMaxLaps, ryaApprovedSCT] = calculateSCTFromRaceResults(this.results) || [];
+        const [sct, raceMaxLaps, ryaApprovedSCT] =
+            calculateSCTFromRaceResults(this.results) || [];
         this.sct = sct;
         this.raceMaxLaps = raceMaxLaps;
         this.ryaApprovedSCT = ryaApprovedSCT;
@@ -54,13 +67,14 @@ export default class MutableRaceFinish extends Race {
     }
 
     hasImmutableResults() {
-        return Boolean(this.hasResults() && this.results.some((result) => !result.hasStaleRemote()));
+        return Boolean(
+            this.hasResults() &&
+                this.results.some((result) => !result.hasStaleRemote()),
+        );
     }
 
     getCorrectedResults() {
-        return this.isPursuitRace()
-            ? this.results
-            : this.correctedResults;
+        return this.isPursuitRace() ? this.results : this.correctedResults;
     }
 
     // addResult(result) {
@@ -79,11 +93,17 @@ export default class MutableRaceFinish extends Race {
     // }
 
     validateRaceType() {
-        assert(this.results.some((result) => result.finishCode.validFinish()), `RaceFinish date:${this.date} number:${this.raceNumber} has no valid finishers`);
-        if (this.results.some((result) => result.getFinishTime())
-            && this.isPursuitRace()
+        assert(
+            this.results.some((result) => result.finishCode.validFinish()),
+            `RaceFinish date:${this.date} number:${this.raceNumber} has no valid finishers`,
+        );
+        if (
+            this.results.some((result) => result.getFinishTime()) &&
+            this.isPursuitRace()
         ) {
-            throw new Error(`RaceFinish date:${this.date} number:${this.raceNumber} must contain only one type of race`);
+            throw new Error(
+                `RaceFinish date:${this.date} number:${this.raceNumber} must contain only one type of race`,
+            );
         }
     }
 
@@ -92,16 +112,15 @@ export default class MutableRaceFinish extends Race {
         // const helmResultsByRaceAsc = new Map(groupBy(allResultsByRaceAsc, Result.getHelmId));
         // const getHelmResults = (helmId) => helmResultsByRaceAsc.get(helmId) || [];
 
-        this.correctedResults = this.results
-            .map((result) =>
-                CorrectedResult.fromResult(
-                    result,
-                    result.getHelm().isGuestHelm()
-                        ? []
-                        : this.getHelmResults(Result.getHelmId(result)),
-                    this
-                )
-            );
+        this.correctedResults = this.results.map((result) =>
+            CorrectedResult.fromResult(
+                result,
+                result.getHelm().isGuestHelm()
+                    ? []
+                    : this.getHelmResults(Result.getHelmId(result)),
+                this,
+            ),
+        );
     }
 
     getSCT() {
@@ -118,13 +137,14 @@ export default class MutableRaceFinish extends Race {
      * eg. joint 2nd and 3rd position share 2.5 points.
      */
     static assignPointsToResults(allFinishers, sortBy, setPosition) {
-        const groupedFinishTimes = groupBy(allFinishers, sortBy)
-            .sort(([a], [b]) => a - b);
+        const groupedFinishTimes = groupBy(allFinishers, sortBy).sort(
+            ([a], [b]) => a - b,
+        );
 
         groupedFinishTimes.reduce((position, [, finishers]) => {
             finishers.forEach((finisher) => {
                 setPosition(finisher, position + (finishers.length - 1) / 2);
-            })
+            });
             return position + finishers.length;
         }, 1);
     }
@@ -137,18 +157,25 @@ export default class MutableRaceFinish extends Race {
     }
 
     getPersonalCorrectedPointsByResult(personalHandicapAtRace) {
-        const [, personalAdjustedPoints] = MutableRaceFinish.getPointsForResults(this.getCorrectedResults(), personalHandicapAtRace);
+        const [, personalAdjustedPoints] =
+            MutableRaceFinish.getPointsForResults(
+                this.getCorrectedResults(),
+                personalHandicapAtRace,
+            );
         return this.sortResultsByPointsDesc(personalAdjustedPoints);
     }
 
     getClassCorrectedPointsByResult() {
-        const [classAdjustedPoints] = MutableRaceFinish.getPointsForResults(this.getCorrectedResults());
+        const [classAdjustedPoints] = MutableRaceFinish.getPointsForResults(
+            this.getCorrectedResults(),
+        );
         return this.sortResultsByPointsDesc(classAdjustedPoints);
     }
 
     getFinishersByFinishTime() {
-        return this.getCorrectedResults()
-            .sort((a, b) => b.sortByFinishTimeDesc(a));
+        return this.getCorrectedResults().sort((a, b) =>
+            b.sortByFinishTimeDesc(a),
+        );
     }
 
     getOODs() {
@@ -161,21 +188,21 @@ export default class MutableRaceFinish extends Race {
 
         const pointsForDNF = results.length + 1;
 
-        const allFinishers = results
-            .filter((result) => result.isValidFinish())
+        const allFinishers = results.filter((result) => result.isValidFinish());
 
         if (Race.isPursuitRace(results)) {
             results
                 .filter((result) => !result.isValidFinish())
-                .forEach((result) => classAdjustedPoints.set(result, pointsForDNF));
+                .forEach((result) =>
+                    classAdjustedPoints.set(result, pointsForDNF),
+                );
 
             MutableRaceFinish.assignPointsToResults(
                 allFinishers,
                 (result) => result.getPursuitFinishPosition(),
                 (result, points) => classAdjustedPoints.set(result, points),
             );
-        }
-        else {
+        } else {
             results
                 .filter((result) => !result.isValidFinish())
                 .forEach((result) => {
@@ -191,7 +218,10 @@ export default class MutableRaceFinish extends Race {
 
             MutableRaceFinish.assignPointsToResults(
                 allFinishers,
-                (result) => result.getPersonalCorrectedFinishTimeUsingPHDate(personalHandicapAtRace),
+                (result) =>
+                    result.getPersonalCorrectedFinishTimeUsingPHDate(
+                        personalHandicapAtRace,
+                    ),
                 (result, points) => personalAdjustedPoints.set(result, points),
             );
         }
@@ -200,16 +230,34 @@ export default class MutableRaceFinish extends Race {
     }
 
     static fromResults(results, getHelmResults, oods) {
-        assert(results.length, "Minimum number of results to create a race finish is 1");
+        assert(
+            results.length,
+            "Minimum number of results to create a race finish is 1",
+        );
         assertType(results.at(0), Result);
         const race = results.at(0).getRace();
-        return new MutableRaceFinish(race.getDate(), race.getNumber(), results, getHelmResults, oods);
+        return new MutableRaceFinish(
+            race.getDate(),
+            race.getNumber(),
+            results,
+            getHelmResults,
+            oods,
+        );
     }
 
     static fromOODs(oods) {
-        assert(oods.length, "Minimum number of oods to create a race finish is 1");
+        assert(
+            oods.length,
+            "Minimum number of oods to create a race finish is 1",
+        );
         assertType(oods.at(0), HelmResult);
         const race = oods.at(0).getRace();
-        return new MutableRaceFinish(race.getDate(), race.getNumber(), undefined, undefined, oods);
+        return new MutableRaceFinish(
+            race.getDate(),
+            race.getNumber(),
+            undefined,
+            undefined,
+            oods,
+        );
     }
 }

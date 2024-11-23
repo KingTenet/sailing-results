@@ -9,10 +9,13 @@ export class HeadToHead extends StoreObject {
     }
 
     toStore() {
-        const values = this.headers.reduce((acc, header, key) => ({
-            ...acc,
-            [header]: this.values[key]
-        }), {});
+        const values = this.headers.reduce(
+            (acc, header, key) => ({
+                ...acc,
+                [header]: this.values[key],
+            }),
+            {},
+        );
 
         return {
             ...values,
@@ -35,16 +38,19 @@ export class MultiValueWrapper {
         return {
             ...this.headers,
             ...StoreObject.sheetHeaders(),
-        }
+        };
     }
 
     fromAllRows(allRows) {
-        return allRows.map((row) => new HeadToHead(this.headers, row, StoreObject.fromStore({})));
+        return allRows.map(
+            (row) =>
+                new HeadToHead(this.headers, row, StoreObject.fromStore({})),
+        );
     }
 
     async store(createSheetIfMissing = true) {
         const store = await StoreWrapper.create(
-            false, 
+            false,
             this.storeName,
             this.sheetDoc,
             this.stores,
@@ -54,10 +60,7 @@ export class MultiValueWrapper {
             createSheetIfMissing,
             undefined,
             (obj) => this.getId(obj.values),
-            [
-                ...this.headers,
-                ...StoreObject.sheetHeaders(),
-            ],
+            [...this.headers, ...StoreObject.sheetHeaders()],
         );
         for (let row of this.fromAllRows(this.allRows)) {
             store.add(row);

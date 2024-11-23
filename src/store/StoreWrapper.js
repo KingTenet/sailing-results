@@ -4,8 +4,7 @@ import StoreObject from "./types/StoreObject.js";
 function debugCreationErrors(func, storeObject) {
     try {
         return func();
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         console.log(`Failed to create object from store`);
         console.log(storeObject);
@@ -39,7 +38,7 @@ export default class StoreWrapper {
         this.map((...args) => {
             let newObj = func(...args);
             return this.update(newObj);
-        })
+        });
     }
 
     count() {
@@ -74,7 +73,19 @@ export default class StoreWrapper {
         return await this.store.syncRemoteStateToLocalState(force);
     }
 
-    static async create(forceRefresh, storeName, raceResultsDocument, services, Type, fromStore = Type.fromStore, batch = (all) => all.map(fromStore), createSheetIfMissing = false, toStore = (obj) => obj.toStore(), getId = Type.getId, sheetHeaders = Type.sheetHeaders()) {
+    static async create(
+        forceRefresh,
+        storeName,
+        raceResultsDocument,
+        services,
+        Type,
+        fromStore = Type.fromStore,
+        batch = (all) => all.map(fromStore),
+        createSheetIfMissing = false,
+        toStore = (obj) => obj.toStore(),
+        getId = Type.getId,
+        sheetHeaders = Type.sheetHeaders(),
+    ) {
         let store = new Store(
             storeName,
             raceResultsDocument,

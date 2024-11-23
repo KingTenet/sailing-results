@@ -1,4 +1,9 @@
-import { assertType, getURLDate, parseURLDate, generateId } from "../../common.js";
+import {
+    assertType,
+    getURLDate,
+    parseURLDate,
+    generateId,
+} from "../../common.js";
 import StoreObject from "./StoreObject.js";
 import Helm from "./Helm.js";
 import Race from "./Race.js";
@@ -12,7 +17,10 @@ export default class HelmResult extends StoreObject {
 
     static getId(result) {
         assertType(result, HelmResult);
-        return generateId("HelmResult", [Helm.getId(result.helm), Race.getId(result.race)]);
+        return generateId("HelmResult", [
+            Helm.getId(result.helm),
+            Race.getId(result.race),
+        ]);
     }
 
     static getRaceId(result) {
@@ -28,26 +36,25 @@ export default class HelmResult extends StoreObject {
     static sortByRaceAsc(firstResult, secondResult) {
         assertType(firstResult, HelmResult);
         assertType(secondResult, HelmResult);
-        return firstResult.getRace().sortByRaceAsc(secondResult.getRace())
+        return firstResult.getRace().sortByRaceAsc(secondResult.getRace());
     }
 
     static sheetHeaders() {
-        return [
-            "Date",
-            "Race Number",
-            "Helm",
-            ...StoreObject.sheetHeaders(),
-        ];
+        return ["Date", "Race Number", "Helm", ...StoreObject.sheetHeaders()];
     }
 
     static fromStore(storeResult, getHelm) {
         let {
-            "Date": dateString,
+            Date: dateString,
             "Race Number": raceNumber,
-            "Helm": helmId,
+            Helm: helmId,
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
-        return new HelmResult(race, getHelm(helmId), StoreObject.fromStore(storeResult));
+        return new HelmResult(
+            race,
+            getHelm(helmId),
+            StoreObject.fromStore(storeResult),
+        );
     }
 
     static fromHelmRace(helm, race) {
@@ -57,7 +64,11 @@ export default class HelmResult extends StoreObject {
     static fromPreviousResult(result, race) {
         assertType(result, HelmResult);
         assertType(race, Race);
-        return new HelmResult(race, result.getHelm(), StoreObject.fromStore({}));
+        return new HelmResult(
+            race,
+            result.getHelm(),
+            StoreObject.fromStore({}),
+        );
     }
 
     getRace() {
@@ -74,9 +85,9 @@ export default class HelmResult extends StoreObject {
 
     toStore() {
         return {
-            "Date": getURLDate(this.race.getDate()),
+            Date: getURLDate(this.race.getDate()),
             "Race Number": this.race.getNumber(),
-            "Helm": Helm.getId(this.helm),
+            Helm: Helm.getId(this.helm),
             ...super.toStore(this),
         };
     }

@@ -3,9 +3,17 @@ import { Text, Spinner, Flex } from "@chakra-ui/react";
 
 function SpinnerPage() {
     return (
-        <Flex width="100vw" height="100vh" align={"center"} justify={"center"} direction="column">
-            <Spinner color='blue.500' size="xl" />
-            <Text marginLeft={"10px"} marginTop={"20px"}>Loading...</Text>
+        <Flex
+            width="100vw"
+            height="100vh"
+            align={"center"}
+            justify={"center"}
+            direction="column"
+        >
+            <Spinner color="blue.500" size="xl" />
+            <Text marginLeft={"10px"} marginTop={"20px"}>
+                Loading...
+            </Text>
         </Flex>
     );
 }
@@ -15,7 +23,7 @@ export default function SpinnerWithTimeout({ timeout = 0, children }) {
     const [count, updateCount] = useState(0);
     const timeoutRef = useRef();
 
-    const timeoutElapsed = Date.now() >= (started + timeout);
+    const timeoutElapsed = Date.now() >= started + timeout;
 
     useEffect(() => {
         if (timeoutElapsed) {
@@ -26,18 +34,18 @@ export default function SpinnerWithTimeout({ timeout = 0, children }) {
             clearInterval(timeoutRef.current);
         }
 
-        timeoutRef.current = setTimeout(() => updateCount(count + 1), started + timeout - Date.now());
+        timeoutRef.current = setTimeout(
+            () => updateCount(count + 1),
+            started + timeout - Date.now(),
+        );
         return () => clearInterval(timeoutRef.current);
-
     }, [count]);
 
     if (!timeout || !timeoutElapsed) {
         return <SpinnerPage />;
     }
 
-    return <>
-        {children}
-    </>
+    return <>{children}</>;
 }
 
 export function ForceSpinnerOld({ timeout = 100, children: getChildren }) {
@@ -45,7 +53,7 @@ export function ForceSpinnerOld({ timeout = 100, children: getChildren }) {
     const [count, updateCount] = useState(0);
     const timeoutRef = useRef();
 
-    const timeoutElapsed = Date.now() >= (started + timeout);
+    const timeoutElapsed = Date.now() >= started + timeout;
 
     useEffect(() => {
         if (timeoutElapsed) {
@@ -56,15 +64,15 @@ export function ForceSpinnerOld({ timeout = 100, children: getChildren }) {
             clearInterval(timeoutRef.current);
         }
 
-        timeoutRef.current = setTimeout(() => updateCount(count + 1), started + timeout - Date.now());
+        timeoutRef.current = setTimeout(
+            () => updateCount(count + 1),
+            started + timeout - Date.now(),
+        );
         return () => clearInterval(timeoutRef.current);
-
     }, [count]);
 
     if (timeout && timeoutElapsed) {
-        return <>
-            {getChildren()}
-        </>
+        return <>{getChildren()}</>;
     }
 
     return <SpinnerPage />;
@@ -80,9 +88,7 @@ export function ForceSpinner({ children: getChildren, threshold = 2 }) {
     }, [count]);
 
     if (count >= threshold) {
-        return <>
-            {getChildren()}
-        </>
+        return <>{getChildren()}</>;
     }
 
     return <SpinnerPage />;

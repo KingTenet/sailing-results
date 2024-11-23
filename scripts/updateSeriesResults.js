@@ -12,20 +12,29 @@ function getLatestProcessedRace(correctedResults) {
     return undefined;
 }
 
-async function updateCorrectedResults(raceFinishesByRaceAsc, correctedResultsStore) {
-    const latestProcessedRace = getLatestProcessedRace(correctedResultsStore.all());
+async function updateCorrectedResults(
+    raceFinishesByRaceAsc,
+    correctedResultsStore,
+) {
+    const latestProcessedRace = getLatestProcessedRace(
+        correctedResultsStore.all(),
+    );
     if (!latestProcessedRace) {
         console.log(`No data has yet been imported`);
-    }
-    else {
-        console.log(`Latest imported race is: ${latestProcessedRace.getDate().toISOString()}, ${latestProcessedRace.getNumber()}`)
+    } else {
+        console.log(
+            `Latest imported race is: ${latestProcessedRace.getDate().toISOString()}, ${latestProcessedRace.getNumber()}`,
+        );
     }
 
-    const finishesByRaceAscToProcess = raceFinishesByRaceAsc
-        .filter((raceFinish) => !latestProcessedRace || latestProcessedRace.isBefore(raceFinish));
+    const finishesByRaceAscToProcess = raceFinishesByRaceAsc.filter(
+        (raceFinish) =>
+            !latestProcessedRace || latestProcessedRace.isBefore(raceFinish),
+    );
 
     for (let raceFinish of finishesByRaceAscToProcess) {
-        raceFinish.getCorrectedResults()
+        raceFinish
+            .getCorrectedResults()
             .forEach((result) => correctedResultsStore.add(result));
     }
 
@@ -38,7 +47,10 @@ async function updateAllSeriesResults(stores) {
         .map(([, raceFinish]) => raceFinish)
         .sort((a, b) => a.sortByRaceAsc(b));
 
-    await updateCorrectedResults(raceFinishesByRaceAsc, stores.correctedResultsStore);
+    await updateCorrectedResults(
+        raceFinishesByRaceAsc,
+        stores.correctedResultsStore,
+    );
 
     const allSeriesRaces = stores.seriesRaces.all();
     const allSeries = groupBy(allSeriesRaces, SeriesRace.getSeriesId);
@@ -47,18 +59,25 @@ async function updateAllSeriesResults(stores) {
         console.log(`Updating results for series: ${seriesId}`);
         const seriesRaceFinishes = [];
         for (let seriesRace of seriesRaces) {
-            const raceFinish = raceFinishes.get(SeriesRace.getRaceId(seriesRace));
+            const raceFinish = raceFinishes.get(
+                SeriesRace.getRaceId(seriesRace),
+            );
             if (!raceFinish) {
-                console.log("   No results found for race " + SeriesRace.getRaceId(seriesRace));
+                console.log(
+                    "   No results found for race " +
+                        SeriesRace.getRaceId(seriesRace),
+                );
                 continue;
             }
             seriesRaceFinishes.push(raceFinish);
         }
         if (!seriesRaceFinishes.length) {
             console.log(`No races found for series ${seriesId}`);
-        }
-        else {
-            await updateCorrectedResults(seriesRaceFinishes, stores.seriesResults.get(seriesId));
+        } else {
+            await updateCorrectedResults(
+                seriesRaceFinishes,
+                stores.seriesResults.get(seriesId),
+            );
         }
     }
 }
@@ -66,7 +85,11 @@ async function updateAllSeriesResults(stores) {
 async function updateAll(sourceResultsURL, seriesResultsURL) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
-    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId);
+    const stores = await Stores.create(
+        auth,
+        sourceResultsSheetId,
+        seriesResultsSheetId,
+    );
 
     await updateAllSeriesResults(stores);
 
@@ -74,11 +97,15 @@ async function updateAll(sourceResultsURL, seriesResultsURL) {
     [...stores.seriesResults].forEach(([, store]) => store.sync());
 }
 
-
 async function run(sourceResultsURL, seriesResultsURL) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
-    const stores = await Stores.create(auth, sourceResultsSheetId, seriesResultsSheetId, true);
+    const stores = await Stores.create(
+        auth,
+        sourceResultsSheetId,
+        seriesResultsSheetId,
+        true,
+    );
     stores.correctedResultsStore.sync();
 }
 

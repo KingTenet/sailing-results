@@ -10,7 +10,7 @@ import {
     Spacer,
     Switch,
     Flex,
-} from '@chakra-ui/react'
+} from "@chakra-ui/react";
 
 import { useState, useEffect } from "react";
 
@@ -18,19 +18,24 @@ const MAX_MINUTES = 99;
 const MAX_SECONDS = 59;
 
 function NumberSelector({ setFinishTimeSeconds }) {
-    const [minutes, setMinutes] = useState()
-    const [seconds, setSeconds] = useState()
-    const [completed, setCompleted] = useState()
+    const [minutes, setMinutes] = useState();
+    const [seconds, setSeconds] = useState();
+    const [completed, setCompleted] = useState();
 
     let minutesInvalid = minutes < 0 || minutes > MAX_MINUTES;
     let secondsInvalid = seconds < 0 || seconds > MAX_SECONDS;
 
     useEffect(() => {
-        if (minutes && !minutesInvalid && seconds !== undefined && !secondsInvalid) {
+        if (
+            minutes &&
+            !minutesInvalid &&
+            seconds !== undefined &&
+            !secondsInvalid
+        ) {
             setCompleted(true);
             setFinishTimeSeconds(minutes * 60 + seconds);
         }
-    }, [seconds, minutes])
+    }, [seconds, minutes]);
 
     const onComplete = (value) => {
         setMinutes(parseInt(value.slice(0, 2)));
@@ -38,19 +43,27 @@ function NumberSelector({ setFinishTimeSeconds }) {
     };
 
     return (
-        <Box borderRadius={"12px"} borderWidth="1px" style={{ padding: "8px 15px 8px 15px" }} className={"input-container input-container-5"}>
-            {!completed &&
+        <Box
+            borderRadius={"12px"}
+            borderWidth="1px"
+            style={{ padding: "8px 15px 8px 15px" }}
+            className={"input-container input-container-5"}
+        >
+            {!completed && (
                 <Box minWidth="110px" paddingTop="5px">
                     <Text fontSize={"lg"}>{"Finish Time"}</Text>
                 </Box>
-            }
-            <Stack direction='row' marginTop={!completed ? "10px" : "0px"}>
-                {completed &&
-                    <Box minWidth={!completed ? "110px" : "94px"} paddingTop="5px">
+            )}
+            <Stack direction="row" marginTop={!completed ? "10px" : "0px"}>
+                {completed && (
+                    <Box
+                        minWidth={!completed ? "110px" : "94px"}
+                        paddingTop="5px"
+                    >
                         <Text fontSize={"lg"}>{"Finish Time"}</Text>
                     </Box>
-                }
-                <PinInput onComplete={onComplete} isInvalid={secondsInvalid} >
+                )}
+                <PinInput onComplete={onComplete} isInvalid={secondsInvalid}>
                     <Text paddingTop="7px">{!completed ? "Minutes" : ""}</Text>
                     <PinInputField bgColor="white" autoFocus />
                     <PinInputField bgColor="white" />
@@ -59,15 +72,17 @@ function NumberSelector({ setFinishTimeSeconds }) {
                     <PinInputField bgColor="white" />
                 </PinInput>
             </Stack>
-            {secondsInvalid &&
+            {secondsInvalid && (
                 <>
                     <Spacer />
-                    <Alert status='error'>
+                    <Alert status="error">
                         <AlertIcon />
-                        <AlertTitle mr={2}>Seconds must not exceed 59</AlertTitle>
+                        <AlertTitle mr={2}>
+                            Seconds must not exceed 59
+                        </AlertTitle>
                     </Alert>
                 </>
-            }
+            )}
         </Box>
     );
 }

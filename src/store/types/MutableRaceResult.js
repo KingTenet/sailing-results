@@ -18,37 +18,55 @@ export default class MutableRaceResult extends HelmResult {
     }
 
     static sheetHeaders() {
-        return [
-            "Sail Number",
-            "Class",
-            ...HelmResult.sheetHeaders(),
-        ];
+        return ["Sail Number", "Class", ...HelmResult.sheetHeaders()];
     }
 
     static fromStore(storeResult, getHelm, getBoatClassForRace) {
         let {
-            "Date": dateString,
+            Date: dateString,
             "Race Number": raceNumber,
-            "Helm": helmId,
+            Helm: helmId,
             "Sail Number": boatSailNumber,
-            "Class": boatClassName,
+            Class: boatClassName,
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
-        return new MutableRaceResult(race, getHelm(helmId), getBoatClassForRace(boatClassName, race), parseInt(boatSailNumber), StoreObject.fromStore(storeResult));
+        return new MutableRaceResult(
+            race,
+            getHelm(helmId),
+            getBoatClassForRace(boatClassName, race),
+            parseInt(boatSailNumber),
+            StoreObject.fromStore(storeResult),
+        );
     }
 
     static fromUser(race, helm, boatClass, boatSailNumber) {
-        return new MutableRaceResult(race, helm, boatClass, boatSailNumber, StoreObject.fromStore({}));
+        return new MutableRaceResult(
+            race,
+            helm,
+            boatClass,
+            boatSailNumber,
+            StoreObject.fromStore({}),
+        );
     }
 
     static fromResult(result) {
         assertType(result, Result);
-        return MutableRaceResult.fromUser(result.getRace(), result.getHelm(), result.getBoatClass(), result.boatSailNumber);
+        return MutableRaceResult.fromUser(
+            result.getRace(),
+            result.getHelm(),
+            result.getBoatClass(),
+            result.boatSailNumber,
+        );
     }
 
     static fromPreviousResult(previousResult, race) {
         assertType(previousResult, Result);
-        return MutableRaceResult.fromUser(race, previousResult.getHelm(), previousResult.getBoatClass(), previousResult.boatSailNumber);
+        return MutableRaceResult.fromUser(
+            race,
+            previousResult.getHelm(),
+            previousResult.getBoatClass(),
+            previousResult.boatSailNumber,
+        );
     }
 
     getSailNumber() {
@@ -62,7 +80,7 @@ export default class MutableRaceResult extends HelmResult {
     toStore() {
         return {
             "Sail Number": this.boatSailNumber,
-            "Class": this.boatClass.getClassName(),
+            Class: this.boatClass.getClassName(),
             ...super.toStore(this),
         };
     }

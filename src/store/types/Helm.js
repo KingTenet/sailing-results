@@ -10,10 +10,13 @@ const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent
 
 class Helm extends StoreObject {
     constructor(name, yearOfBirth, gender, noviceInFirstRace, metaData) {
-        super(metaData)
+        super(metaData);
         this.name = assertType(name, "string");
         this.yearOfBirth = assertType(yearOfBirth, "number");
-        assert(Gender.VALID_GENDERS.includes(gender), `Support for gender:${gender} has not been added to the system yet.`);
+        assert(
+            Gender.VALID_GENDERS.includes(gender),
+            `Support for gender:${gender} has not been added to the system yet.`,
+        );
         this.gender = assertType(gender, "string");
         this.noviceInFirstRace = assertType(noviceInFirstRace, "boolean");
     }
@@ -29,23 +32,35 @@ class Helm extends StoreObject {
             "Year Of Birth",
             "Gender",
             "Was Novice In First Race",
-            ...StoreObject.sheetHeaders()
+            ...StoreObject.sheetHeaders(),
         ];
     }
 
     static fromStore(storeHelm) {
         let {
-            "Name": name,
+            Name: name,
             "Year Of Birth": yearOfBirth,
-            "Gender": gender,
+            Gender: gender,
             "Was Novice In First Race": noviceInFirstRace,
         } = storeHelm;
-        return new Helm(name, parseInt(yearOfBirth || 1970), gender, parseBoolean(noviceInFirstRace), StoreObject.fromStore(storeHelm));
+        return new Helm(
+            name,
+            parseInt(yearOfBirth || 1970),
+            gender,
+            parseBoolean(noviceInFirstRace),
+            StoreObject.fromStore(storeHelm),
+        );
     }
 
     static fromClubMember(clubMember, gender, noviceInFirstRace) {
         assertType(clubMember, ClubMember);
-        return new Helm(clubMember.getName(), clubMember.getYearOfBirth(), gender, noviceInFirstRace, StoreObject.fromStore({}));
+        return new Helm(
+            clubMember.getName(),
+            clubMember.getYearOfBirth(),
+            gender,
+            noviceInFirstRace,
+            StoreObject.fromStore({}),
+        );
     }
 
     isGuestHelm() {
@@ -68,7 +83,9 @@ class Helm extends StoreObject {
             return false;
         }
 
-        const previousResults = helmResultsAsc.filter((result) => result.getRace().isBefore(race));
+        const previousResults = helmResultsAsc.filter((result) =>
+            result.getRace().isBefore(race),
+        );
         return previousResults.length < MAX_NOVICE_RACES;
 
         // const ONE_YEAR_IN_MILLISECONDS = 365.25 * 24 * 60 * 60 * 1000;
@@ -96,9 +113,9 @@ class Helm extends StoreObject {
 
     toStore() {
         return {
-            "Name": this.name,
+            Name: this.name,
             "Year Of Birth": this.yearOfBirth,
-            "Gender": this.gender,
+            Gender: this.gender,
             "Was Novice In First Race": this.noviceInFirstRace,
             ...super.toStore(this),
         };
@@ -111,7 +128,7 @@ class Helm extends StoreObject {
 
 class Gender {
     static MALE = "male";
-    static FEMALE = "female"
+    static FEMALE = "female";
     static VALID_GENDERS = [Gender.MALE, Gender.FEMALE];
 }
 

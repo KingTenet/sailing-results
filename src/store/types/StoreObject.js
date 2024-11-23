@@ -46,13 +46,13 @@ export default class StoreObject {
     }
 
     static sheetHeaders() {
-        return [
-            "Last Updated",
-            "Created Date",
-        ];
+        return ["Last Updated", "Created Date"];
     }
 
-    static fromStore({ "Last Updated": lastUpdated, "Created Date": dateCreated }) {
+    static fromStore({
+        "Last Updated": lastUpdated,
+        "Created Date": dateCreated,
+    }) {
         return {
             lastUpdated: parseISOString(lastUpdated, new Date(0)),
             dateCreated: parseISOString(dateCreated, new Date(0)),
@@ -63,22 +63,27 @@ export default class StoreObject {
         return headers;
         const sheetHeaders = Type.sheetHeaders();
         const headerKeys = Object.keys(headers);
-        const headerNotAllowed = headerKeys.find((header) => !sheetHeaders.includes(header));
+        const headerNotAllowed = headerKeys.find(
+            (header) => !sheetHeaders.includes(header),
+        );
         if (headerNotAllowed) {
-            throw new Error(`Mismatch of store headers for type:${Type.name}, unexpected header:${headerNotAllowed}`);
+            throw new Error(
+                `Mismatch of store headers for type:${Type.name}, unexpected header:${headerNotAllowed}`,
+            );
         }
-        const headerMissing = sheetHeaders.find((header) => !headerKeys.includes(header));
+        const headerMissing = sheetHeaders.find(
+            (header) => !headerKeys.includes(header),
+        );
         if (headerMissing) {
-            throw new Error(`Mismatch of store headers for type:${Type.name}, missing header:${headerMissing}`);
+            throw new Error(
+                `Mismatch of store headers for type:${Type.name}, missing header:${headerMissing}`,
+            );
         }
         return headers;
     }
 
     toJSON() {
-        let {
-            store,
-            ...rest
-        } = this;
+        let { store, ...rest } = this;
         return rest;
     }
 

@@ -14,9 +14,17 @@ export function useSortedResults(results, race) {
 
     return [
         raceFinish,
-        raceFinish && raceFinish.hasResults() && raceFinish.getCorrectedResults().sort((a, b) => b.sortByFinishTimeDesc(a)),
-        raceFinish && raceFinish.hasResults() && raceFinish.getClassCorrectedPointsByResult(),
-        raceFinish && raceFinish.hasResults() && raceFinish.getPersonalCorrectedPointsByResult(),
+        raceFinish &&
+            raceFinish.hasResults() &&
+            raceFinish
+                .getCorrectedResults()
+                .sort((a, b) => b.sortByFinishTimeDesc(a)),
+        raceFinish &&
+            raceFinish.hasResults() &&
+            raceFinish.getClassCorrectedPointsByResult(),
+        raceFinish &&
+            raceFinish.hasResults() &&
+            raceFinish.getPersonalCorrectedPointsByResult(),
         raceFinish && raceFinish.hasResults() && raceFinish.getMaxLaps(),
         raceFinish && raceFinish.hasResults() && raceFinish.getSCT(),
         raceFinish && raceFinish.hasResults() && raceFinish.isPursuitRace(),
@@ -25,12 +33,17 @@ export function useSortedResults(results, race) {
 
 export function useDimensionsToggle(dimensions) {
     const [dimensionCounter, updateDimensionCounter] = useState(0);
-    return [dimensions[dimensionCounter % dimensions.length], () => updateDimensionCounter(dimensionCounter + 1)];
+    return [
+        dimensions[dimensionCounter % dimensions.length],
+        () => updateDimensionCounter(dimensionCounter + 1),
+    ];
 }
 
 export function useStoreStatus() {
     const services = useServices();
-    const [storesStatus, updateStoresStatus] = useState(() => services.getStoresStatus());
+    const [storesStatus, updateStoresStatus] = useState(() =>
+        services.getStoresStatus(),
+    );
     const TIMEOUT = 5000;
 
     const handleUpdateStoreStatus = () => {
@@ -38,7 +51,7 @@ export function useStoreStatus() {
         if (JSON.stringify(storesStatus) !== JSON.stringify(newStoreStatus)) {
             updateStoresStatus(newStoreStatus);
         }
-    }
+    };
 
     useEffect(() => {
         const timerId = setInterval(() => handleUpdateStoreStatus(), TIMEOUT);
@@ -60,18 +73,16 @@ export function useAdminToggle() {
 
     const handleAdminRequest = () => {
         const nextAdminCount = adminCount + 1;
-        if (!firstClickTime || (Date.now() - firstClickTime > TIMEOUT)) {
+        if (!firstClickTime || Date.now() - firstClickTime > TIMEOUT) {
             updateFirstClickTime(Date.now());
             updateAdminCount(1);
-        }
-        else {
+        } else {
             if (nextAdminCount >= ADMIN_COUNT_THRESHOLD) {
                 updateAppState(({ ...state }) => ({
                     ...state,
                     adminMode: true,
                 }));
-            }
-            else if (appState.adminMode) {
+            } else if (appState.adminMode) {
                 updateAppState(({ ...state }) => ({
                     ...state,
                     adminMode: false,
@@ -79,12 +90,17 @@ export function useAdminToggle() {
             }
             updateAdminCount(nextAdminCount);
         }
-    }
+    };
 
     return [appState.adminMode, () => handleAdminRequest()];
 }
 
-export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration = MAX_SHORT_PRESS_DURATION_MS, longPressDuration = MIN_LONG_PRESS_DURATION_MS) {
+export function useLongPressHandler(
+    onClick,
+    onLongPress,
+    maxShortPressDuration = MAX_SHORT_PRESS_DURATION_MS,
+    longPressDuration = MIN_LONG_PRESS_DURATION_MS,
+) {
     const [shortClickExceeded, updateShortClickExceeded] = useState(false);
     const shortClickTimer = useRef();
     const shortClickTimerStarted = useRef();
@@ -104,7 +120,7 @@ export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration 
 
     const finish = () => {
         clearShortClick();
-    }
+    };
 
     const bind = useLongPress(
         () => {
@@ -112,10 +128,19 @@ export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration 
             onLongPress();
         },
         {
-            onStart: () => shortClickTimeout(() => updateShortClickExceeded(true), Math.round(maxShortPressDuration)),
+            onStart: () =>
+                shortClickTimeout(
+                    () => updateShortClickExceeded(true),
+                    Math.round(maxShortPressDuration),
+                ),
             onFinish: () => finish(),
             onCancel: (event) => {
-                if (["mouseup", "touchend"].includes(event.type) && shortClickTimerStarted?.current && (Date.now() - shortClickTimerStarted.current < maxShortPressDuration)) {
+                if (
+                    ["mouseup", "touchend"].includes(event.type) &&
+                    shortClickTimerStarted?.current &&
+                    Date.now() - shortClickTimerStarted.current <
+                        maxShortPressDuration
+                ) {
                     onClick(event);
                     event.preventDefault();
                 }
@@ -124,8 +149,9 @@ export function useLongPressHandler(onClick, onLongPress, maxShortPressDuration 
             threshold: longPressDuration,
             captureEvent: true,
             cancelOnMovement: true,
-            detect: LongPressEventType.Pointer
-        });
+            detect: LongPressEventType.Pointer,
+        },
+    );
 
     return {
         ...bind(),

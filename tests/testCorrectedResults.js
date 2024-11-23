@@ -31,7 +31,9 @@ const DEFAULT_FINISH_CODE = new FinishCode("");
 
 function assertDeepEquals(expected, actual, str) {
     if (JSON.stringify(expected) !== JSON.stringify(actual)) {
-        console.log(`Expected:\n${JSON.stringify(expected, null, 4)}\nBut got:\n${JSON.stringify(actual, null, 4)}`)
+        console.log(
+            `Expected:\n${JSON.stringify(expected, null, 4)}\nBut got:\n${JSON.stringify(actual, null, 4)}`,
+        );
         throw new Error(str);
     }
 }
@@ -62,8 +64,9 @@ function createRace1() {
         ["Wallace", 1200, 2737, 3],
         ["Betty Boop", 1175, 2822, 3],
         ["Peter Rabbit", 1133, 2817, 3],
-    ]
-        .map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 }
 
 function createRace2() {
@@ -87,9 +90,9 @@ Olive Oyl           Argo (No Spin)	2/S/0	1175	11421	JLN		DNF	                8
         ["Scratchy", 1133, 3026, 4],
         ["Wallace", 1200, 2538, 3],
         // ["Olive Oyl", 1175, 3544, 3],
-    ]
-        .map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
-
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 }
 
 function createRace3() {
@@ -105,9 +108,9 @@ Scratchy	    Solo	        1/U/0	1133	4359		25:51:00	2	684.5	3	3	9.8	    111	    
         ["Bananaman", 1029, 1911, 3],
         ["Mickey Mouse", 1096, 2065, 3],
         ["Scratchy", 1133, 1551, 2],
-    ]
-        .map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
-
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 }
 
 function createRace4() {
@@ -140,8 +143,9 @@ function createRace4() {
         ["Yogi Bear", 1096, 3946, 5],
         // ["Minnie Mouse", 1170, ,],
         // ["Charlie Brown", 1085, ,]
-    ]
-        .map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 }
 
 function createResult({
@@ -161,11 +165,37 @@ function createResult({
     finishTime = DEFAULT_FINISH_TIME,
     finishCode = DEFAULT_FINISH_CODE,
 }) {
-    const metadata = new StoreObject({ lastUpdated: new Date(0), dateCreated: new Date(0) });
+    const metadata = new StoreObject({
+        lastUpdated: new Date(0),
+        dateCreated: new Date(0),
+    });
     const race = new Race(raceDate, raceNumber);
-    const helm = new Helm(helmName, helmYearOfBirth, helmGender, helmNoviceInFirstRace, metadata);
-    const boatClass = new BoatClass(boatClassName, boatConfiguration, boatPY, boatPYValidFrom, false, metadata);
-    return new Result(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, metadata);
+    const helm = new Helm(
+        helmName,
+        helmYearOfBirth,
+        helmGender,
+        helmNoviceInFirstRace,
+        metadata,
+    );
+    const boatClass = new BoatClass(
+        boatClassName,
+        boatConfiguration,
+        boatPY,
+        boatPYValidFrom,
+        false,
+        metadata,
+    );
+    return new Result(
+        race,
+        helm,
+        boatClass,
+        boatSailNumber,
+        laps,
+        pursuitFinishPosition,
+        finishTime,
+        finishCode,
+        metadata,
+    );
 }
 
 function transformResult(result) {
@@ -174,7 +204,7 @@ function transformResult(result) {
         ...result,
         helmName: result.getHelm().name,
         totalPersonalHandicapFromRace: result.getPersonalHandicapFromRace(),
-    }
+    };
 }
 
 function testCorrectedTimeSameLaps() {
@@ -182,7 +212,9 @@ function testCorrectedTimeSameLaps() {
         ["helm 1", 1000, 2000, 2],
         ["helm 2", 1100, 2200, 2],
         ["helm 3", 1200, 3000, 2],
-    ].map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 
     const correctedResults = getCorrectedResultsForRace(results, []);
     // console.log(correctedResults);
@@ -193,8 +225,13 @@ function testCorrectedTimeSameLaps() {
             ["helm 2", 2000],
             ["helm 3", 2500],
         ],
-        correctedResults.map(transformResult).map(({ helmName, classCorrectedTime }) => [helmName, classCorrectedTime]),
-        "Failed test testCorrectedTimeSameLaps"
+        correctedResults
+            .map(transformResult)
+            .map(({ helmName, classCorrectedTime }) => [
+                helmName,
+                classCorrectedTime,
+            ]),
+        "Failed test testCorrectedTimeSameLaps",
     );
 }
 
@@ -203,7 +240,9 @@ function testCorrectedTimeDifferentLaps() {
         ["helm 1", 1000, 2000, 2],
         ["helm 2", 1100, 2200, 2],
         ["helm 3", 1000, 3000, 3],
-    ].map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 
     const correctedResults = getCorrectedResultsForRace(results, []);
 
@@ -213,8 +252,14 @@ function testCorrectedTimeDifferentLaps() {
             ["helm 2", 3000, 3],
             ["helm 3", 3000, 3],
         ],
-        correctedResults.map(transformResult).map(({ helmName, classCorrectedTime, raceMaxLaps }) => [helmName, classCorrectedTime, raceMaxLaps]),
-        "Failed test testCorrectedTimeDifferentLaps"
+        correctedResults
+            .map(transformResult)
+            .map(({ helmName, classCorrectedTime, raceMaxLaps }) => [
+                helmName,
+                classCorrectedTime,
+                raceMaxLaps,
+            ]),
+        "Failed test testCorrectedTimeDifferentLaps",
     );
 }
 
@@ -241,8 +286,14 @@ Olive Oyl       Argo (No Spin)	2/S/0	1175	11421	JLN		DNF	                8
             ["Scratchy", 2671, 4],
             ["Wallace", 2820, 4],
         ],
-        correctedResults.map(transformResult).map(({ helmName, classCorrectedTime, raceMaxLaps }) => [helmName, classCorrectedTime, raceMaxLaps]),
-        "Failed test testCorrectedTimeForRace"
+        correctedResults
+            .map(transformResult)
+            .map(({ helmName, classCorrectedTime, raceMaxLaps }) => [
+                helmName,
+                classCorrectedTime,
+                raceMaxLaps,
+            ]),
+        "Failed test testCorrectedTimeForRace",
     );
 }
 
@@ -251,7 +302,9 @@ function testCorrectedPersonalHandicap() {
         ["helm 1", 1000, 2000, 2],
         ["helm 2", 1100, 2200, 2],
         ["helm 3", 1000, 3000, 3],
-    ].map(([helmName, boatPY, finishTime, laps]) => createResult({ helmName, finishTime, boatPY, laps }));
+    ].map(([helmName, boatPY, finishTime, laps]) =>
+        createResult({ helmName, finishTime, boatPY, laps }),
+    );
 
     const correctedResults = getCorrectedResultsForRace(results, []);
 
@@ -261,8 +314,14 @@ function testCorrectedPersonalHandicap() {
             ["helm 2", 3000, 3],
             ["helm 3", 3000, 3],
         ],
-        correctedResults.map(transformResult).map(({ helmName, classCorrectedTime, raceMaxLaps }) => [helmName, classCorrectedTime, raceMaxLaps]),
-        "Failed test testCorrectedPersonalHandicap"
+        correctedResults
+            .map(transformResult)
+            .map(({ helmName, classCorrectedTime, raceMaxLaps }) => [
+                helmName,
+                classCorrectedTime,
+                raceMaxLaps,
+            ]),
+        "Failed test testCorrectedPersonalHandicap",
     );
 }
 
@@ -305,7 +364,6 @@ function testGetPH1() {
 }
 
 function testGetPH2() {
-
     // * 	Date	1/10/17	Race	2
     /**
 Bananaman	    DEVOTI D-ZERO	1/U/0	1029	181			    41:14   2474	4	601.1	1	1	    -1	    -10
@@ -336,7 +394,7 @@ Olive Oyl       Argo (No Spin)	2/S/0	1175	11421	JLN		DNF	                8
 }
 
 function testGetPH3() {
-    // 
+    //
     /** 	
      * Date	1/10/17	Race	3
     * 
@@ -359,8 +417,6 @@ Scratchy	Solo	        1/U/0	1133	4359		25:51:00	2	684.5	3	3	9.8	    111	    1551
         "testGetPH3 failed",
     );
 }
-
-
 
 function testGetPH4() {
     /**
@@ -410,18 +466,27 @@ function processRaces(races, transformInputs) {
         input.push([]);
         for (let result of race) {
             const args = transformInputs(result[0], key);
-            input[key].push(createResult({
-                raceDate: new Date(key),
-                ...args,
-            }));
+            input[key].push(
+                createResult({
+                    raceDate: new Date(key),
+                    ...args,
+                }),
+            );
             output.push(result[1]);
         }
     }
     return [input, output];
 }
 
-function generateRaces(transform, fixedResultsForEachRace, ...varyingResultsPerRace) {
-    const maxRaces = varyingResultsPerRace.reduce((max, varying) => Math.max(max, varying.length), -Infinity);
+function generateRaces(
+    transform,
+    fixedResultsForEachRace,
+    ...varyingResultsPerRace
+) {
+    const maxRaces = varyingResultsPerRace.reduce(
+        (max, varying) => Math.max(max, varying.length),
+        -Infinity,
+    );
     if (maxRaces <= 0) {
         return;
     }
@@ -430,7 +495,7 @@ function generateRaces(transform, fixedResultsForEachRace, ...varyingResultsPerR
         races[i] = [...fixedResultsForEachRace];
         for (let varying of varyingResultsPerRace) {
             if (varying[i]) {
-                races[i].push([...varying[i]])
+                races[i].push([...varying[i]]);
             }
         }
     }
@@ -453,36 +518,76 @@ function testRollingPH() {
     //                          correctedTime,  PH,   correctedForPHTime    rollingPH(for class)
     // Output:
     const varying = [
-        [["helm 1", "class1", 1000, 2000, 2], [2000, 2000, 2000, 1000]], // Try to force not to contribute to SCT, first rolling PH is equal to class PH (for non-novice helm) and no other classes have been sailed.
-        [["helm 1", "class1", 1000, 2000, 2], [2000, 2000, 1333, 1500]], // Second rolling PH is average of initial PH (class PY) and first race PH
-        [["helm 1", "class2", 1200, 2000, 2], [1667, 2000, 1000, 2000]], // Because sailing a new class "PY:1200", rolling PH is: (1000+2000+2000) / 3 = ( 1667 / 1000 - 1 ) * 100 = 66.7%, new handicap is then: 1200 * 66.7% = 2000
-        [["helm 1", "class1", 1000, 1667, 2], [1667, 1667, 1000, 1667]], // go back to original class and continue PH where left off (1667)
-        [["helm 1", "class2", 1200, 2000, 2], [1667, 2000, 1000, 2000]], // go back to second class and continue PH where left off (2000)
-        [["helm 1", "class3", 1500, 2000, 2], [1333, 2000, 800, 2500]], // Because sailing a new class "PY:1500", rolling PH is: 1000 * (1 + 2 + 2 + 2/1.2 + 1.667 + 2/1.2) / 6 = ( 1667 / 1000 - 1 ) * 100 = 66.7%, new handicap is then: 1500 * 166.7% = 2500
-        [["helm 1", "class1", 1500, 1667, 2], [1111, 1667, 1000, 1667]], // Class handicap has changed from 1000 to 1500, but should still continue from 1667 (previous rolling PH for class), in this case PH stays the same but PI is reduced
+        [
+            ["helm 1", "class1", 1000, 2000, 2],
+            [2000, 2000, 2000, 1000],
+        ], // Try to force not to contribute to SCT, first rolling PH is equal to class PH (for non-novice helm) and no other classes have been sailed.
+        [
+            ["helm 1", "class1", 1000, 2000, 2],
+            [2000, 2000, 1333, 1500],
+        ], // Second rolling PH is average of initial PH (class PY) and first race PH
+        [
+            ["helm 1", "class2", 1200, 2000, 2],
+            [1667, 2000, 1000, 2000],
+        ], // Because sailing a new class "PY:1200", rolling PH is: (1000+2000+2000) / 3 = ( 1667 / 1000 - 1 ) * 100 = 66.7%, new handicap is then: 1200 * 66.7% = 2000
+        [
+            ["helm 1", "class1", 1000, 1667, 2],
+            [1667, 1667, 1000, 1667],
+        ], // go back to original class and continue PH where left off (1667)
+        [
+            ["helm 1", "class2", 1200, 2000, 2],
+            [1667, 2000, 1000, 2000],
+        ], // go back to second class and continue PH where left off (2000)
+        [
+            ["helm 1", "class3", 1500, 2000, 2],
+            [1333, 2000, 800, 2500],
+        ], // Because sailing a new class "PY:1500", rolling PH is: 1000 * (1 + 2 + 2 + 2/1.2 + 1.667 + 2/1.2) / 6 = ( 1667 / 1000 - 1 ) * 100 = 66.7%, new handicap is then: 1500 * 166.7% = 2500
+        [
+            ["helm 1", "class1", 1500, 1667, 2],
+            [1111, 1667, 1000, 1667],
+        ], // Class handicap has changed from 1000 to 1500, but should still continue from 1667 (previous rolling PH for class), in this case PH stays the same but PI is reduced
     ];
 
     const fixed = [
-        [["helm 2", "classA", 2000, 2000, 2], [1000, 2000, 1000, 2000]],
-        [["helm 3", "classA", 2000, 2000, 2], [1000, 2000, 1000, 2000]],
+        [
+            ["helm 2", "classA", 2000, 2000, 2],
+            [1000, 2000, 1000, 2000],
+        ],
+        [
+            ["helm 3", "classA", 2000, 2000, 2],
+            [1000, 2000, 1000, 2000],
+        ],
     ];
 
     const [raceInputs, expected] = generateRaces(
-        ([a, b, c, d, e]) => ({ helmName: a, boatClassName: b, boatPY: c, finishTime: d, laps: e }),
+        ([a, b, c, d, e]) => ({
+            helmName: a,
+            boatClassName: b,
+            boatPY: c,
+            finishTime: d,
+            laps: e,
+        }),
         fixed,
         varying,
     );
 
     const correctedResults = [];
     for (let raceResults of raceInputs) {
-        correctedResults.push(...getCorrectedResultsForRace(raceResults, correctedResults));
+        correctedResults.push(
+            ...getCorrectedResultsForRace(raceResults, correctedResults),
+        );
     }
 
     deepEqualsResults(
         expected,
         correctedResults
             .map(transformResult)
-            .map((r) => [r.classCorrectedTime, r.totalPersonalHandicapFromRace, r.personalCorrectedTime, r.rollingPersonalHandicapBeforeRace]),
+            .map((r) => [
+                r.classCorrectedTime,
+                r.totalPersonalHandicapFromRace,
+                r.personalCorrectedTime,
+                r.rollingPersonalHandicapBeforeRace,
+            ]),
         "testRollingPH failed",
     );
 }
@@ -494,36 +599,77 @@ function testRollingNoviceHelm() {
     //                          correctedTime,  PH,   correctedForPHTime    rollingPH(for class)
     // Output:
     const varying = [
-        [["helm 1", true, "class1", 1000, 2000, 2], [2000, 2000, 1667, 1200]], // Novice helm so initial PH is 1000 * 120%
-        [["helm 1", true, "class1", 1000, 2000, 2], [2000, 2000, 1250, 1600]], // Second rolling PH is average of initial PH (class PY) and first race PH
-        [["helm 1", true, "class2", 1200, 2000, 2], [1667, 2000, 962, 2080]], // Because sailing a new class "PY:1200", rolling PH is: 1000 * (1.2 + 2 + 2) / 3 = ( 1733 / 1000 - 1 ) * 100 = 73.3%, new handicap is then: 1200 * 173.3% = 2080
-        [["helm 1", true, "class1", 1000, 1667, 2], [1667, 1667, 962, 1733]], // go back to original class and continue PH where left off (1733)
-        [["helm 1", true, "class2", 1200, 2000, 2], [1667, 2000, 980, 2040]], // go back to second class and continue PH where left off (2040)
-        [["helm 1", true, "class3", 1500, 2000, 2], [1333, 2000, 784, 2550]], // Because sailing a new class "PY:1500", rolling PH is: 1000 * (1.2 + 2 + 2 + 2/1.2 + 1.667 + 2/1.2) / 6 = ( 1700 / 1000 - 1 ) * 100 = 70%, new handicap is then: 1500 * 170% = 2550
-        [["helm 1", true, "class1", 1500, 1667, 2], [1111, 1667, 971, 1717]], // Class handicap has changed from 1000 to 1500, but should still continue from 1717 (previous rolling PH for class), in this case PH stays the same but PI is reduced
+        [
+            ["helm 1", true, "class1", 1000, 2000, 2],
+            [2000, 2000, 1667, 1200],
+        ], // Novice helm so initial PH is 1000 * 120%
+        [
+            ["helm 1", true, "class1", 1000, 2000, 2],
+            [2000, 2000, 1250, 1600],
+        ], // Second rolling PH is average of initial PH (class PY) and first race PH
+        [
+            ["helm 1", true, "class2", 1200, 2000, 2],
+            [1667, 2000, 962, 2080],
+        ], // Because sailing a new class "PY:1200", rolling PH is: 1000 * (1.2 + 2 + 2) / 3 = ( 1733 / 1000 - 1 ) * 100 = 73.3%, new handicap is then: 1200 * 173.3% = 2080
+        [
+            ["helm 1", true, "class1", 1000, 1667, 2],
+            [1667, 1667, 962, 1733],
+        ], // go back to original class and continue PH where left off (1733)
+        [
+            ["helm 1", true, "class2", 1200, 2000, 2],
+            [1667, 2000, 980, 2040],
+        ], // go back to second class and continue PH where left off (2040)
+        [
+            ["helm 1", true, "class3", 1500, 2000, 2],
+            [1333, 2000, 784, 2550],
+        ], // Because sailing a new class "PY:1500", rolling PH is: 1000 * (1.2 + 2 + 2 + 2/1.2 + 1.667 + 2/1.2) / 6 = ( 1700 / 1000 - 1 ) * 100 = 70%, new handicap is then: 1500 * 170% = 2550
+        [
+            ["helm 1", true, "class1", 1500, 1667, 2],
+            [1111, 1667, 971, 1717],
+        ], // Class handicap has changed from 1000 to 1500, but should still continue from 1717 (previous rolling PH for class), in this case PH stays the same but PI is reduced
     ];
 
     const fixed = [
-        [["helm 2", false, "classA", 2000, 2000, 2], [1000, 2000, 1000, 2000]],
-        [["helm 3", false, "classA", 2000, 2000, 2], [1000, 2000, 1000, 2000]],
+        [
+            ["helm 2", false, "classA", 2000, 2000, 2],
+            [1000, 2000, 1000, 2000],
+        ],
+        [
+            ["helm 3", false, "classA", 2000, 2000, 2],
+            [1000, 2000, 1000, 2000],
+        ],
     ];
 
     const [raceInputs, expected] = generateRaces(
-        ([a, novice, b, c, d, e]) => ({ helmName: a, helmNoviceInFirstRace: novice, boatClassName: b, boatPY: c, finishTime: d, laps: e }),
+        ([a, novice, b, c, d, e]) => ({
+            helmName: a,
+            helmNoviceInFirstRace: novice,
+            boatClassName: b,
+            boatPY: c,
+            finishTime: d,
+            laps: e,
+        }),
         fixed,
         varying,
     );
 
     const correctedResults = [];
     for (let raceResults of raceInputs) {
-        correctedResults.push(...getCorrectedResultsForRace(raceResults, correctedResults));
+        correctedResults.push(
+            ...getCorrectedResultsForRace(raceResults, correctedResults),
+        );
     }
 
     deepEqualsResults(
         expected,
         correctedResults
             .map(transformResult)
-            .map((r) => [r.classCorrectedTime, r.totalPersonalHandicapFromRace, r.personalCorrectedTime, r.rollingPersonalHandicapBeforeRace]),
+            .map((r) => [
+                r.classCorrectedTime,
+                r.totalPersonalHandicapFromRace,
+                r.personalCorrectedTime,
+                r.rollingPersonalHandicapBeforeRace,
+            ]),
         "testRollingNoviceHelm failed",
     );
 }
@@ -531,7 +677,7 @@ function testRollingNoviceHelm() {
 function testNoviceTransition() {
     // Input:
     //    helm, wasNoviceInFirstRace
-    //                          
+    //
     // Output:              novice
     const varying = [
         [["helm 1", true], [true]], // race 1, 1970-01-01
@@ -560,25 +706,28 @@ function testNoviceTransition() {
     const MILLIS_IN_25_DAYS = 25 * 24 * 60 * 60 * 1000;
 
     const [raceInputs, expected] = generateRaces(
-        ([helmName, helmNoviceInFirstRace], raceId) => ({ helmName, helmNoviceInFirstRace, raceDate: new Date(MILLIS_IN_25_DAYS * raceId) }),
+        ([helmName, helmNoviceInFirstRace], raceId) => ({
+            helmName,
+            helmNoviceInFirstRace,
+            raceDate: new Date(MILLIS_IN_25_DAYS * raceId),
+        }),
         fixed,
         varying,
     );
 
     const correctedResults = [];
     for (let raceResults of raceInputs) {
-        correctedResults.push(...getCorrectedResultsForRace(raceResults, correctedResults));
+        correctedResults.push(
+            ...getCorrectedResultsForRace(raceResults, correctedResults),
+        );
     }
 
     deepEqualsResults(
         expected,
-        correctedResults
-            .map(transformResult)
-            .map((r) => [r.novice]),
+        correctedResults.map(transformResult).map((r) => [r.novice]),
         "testNoviceTransition failed",
     );
 }
-
 
 function runTests() {
     try {
@@ -594,8 +743,7 @@ function runTests() {
         // testRollingNoviceHelm();
         // testNoviceTransition();
         console.log("Tests passed");
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
     }
 }

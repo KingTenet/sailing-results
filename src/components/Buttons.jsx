@@ -1,17 +1,12 @@
-
 import { Button, Text } from "@chakra-ui/react";
-import { useBack } from "../common"
+import { useBack } from "../common";
 
 export function BackButton({ children, ...props }) {
     const navigateBack = useBack();
     return (
-        <RedButton
-            onClick={() => navigateBack()}
-            {...props}
-        >
+        <RedButton onClick={() => navigateBack()} {...props}>
             {children}
         </RedButton>
-
     );
 }
 

@@ -13,54 +13,74 @@ export function DroppableContext({ onDragEnd, children }) {
     );
 }
 
-export function DroppableList({ DraggableListItem, listItems = [], droppableId, DroppableHeader, isDropDisabled, DroppableContainer, getId }) {
+export function DroppableList({
+    DraggableListItem,
+    listItems = [],
+    droppableId,
+    DroppableHeader,
+    isDropDisabled,
+    DroppableContainer,
+    getId,
+}) {
     return (
-        < DroppableWrapper
+        <DroppableWrapper
             droppableId={droppableId}
             isDropDisabled={isDropDisabled || false}
         >
-            {(isDraggingOver, placeholder) =>
+            {(isDraggingOver, placeholder) => (
                 <DroppableContainer isDraggingOver={isDraggingOver}>
-                    {DroppableHeader && <DroppableHeader isDraggingOver={isDraggingOver} listItems={listItems} />}
-                    {listItems.map((item, index) =>
+                    {DroppableHeader && (
+                        <DroppableHeader
+                            isDraggingOver={isDraggingOver}
+                            listItems={listItems}
+                        />
+                    )}
+                    {listItems.map((item, index) => (
                         <Draggable
                             key={getId(item)}
                             draggableId={`${droppableId}${getId(item)}`}
                             index={index}
                         >
-                            {(draggableProvided, draggableSnapshot) =>
+                            {(draggableProvided, draggableSnapshot) => (
                                 <Box
                                     key={getId(item)}
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
                                 >
-                                    <DraggableListItem item={item} index={index} draggableSnapshot={draggableSnapshot} dragHandleProps={draggableProvided.dragHandleProps} />
+                                    <DraggableListItem
+                                        item={item}
+                                        index={index}
+                                        draggableSnapshot={draggableSnapshot}
+                                        dragHandleProps={
+                                            draggableProvided.dragHandleProps
+                                        }
+                                    />
                                 </Box>
-                            }
+                            )}
                         </Draggable>
-                    )}
+                    ))}
                     {placeholder}
                 </DroppableContainer>
-            }
-        </DroppableWrapper >
+            )}
+        </DroppableWrapper>
     );
 }
 
 const DroppableWrapper = ({ droppableId, children, isDropDisabled }) => {
     return (
-        <Droppable
-            droppableId={droppableId}
-            isDropDisabled={isDropDisabled}
-        >
-            {(droppableProvided, snapshot) =>
+        <Droppable droppableId={droppableId} isDropDisabled={isDropDisabled}>
+            {(droppableProvided, snapshot) => (
                 <Box
                     width="100%"
                     ref={droppableProvided.innerRef}
                     {...droppableProvided.droppableProps}
                 >
-                    {children(snapshot.isDraggingOver, droppableProvided.placeholder)}
+                    {children(
+                        snapshot.isDraggingOver,
+                        droppableProvided.placeholder,
+                    )}
                 </Box>
-            }
+            )}
         </Droppable>
-    )
+    );
 };

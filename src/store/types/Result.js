@@ -1,4 +1,11 @@
-import { assertType, getURLDate, parseURLDate, generateId, assert, parseIntOrUndefined } from "../../common.js";
+import {
+    assertType,
+    getURLDate,
+    parseURLDate,
+    generateId,
+    assert,
+    parseIntOrUndefined,
+} from "../../common.js";
 import StoreObject from "./StoreObject.js";
 import Helm from "./Helm.js";
 import Race from "./Race.js";
@@ -9,19 +16,36 @@ import HelmResult from "./HelmResult.js";
 import MutableRaceResult from "./MutableRaceResult.js";
 
 export default class Result extends HelmResult {
-    constructor(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, metadata) {
+    constructor(
+        race,
+        helm,
+        boatClass,
+        boatSailNumber,
+        laps,
+        pursuitFinishPosition,
+        finishTime,
+        finishCode,
+        metadata,
+    ) {
         super(race, helm, metadata);
         this.boatClass = assertType(boatClass, BoatClass);
         this.boatSailNumber = assertType(boatSailNumber, "number");
         this.laps = laps && assertType(laps, "number");
-        this.pursuitFinishPosition = pursuitFinishPosition && assertType(pursuitFinishPosition, "number");
+        this.pursuitFinishPosition =
+            pursuitFinishPosition &&
+            assertType(pursuitFinishPosition, "number");
         this.finishTime = finishTime && assertType(finishTime, "number");
         this.finishCode = assertType(finishCode, FinishCode);
         if (this.finishCode.validFinish()) {
-            assert((this.laps && this.finishTime) || this.pursuitFinishPosition, `Invalid race result for race ${JSON.stringify(this, null, 4)}`);
-        }
-        else {
-            assert(!this.laps && !this.finishTime && !this.pursuitFinishPosition, `Invalid race result for race ${JSON.stringify(this, null, 4)}`);
+            assert(
+                (this.laps && this.finishTime) || this.pursuitFinishPosition,
+                `Invalid race result for race ${JSON.stringify(this, null, 4)}`,
+            );
+        } else {
+            assert(
+                !this.laps && !this.finishTime && !this.pursuitFinishPosition,
+                `Invalid race result for race ${JSON.stringify(this, null, 4)}`,
+            );
         }
     }
 
@@ -54,46 +78,114 @@ export default class Result extends HelmResult {
 
     static fromStore(storeResult, getHelm, getBoatClassForRace) {
         let {
-            "Date": dateString,
+            Date: dateString,
             "Race Number": raceNumber,
-            "Helm": helmId,
+            Helm: helmId,
             "Sail Number": boatSailNumber,
-            "Class": boatClassName,
-            "Laps": laps,
+            Class: boatClassName,
+            Laps: laps,
             "Pursuit Finish Position": pursuitFinishPosition,
             "Finish Time": finishTime,
             "Finish Code": finishCodeString,
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
         const finishCode = new FinishCode(finishCodeString);
-        return new Result(race, getHelm(helmId), getBoatClassForRace(boatClassName, race), parseInt(boatSailNumber), parseIntOrUndefined(laps), parseIntOrUndefined(pursuitFinishPosition), parseIntOrUndefined(finishTime), finishCode, StoreObject.fromStore(storeResult));
+        return new Result(
+            race,
+            getHelm(helmId),
+            getBoatClassForRace(boatClassName, race),
+            parseInt(boatSailNumber),
+            parseIntOrUndefined(laps),
+            parseIntOrUndefined(pursuitFinishPosition),
+            parseIntOrUndefined(finishTime),
+            finishCode,
+            StoreObject.fromStore(storeResult),
+        );
     }
 
-    static fromUser(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode = new FinishCode("")) {
-        return new Result(race, helm, boatClass, boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, StoreObject.fromStore({}));
+    static fromUser(
+        race,
+        helm,
+        boatClass,
+        boatSailNumber,
+        laps,
+        pursuitFinishPosition,
+        finishTime,
+        finishCode = new FinishCode(""),
+    ) {
+        return new Result(
+            race,
+            helm,
+            boatClass,
+            boatSailNumber,
+            laps,
+            pursuitFinishPosition,
+            finishTime,
+            finishCode,
+            StoreObject.fromStore({}),
+        );
     }
 
-    static fromMutableRaceResult(mutableResult, laps, pursuitFinishPosition, finishTime, finishCode = new FinishCode("")) {
+    static fromMutableRaceResult(
+        mutableResult,
+        laps,
+        pursuitFinishPosition,
+        finishTime,
+        finishCode = new FinishCode(""),
+    ) {
         assertType(mutableResult, MutableRaceResult);
-        return new Result(mutableResult.getRace(), mutableResult.getHelm(), mutableResult.getBoatClass(), mutableResult.boatSailNumber, laps, pursuitFinishPosition, finishTime, finishCode, StoreObject.fromStore({}));
+        return new Result(
+            mutableResult.getRace(),
+            mutableResult.getHelm(),
+            mutableResult.getBoatClass(),
+            mutableResult.boatSailNumber,
+            laps,
+            pursuitFinishPosition,
+            finishTime,
+            finishCode,
+            StoreObject.fromStore({}),
+        );
     }
 
     static fromRegistered(helmResult, pursuitFinishPosition) {
         assertType(helmResult, HelmResult);
-        const mutableResult = MutableRaceResult.fromUser(helmResult.getRace(), helmResult.getHelm(), helmResult.getBoatClass(), helmResult.getSailNumber());
+        const mutableResult = MutableRaceResult.fromUser(
+            helmResult.getRace(),
+            helmResult.getHelm(),
+            helmResult.getBoatClass(),
+            helmResult.getSailNumber(),
+        );
         if (!pursuitFinishPosition) {
-            return Result.fromMutableRaceResult(mutableResult, undefined, undefined, undefined, new FinishCode("DNF"));
+            return Result.fromMutableRaceResult(
+                mutableResult,
+                undefined,
+                undefined,
+                undefined,
+                new FinishCode("DNF"),
+            );
         }
-        return Result.fromMutableRaceResult(mutableResult, undefined, pursuitFinishPosition, undefined);
+        return Result.fromMutableRaceResult(
+            mutableResult,
+            undefined,
+            pursuitFinishPosition,
+            undefined,
+        );
     }
 
     getClassCorrectedTime(raceMaxLaps) {
         let boatClass = this.getBoatClass();
         if (!this.finishCode.validFinish()) {
-            throw new Error("Cannot calculate a class corrected time for a non-finisher");
+            throw new Error(
+                "Cannot calculate a class corrected time for a non-finisher",
+            );
         }
 
-        return calculateClassCorrectedTime(boatClass.getPY(), this.getFinishTime(), this.getLaps(), raceMaxLaps);
+        return calculateClassCorrectedTime(
+            boatClass.getPY(),
+            this.getFinishTime(),
+            this.getLaps(),
+            raceMaxLaps,
+        );
     }
 
     sortByFinishTimeDesc(secondResult) {
@@ -103,12 +195,20 @@ export default class Result extends HelmResult {
 
     sortByCorrectedFinishTimeDesc(secondResult, maxLaps) {
         assertType(secondResult, Result);
-        return secondResult.getClassCorrectedTime(maxLaps) - this.getClassCorrectedTime(maxLaps);
+        return (
+            secondResult.getClassCorrectedTime(maxLaps) -
+            this.getClassCorrectedTime(maxLaps)
+        );
     }
 
     getCorrectedTimes(totalPersonalHandicap, raceMaxLaps) {
         const classCorrectedTime = this.getClassCorrectedTime(raceMaxLaps);
-        const personalCorrectedTime = calculateClassCorrectedTime(totalPersonalHandicap, this.getFinishTime(), this.getLaps(), raceMaxLaps);
+        const personalCorrectedTime = calculateClassCorrectedTime(
+            totalPersonalHandicap,
+            this.getFinishTime(),
+            this.getLaps(),
+            raceMaxLaps,
+        );
         return [personalCorrectedTime, classCorrectedTime];
     }
 
@@ -142,8 +242,8 @@ export default class Result extends HelmResult {
             // "Race Number": this.race.getNumber(),
             // "Helm": Helm.getId(this.helm),
             "Sail Number": this.boatSailNumber,
-            "Class": this.boatClass.getClassName(),
-            "Laps": this.laps,
+            Class: this.boatClass.getClassName(),
+            Laps: this.laps,
             "Pursuit Finish Position": this.pursuitFinishPosition,
             "Finish Time": this.finishTime,
             "Finish Code": this.finishCode.getCode(),

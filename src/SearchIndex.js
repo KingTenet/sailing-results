@@ -98,16 +98,14 @@ import fuzzysort from "fuzzysort";
 
 export default class SearchIndex {
     /*
-    * data:
-    * scoreFn: (score, obj) => score, where score in range [-1, 0] with zero perfect match.
-    */
+     * data:
+     * scoreFn: (score, obj) => score, where score in range [-1, 0] with zero perfect match.
+     */
     constructor(data, name = "name", scoreFn = (score) => score) {
         this.data = data;
         const MIN_SCORE = -10000;
-        this.runSearch = (input) => fuzzysort.go(
-            input,
-            this.data,
-            {
+        this.runSearch = (input) =>
+            fuzzysort.go(input, this.data, {
                 keys: [name],
                 scoreFn: (result) => {
                     // if (result?.obj && result.obj[name] === "New Item") {
@@ -118,7 +116,10 @@ export default class SearchIndex {
                         return MIN_SCORE;
                     }
                     // Pass normalised score in range [-1, 0] to user provided scoreFn
-                    return scoreFn(-result[0]?.score / MIN_SCORE, result.obj) * -MIN_SCORE;
+                    return (
+                        scoreFn(-result[0]?.score / MIN_SCORE, result.obj) *
+                        -MIN_SCORE
+                    );
                 },
                 threshold: MIN_SCORE + 1,
                 allowTypo: true,
@@ -139,9 +140,7 @@ export default class SearchIndex {
     searchAndSort(input) {
         let results = this.search(input);
         if (results) {
-            return results.sort((a, b) => {
-
-            })
+            return results.sort((a, b) => {});
         }
     }
 }

@@ -8,42 +8,61 @@ import { useLongPressHandler } from "../common/hooks";
 import MutableRaceResult from "../store/types/MutableRaceResult";
 import { useNavigate } from "react-router-dom";
 
-export function DeleteFinisher({ itemToDelete: finisher, providedDisclosure, children }) {
+export function DeleteFinisher({
+    itemToDelete: finisher,
+    providedDisclosure,
+    children,
+}) {
     const [, updateAppState] = useAppState();
 
     const deleteFinisher = () => {
         updateAppState(({ results, ...state }) => ({
             ...state,
-            results: results.filter((result) => HelmResult.getId(result) !== HelmResult.getId(finisher)),
+            results: results.filter(
+                (result) =>
+                    HelmResult.getId(result) !== HelmResult.getId(finisher),
+            ),
         }));
     };
 
     return (
         <AlertDialogWrapper
             providedDisclosure={providedDisclosure}
-            onConfirm={() => deleteFinisher()} deleteHeading={`Delete result for ${HelmResult.getHelmId(finisher)}.`}>
+            onConfirm={() => deleteFinisher()}
+            deleteHeading={`Delete result for ${HelmResult.getHelmId(finisher)}.`}
+        >
             {children}
         </AlertDialogWrapper>
-    )
+    );
 }
 
-export function DeletePursuitFinish({ itemToDelete: registeredToDelete, providedDisclosure, children }) {
+export function DeletePursuitFinish({
+    itemToDelete: registeredToDelete,
+    providedDisclosure,
+    children,
+}) {
     const [, updateAppState] = useAppState();
 
     const deletePursuitFinish = () => {
         updateAppState(({ registered, ...state }) => ({
             ...state,
-            registered: registered.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(registeredToDelete)),
+            registered: registered.filter(
+                (prev) =>
+                    HelmResult.getId(prev) !==
+                    HelmResult.getId(registeredToDelete),
+            ),
         }));
     };
 
     return (
         <AlertDialogWrapper
             providedDisclosure={providedDisclosure}
-            onConfirm={() => deletePursuitFinish()} deleteHeading={`Delete helm: ${HelmResult.getHelmId(registeredToDelete)}.`}>
+            onConfirm={() => deletePursuitFinish()}
+            deleteHeading={`Delete helm: ${HelmResult.getHelmId(registeredToDelete)}.`}
+        >
             {children}
         </AlertDialogWrapper>
-    )
+    );
 }
 
 export function DeleteOOD({ itemToDelete: ood, providedDisclosure, children }) {
@@ -52,51 +71,67 @@ export function DeleteOOD({ itemToDelete: ood, providedDisclosure, children }) {
     const deleteOOD = () => {
         updateAppState(({ oods, ...state }) => ({
             ...state,
-            oods: oods.filter((prev) => HelmResult.getId(prev) !== HelmResult.getId(ood)),
+            oods: oods.filter(
+                (prev) => HelmResult.getId(prev) !== HelmResult.getId(ood),
+            ),
         }));
     };
 
     return (
         <AlertDialogWrapper
             providedDisclosure={providedDisclosure}
-            onConfirm={() => deleteOOD()} deleteHeading={`Delete OOD: ${HelmResult.getHelmId(ood)}.`}>
+            onConfirm={() => deleteOOD()}
+            deleteHeading={`Delete OOD: ${HelmResult.getHelmId(ood)}.`}
+        >
             {children}
         </AlertDialogWrapper>
-    )
+    );
 }
 
-export function DeleteItemOnLongPress({ DeleteItemComponent, ListItemComponent, onClick, item, children, ...props }) {
+export function DeleteItemOnLongPress({
+    DeleteItemComponent,
+    ListItemComponent,
+    onClick,
+    item,
+    children,
+    ...props
+}) {
     const { onOpen, ...providedDisclosure } = useDisclosure();
-    const longPressProps = useLongPressHandler(
-        onClick,
-        onOpen,
-    );
+    const longPressProps = useLongPressHandler(onClick, onOpen);
 
     return (
         <DeleteItemComponent
             providedDisclosure={providedDisclosure}
             itemToDelete={item}
         >
-            <ListItemComponent
-                item={item}
-                {...longPressProps}
-                {...props}
-            />
+            <ListItemComponent item={item} {...longPressProps} {...props} />
         </DeleteItemComponent>
     );
 }
 
-export function wrapDeleteOnLongPress(DeleteItemComponent, ListItemComponent, getProps = () => ({})) {
-    return ({ item, ...innerProps }) => <DeleteItemOnLongPress
-        DeleteItemComponent={DeleteItemComponent}
-        ListItemComponent={ListItemComponent}
-        item={item}
-        {...getProps(item)}
-        {...innerProps}
-    />
+export function wrapDeleteOnLongPress(
+    DeleteItemComponent,
+    ListItemComponent,
+    getProps = () => ({}),
+) {
+    return ({ item, ...innerProps }) => (
+        <DeleteItemOnLongPress
+            DeleteItemComponent={DeleteItemComponent}
+            ListItemComponent={ListItemComponent}
+            item={item}
+            {...getProps(item)}
+            {...innerProps}
+        />
+    );
 }
 
-export function DeleteItemOnSwipe({ DeleteItemComponent, ListItemComponent, item, children, ...props }) {
+export function DeleteItemOnSwipe({
+    DeleteItemComponent,
+    ListItemComponent,
+    item,
+    children,
+    ...props
+}) {
     const { onOpen, ...providedDisclosure } = useDisclosure();
 
     return (
@@ -104,16 +139,17 @@ export function DeleteItemOnSwipe({ DeleteItemComponent, ListItemComponent, item
             providedDisclosure={providedDisclosure}
             itemToDelete={item}
         >
-            <ListItemComponent
-                item={item}
-                onDelete={onOpen}
-                {...props}
-            />
+            <ListItemComponent item={item} onDelete={onOpen} {...props} />
         </DeleteItemComponent>
     );
 }
 
-export function ResetTimingComponent({ onResetFinisher, itemToReset, providedDisclosure, children }) {
+export function ResetTimingComponent({
+    onResetFinisher,
+    itemToReset,
+    providedDisclosure,
+    children,
+}) {
     return (
         <AlertDialogWrapper
             providedDisclosure={providedDisclosure}
@@ -124,11 +160,17 @@ export function ResetTimingComponent({ onResetFinisher, itemToReset, providedDis
             onConfirm={() => onResetFinisher(itemToReset)}
         >
             {children}
-        </ AlertDialogWrapper>
-    )
+        </AlertDialogWrapper>
+    );
 }
 
-export function ResetTimingOnClick({ ListItemComponent, item, onResetFinisher, children, ...props }) {
+export function ResetTimingOnClick({
+    ListItemComponent,
+    item,
+    onResetFinisher,
+    children,
+    ...props
+}) {
     const { onOpen, ...providedDisclosure } = useDisclosure();
 
     return (
@@ -137,23 +179,26 @@ export function ResetTimingOnClick({ ListItemComponent, item, onResetFinisher, c
             itemToReset={item}
             onResetFinisher={onResetFinisher}
         >
-            <ListItemComponent
-                item={item}
-                onClick={onOpen}
-                {...props}
-            />
+            <ListItemComponent item={item} onClick={onOpen} {...props} />
         </ResetTimingComponent>
     );
 }
 
-export function wrapDeleteOnSwipe(DeleteItemComponent, ListItemComponent, getProps = () => ({}), onResetFinisher) {
-    const WrappedDeleteOnSwipe = ({ item, ...innerProps }) => <DeleteItemOnSwipe
-        DeleteItemComponent={DeleteItemComponent}
-        ListItemComponent={ListItemComponent}
-        item={item}
-        {...getProps(item)}
-        {...innerProps}
-    />;
+export function wrapDeleteOnSwipe(
+    DeleteItemComponent,
+    ListItemComponent,
+    getProps = () => ({}),
+    onResetFinisher,
+) {
+    const WrappedDeleteOnSwipe = ({ item, ...innerProps }) => (
+        <DeleteItemOnSwipe
+            DeleteItemComponent={DeleteItemComponent}
+            ListItemComponent={ListItemComponent}
+            item={item}
+            {...getProps(item)}
+            {...innerProps}
+        />
+    );
 
     if (!onResetFinisher) {
         return WrappedDeleteOnSwipe;

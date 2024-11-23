@@ -1,7 +1,13 @@
 import cheerio from "cheerio";
 import fetch from "node-fetch";
 import { devAuth } from "./auth.js";
-import { getSheetIdFromURL, getAllCellsFromSheet, getGoogleSheetDoc, parseISOString, mapGroupBy } from "../src/common.js"
+import {
+    getSheetIdFromURL,
+    getAllCellsFromSheet,
+    getGoogleSheetDoc,
+    parseISOString,
+    mapGroupBy,
+} from "../src/common.js";
 // import ClubMember from "../src/store/types/ClubMember.js";
 import StoreWrapper from "../src/store/StoreWrapper.js";
 import bootstrapLocalStorage from "../src/bootstrapLocalStorage.js";
@@ -39,9 +45,12 @@ class AutoMap extends Map {
     upsert(obj, transform = (prev, obj, key) => obj) {
         let key = this.getKey(obj);
         if (!this.has(key) && this.getDefaultValue !== undefined) {
-            return this.set(key, transform(this.getDefaultValue(obj), obj, key));
+            return this.set(
+                key,
+                transform(this.getDefaultValue(obj), obj, key),
+            );
         }
-        return this.set(key, transform(super.get(key), obj, key))
+        return this.set(key, transform(super.get(key), obj, key));
     }
 }
 
@@ -50,7 +59,7 @@ const assert = (testResult, errMsg) => {
     if (testResult !== true) {
         throw new Error(errMsg);
     }
-}
+};
 
 function mapScrapedResult({
     raceDate,
@@ -73,7 +82,7 @@ function mapScrapedResult({
         },
         boat: {
             sailNumber: sailNo,
-            className
+            className,
         },
         finishPosition: position,
         finishTime: finishTimeTotalSeconds,
@@ -83,16 +92,18 @@ function mapScrapedResult({
 
 function getRowCellValues(dom, nth) {
     const cells = [];
-    dom(`body > table > tbody > tr:nth-child(${nth}) > td`).each((index, element) => {
-        cells.push(dom(element).text());
-    });
+    dom(`body > table > tbody > tr:nth-child(${nth}) > td`).each(
+        (index, element) => {
+            cells.push(dom(element).text());
+        },
+    );
     return cells;
 }
 
 function getAllRowsValues(dom, fromNthRow = 1) {
-    let rowCount = 0
+    let rowCount = 0;
     let rowValues = [];
-    dom(`body > table > tbody > tr`).each(() => rowCount += 1);
+    dom(`body > table > tbody > tr`).each(() => (rowCount += 1));
     for (let i = fromNthRow; i <= rowCount; i++) {
         rowValues[i - fromNthRow] = getRowCellValues(dom, i);
     }
@@ -105,7 +116,7 @@ function processCJLN(cjln) {
         novice: Boolean(cjln.toLowerCase().includes("n")),
         cadet: Boolean(cjln.toLowerCase().includes("c")),
         junior: Boolean(cjln.toLowerCase().includes("j")),
-    }
+    };
 }
 
 function processRig(rig) {
@@ -113,7 +124,7 @@ function processRig(rig) {
         crew: parseInt(rig.split("/")[0]),
         rig: rig.split("/")[1],
         spinnaker: rig.split("/")[2],
-    }
+    };
 }
 
 function getRaceDateFromString(str) {
@@ -140,8 +151,8 @@ function mapRowToResult(row) {
         spinnaker,
         crew,
         rig,
-        PN: row[3]
-    }
+        PN: row[3],
+    };
 
     const boat = {
         class: boatClass,
@@ -161,9 +172,9 @@ function mapRowToResult(row) {
     // }
     const finishTimeMinutes = finishTime && parseInt(finishTime[1]);
     const finishTimeSeconds = finishTime && parseInt(finishTime[2]);
-    const finishTimeTotalSeconds = finishTime && finishTimeMinutes * 60 + finishTimeSeconds;
+    const finishTimeTotalSeconds =
+        finishTime && finishTimeMinutes * 60 + finishTimeSeconds;
     const laps = row[8] ? parseInt(row[8]) : undefined;
-
 
     return {
         name: helm.name,
@@ -184,20 +195,31 @@ function mapRowToResult(row) {
         position,
         DNFCode,
         couldBePursuit: Boolean(!finishTime),
-    }
+    };
 }
 
-function isValid({ name, className, PN, sailNo, position, laps, finishTimeTotalSeconds, DNF, couldBePursuit }) {
-    const hasResultId = Boolean(name && className && !isNaN(PN) && !isNaN(sailNo));
+function isValid({
+    name,
+    className,
+    PN,
+    sailNo,
+    position,
+    laps,
+    finishTimeTotalSeconds,
+    DNF,
+    couldBePursuit,
+}) {
+    const hasResultId = Boolean(
+        name && className && !isNaN(PN) && !isNaN(sailNo),
+    );
     const hasResultValue = () => {
         if (couldBePursuit) {
             return DNF || position;
         }
         return DNF || (finishTimeTotalSeconds && laps);
-    }
+    };
     return hasResultId && hasResultValue();
 }
-
 
 async function scrapePage(page) {
     const result = await fetch(page).then((response) => response.text());
@@ -209,11 +231,14 @@ async function scrapePage(page) {
         unused2,
         raceDateString,
         unused3,
-        raceNumberString
-    ] = getRowCellValues(dom, 3)
+        raceNumberString,
+    ] = getRowCellValues(dom, 3);
 
     const actualColumnHeaders = getRowCellValues(dom, 5);
-    assert(deepEquals(actualColumnHeaders, expectedColumnHeaders), `Column mappings invalid for page ${page}`);
+    assert(
+        deepEquals(actualColumnHeaders, expectedColumnHeaders),
+        `Column mappings invalid for page ${page}`,
+    );
     const OODs = [];
     const helms = [];
     const results = [];
@@ -221,9 +246,11 @@ async function scrapePage(page) {
     let totalIgnoredRows = 0;
     let personalResults = false;
     getAllRowsValues(dom, 5).forEach((row) => {
-
         totalRows++;
-        if (personalResults || row.find((value) => value.toLowerCase().includes("personal"))) {
+        if (
+            personalResults ||
+            row.find((value) => value.toLowerCase().includes("personal"))
+        ) {
             personalResults = true;
             totalIgnoredRows++;
             return;
@@ -245,32 +272,45 @@ async function scrapePage(page) {
     let pursuit = results.every(({ couldBePursuit }) => couldBePursuit);
 
     // console.log(raceDateString);
-    const [raceDay, raceMonth, raceYear] = getRaceDateFromString(raceDateString);
+    const [raceDay, raceMonth, raceYear] =
+        getRaceDateFromString(raceDateString);
     console.log(raceDay, raceMonth, raceYear);
-    const raceDate = parseISOString(`20${raceYear}-${`0${raceMonth}`.slice(-2)}-${`0${raceDay}`.slice(-2)}T00:00:00.000Z`);
+    const raceDate = parseISOString(
+        `20${raceYear}-${`0${raceMonth}`.slice(-2)}-${`0${raceDay}`.slice(-2)}T00:00:00.000Z`,
+    );
     const raceNumber = parseInt(raceNumberString);
 
-    let mappedResults = results.map((result) => ({ ...result, seriesName, raceDate, raceNumber, pursuit }))
-    if (!mappedResults.length && (totalRows - OODs.length - 3 > 0)) {
+    let mappedResults = results.map((result) => ({
+        ...result,
+        seriesName,
+        raceDate,
+        raceNumber,
+        pursuit,
+    }));
+    if (!mappedResults.length && totalRows - OODs.length - 3 > 0) {
         return [];
         throw new Error("No results");
     }
-    let mappedOODs = OODs.map((ood) => ({ name: ood, seriesName, raceDate, raceNumber }))
+    let mappedOODs = OODs.map((ood) => ({
+        name: ood,
+        seriesName,
+        raceDate,
+        raceNumber,
+    }));
     return [mappedResults, mappedOODs, pursuit];
-
 }
 
 const getSeriesURL = (year, series) => {
-    return `http://www.nhebsc.org.uk/results/${year}%20${series.replace(" ", "%20")}_files`
-}
+    return `http://www.nhebsc.org.uk/results/${year}%20${series.replace(" ", "%20")}_files`;
+};
 
 const generateTabstripURL = (year, series) => {
     return `${getSeriesURL(year, series)}/tabstrip.htm`;
-}
+};
 
 const generateURL = (year, series, num) => {
     return `${getSeriesURL(year, series)}/sheet${`00${num}`.slice(-3)}.htm`;
-}
+};
 
 async function getURLSFromTabStrip(year, series) {
     const page = generateTabstripURL(year, series);
@@ -285,7 +325,6 @@ async function getURLSFromTabStrip(year, series) {
         .filter(([value]) => !value.toLowerCase().includes("summary"))
         .map(([_, url]) => url);
 }
-
 
 async function scrape() {
     const allRegularSeries = [
@@ -318,7 +357,6 @@ async function scrape() {
     //     2019,
     // ];
 
-
     const allResults = [];
     const allFleetResults = [];
     const allPursuits = [];
@@ -329,7 +367,7 @@ async function scrape() {
 
     for (let year of years) {
         for (let series of allRegularSeries) {
-            for (let url of (await getURLSFromTabStrip(year, series))) {
+            for (let url of await getURLSFromTabStrip(year, series)) {
                 const [results, OODs, pursuit] = await scrapePage(url);
                 if (!results) {
                     continue;
@@ -337,8 +375,7 @@ async function scrape() {
                 if (pursuit) {
                     allPursuits.push(...results);
                     allResults.push(...results);
-                }
-                else {
+                } else {
                     allFleetResults.push(...results);
                     allResults.push(...results);
                 }
@@ -357,26 +394,34 @@ async function scrape() {
     //     let allPursuits = JSON.parse(fs.readFileSync("pursuits.json")).map(({ raceDate, ...rest }) => ({ raceDate: parseISOString(raceDate), ...rest }));;
     //     let allOODs = JSON.parse(fs.readFileSync("oods.json")).map(({ raceDate, ...rest }) => ({ raceDate: parseISOString(raceDate), ...rest }));
 
-
-    let allHelmResults = [...allFleetResults, ...allPursuits]
-        .sort(({ raceDate: a }, { raceDate: b }) => a - b);
+    let allHelmResults = [...allFleetResults, ...allPursuits].sort(
+        ({ raceDate: a }, { raceDate: b }) => a - b,
+    );
 
     // await appendHelmsSheet(getHelms(allHelmResults), outputSheetId, auth.clientEmail, auth.privateKey);
 
-    return [allFleetResults.map(mapScrapedResult), allPursuits.map(mapScrapedResult), getHelms(allHelmResults), allOODs];
+    return [
+        allFleetResults.map(mapScrapedResult),
+        allPursuits.map(mapScrapedResult),
+        getHelms(allHelmResults),
+        allOODs,
+    ];
 }
 
 const getHelmId = ({ name }) => name;
-const getHelmTypeId = ({ lady, novice, junior, cadet }) => JSON.stringify({ lady, novice, junior, cadet })
+const getHelmTypeId = ({ lady, novice, junior, cadet }) =>
+    JSON.stringify({ lady, novice, junior, cadet });
 
 function getHelms(results) {
     let helmsTypes = new AutoMap(getHelmId, () => new AutoMap(getHelmTypeId));
     let helms = new AutoMap(getHelmId);
 
-    for (let result of results.sort(({ raceDate: a }, { raceDate: b }) => a - b)) {
+    for (let result of results.sort(
+        ({ raceDate: a }, { raceDate: b }) => a - b,
+    )) {
         // Group results by helm, then type
         // console.log(result);
-        helmsTypes.upsert(result, (types) => types.upsert(result))
+        helmsTypes.upsert(result, (types) => types.upsert(result));
         helms.upsert(result, (prev, obj) => prev || obj);
     }
 
@@ -384,12 +429,29 @@ function getHelms(results) {
         if (helmTypes.size > 1) {
             // console.log(helm);
             let lastLady, lastNovice, lastJunior, lastCadet;
-            let ladyChangedDate, noviceChangedDate, juniorChangedDate, cadetChangedDate;
-            for (let [helmType, { lady, novice, cadet, junior, raceDate }] of [...helmTypes]) {
-                ladyChangedDate = lastLady !== undefined && lastLady !== lady ? raceDate : false;
-                noviceChangedDate = lastNovice !== undefined && lastNovice !== novice ? raceDate : false;
-                juniorChangedDate = lastJunior !== undefined && lastJunior !== junior ? raceDate : false;
-                cadetChangedDate = lastCadet !== undefined && lastCadet !== cadet ? raceDate : false;
+            let ladyChangedDate,
+                noviceChangedDate,
+                juniorChangedDate,
+                cadetChangedDate;
+            for (let [helmType, { lady, novice, cadet, junior, raceDate }] of [
+                ...helmTypes,
+            ]) {
+                ladyChangedDate =
+                    lastLady !== undefined && lastLady !== lady
+                        ? raceDate
+                        : false;
+                noviceChangedDate =
+                    lastNovice !== undefined && lastNovice !== novice
+                        ? raceDate
+                        : false;
+                juniorChangedDate =
+                    lastJunior !== undefined && lastJunior !== junior
+                        ? raceDate
+                        : false;
+                cadetChangedDate =
+                    lastCadet !== undefined && lastCadet !== cadet
+                        ? raceDate
+                        : false;
 
                 lastLady = lady;
                 lastNovice = novice;
@@ -413,20 +475,22 @@ function getHelms(results) {
     }
 
     //name, yearOfBirth, gender, joinedDate
-    return [...helms].map(([, { raceDate, novice, lady, name, junior, cadet }]) => ({
-        name,
-        yearOfBirth: undefined,
-        gender: lady ? "female" : "male",
-        noviceInFirstRace: false,
-        firstRaceDate: raceDate,
-    }));
+    return [...helms].map(
+        ([, { raceDate, novice, lady, name, junior, cadet }]) => ({
+            name,
+            yearOfBirth: undefined,
+            gender: lady ? "female" : "male",
+            noviceInFirstRace: false,
+            firstRaceDate: raceDate,
+        }),
+    );
 }
 
 function mapClassName(boatClass) {
     const mappedBoatClasses = {
         "TOPAZ OMEGA (SPIN)": "OMEGA (SPIN)",
         "TOPAZ OMEGA": "OMEGA (SPIN)",
-        "RS200": "RS 200",
+        RS200: "RS 200",
     };
     return mappedBoatClasses[boatClass] || boatClass;
 }
@@ -439,18 +503,28 @@ function mapHelmName(helmName) {
         "Mike Smith": "Michael Smith",
         "Indi Martin": "Indiana Martin",
         "Matt Lacey": "Matthew Lacey",
-    }
+    };
     const reversed = helmName.split(" ").reverse().join(" ");
     return mapNames[reversed] || reversed;
 }
 
-async function replacePursuitResults(results, outputDoc, sourceResultsURL, seriesResultsURL) {
+async function replacePursuitResults(
+    results,
+    outputDoc,
+    sourceResultsURL,
+    seriesResultsURL,
+) {
     const sourceResultsSheetId = getSheetIdFromURL(sourceResultsURL);
     const seriesResultsSheetId = getSheetIdFromURL(seriesResultsURL);
 
     // const pursuitResultsStore = await StoreWrapper.create(false, "2021 All Pursuit", outputDoc, this, Result, undefined, undefined, true);
     // const fleetResultsStore = await StoreWrapper.create(false, "2021 Fleet", outputDoc, this, Result, undefined, undefined, true);
-    const storeFs = await StoreFunctions.create(false, devAuth, sourceResultsSheetId, seriesResultsSheetId);
+    const storeFs = await StoreFunctions.create(
+        false,
+        devAuth,
+        sourceResultsSheetId,
+        seriesResultsSheetId,
+    );
     for (let result of results) {
         const {
             lady,
@@ -464,29 +538,35 @@ async function replacePursuitResults(results, outputDoc, sourceResultsURL, serie
             finishPosition,
             finishTime,
             finishCode,
-            laps
+            laps,
         } = result;
 
         const processedHelmName = mapHelmName(helm.name);
 
-        const processedBoatClassName = mapClassName(boat.className.toUpperCase());
+        const processedBoatClassName = mapClassName(
+            boat.className.toUpperCase(),
+        );
 
         const boatClassesByYear = mapGroupBy(
-            [...storeFs.stores.ryaClasses.all(), ...storeFs.stores.clubClasses.all()],
+            [
+                ...storeFs.stores.ryaClasses.all(),
+                ...storeFs.stores.clubClasses.all(),
+            ],
             [BoatClass.getClassYear, (boat) => boat.getClassName()],
-            (boatClasses) => boatClasses[0]
+            (boatClasses) => boatClasses[0],
         );
 
         let storedHelm;
         let storedBoat;
         try {
             storedHelm = storeFs.stores.getHelmFromHelmId(processedHelmName);
-            storedBoat = boatClassesByYear.get(date.getUTCFullYear()).get(processedBoatClassName);
+            storedBoat = boatClassesByYear
+                .get(date.getUTCFullYear())
+                .get(processedBoatClassName);
             if (!storedBoat) {
                 throw new Error("Boat: " + storedBoat);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.log(result);
             console.log(processedBoatClassName);
             console.log(storedBoat);
@@ -496,13 +576,23 @@ async function replacePursuitResults(results, outputDoc, sourceResultsURL, serie
             throw err;
         }
 
-        const registered = storeFs.createRegisteredHelm(new Race(date, parseInt(raceNumber)), storedHelm, storedBoat, boat.sailNumber)
-        const outputResult = Result.fromMutableRaceResult(registered, laps, finishPosition, finishTime, finishCode ? new FinishCode("DNF") : new FinishCode());
+        const registered = storeFs.createRegisteredHelm(
+            new Race(date, parseInt(raceNumber)),
+            storedHelm,
+            storedBoat,
+            boat.sailNumber,
+        );
+        const outputResult = Result.fromMutableRaceResult(
+            registered,
+            laps,
+            finishPosition,
+            finishTime,
+            finishCode ? new FinishCode("DNF") : new FinishCode(),
+        );
 
         if (pursuit) {
             storeFs.stores.pursuitResults.add(outputResult);
-        }
-        else {
+        } else {
             // pursuitResults.add(outputResult);
         }
     }
@@ -512,19 +602,30 @@ async function replacePursuitResults(results, outputDoc, sourceResultsURL, serie
 
 async function scrapeAll(outputSheetURL) {
     // dev URLS
-    const sourceResultsURL = "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
-    const seriesResultsURL = "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
+    const sourceResultsURL =
+        "https://docs.google.com/spreadsheets/d/1k6VjCuH8rzsKthbxnFtTd_wGff3CFutEapufPCf9MJw/edit#gid=1747234560";
+    const seriesResultsURL =
+        "https://docs.google.com/spreadsheets/d/1yngxguLyDsFHR-DLA72riRgYzF_nCrlaz01DVeEolMQ/edit#gid=1432028078";
 
     await bootstrapLocalStorage();
-    const outputDoc = getGoogleSheetDoc(getSheetIdFromURL(outputSheetURL), devAuth.clientEmail, devAuth.privateKey);
-    const [fleetResults, pursuitResults, helms, oods] = (await scrape());
+    const outputDoc = getGoogleSheetDoc(
+        getSheetIdFromURL(outputSheetURL),
+        devAuth.clientEmail,
+        devAuth.privateKey,
+    );
+    const [fleetResults, pursuitResults, helms, oods] = await scrape();
 
     // console.log(fleetResults);
     // console.log(pursuitResults);
     // console.log(helms);
     // console.log(oods);
 
-    await replacePursuitResults(pursuitResults, outputDoc, sourceResultsURL, seriesResultsURL);
+    await replacePursuitResults(
+        pursuitResults,
+        outputDoc,
+        sourceResultsURL,
+        seriesResultsURL,
+    );
 }
 
 scrapeAll(...process.argv.slice(2))
