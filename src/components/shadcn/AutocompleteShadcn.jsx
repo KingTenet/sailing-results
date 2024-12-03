@@ -8,7 +8,7 @@ import { cn } from "@/components/shadcn/utils/cn";
 
 function CollapseEx({ children, isOpen }) {
     if (!isOpen) return null;
-    return <div className="mt-1">{children}</div>;
+    return <div className="absolute mt-1">{children}</div>;
 }
 
 export default function Autocomplete({

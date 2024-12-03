@@ -804,6 +804,7 @@ export class StoreFunctions {
         this.helmIsClubMember = this.helmIsClubMember;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
+        this.getResultsByHelm = this.getResultsByHelm;
         this.readOnly = readOnly;
         this.isLive = isLive;
         this.indexes = new Indexes(this.stores);
@@ -1146,6 +1147,15 @@ export class StoreFunctions {
                 [];
             return pi;
         }
+    }
+
+    getResultsByHelm() {
+        const resultsByHelm = mapGroupBy(
+            this.stores.allCorrectedResults,
+            [Result.getHelmId],
+            (results) => results.sort(Result.sortByRaceAsc),
+        );
+        return resultsByHelm;
     }
 
     getRaceFinishForResults(

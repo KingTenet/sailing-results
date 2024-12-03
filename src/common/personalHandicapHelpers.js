@@ -246,12 +246,10 @@ export function getRollingHandicaps(previousResults, result) {
             result.getHelm().getInitialPI(),
         ),
     );
-    const rollingPI = Math.round(
-        getRollingPIFromResults(
-            previousResults,
-            result.getBoatClass(),
-            result.getHelm().getInitialPI(),
-        ),
+    const rollingPI = getRollingPIFromResults(
+        previousResults,
+        result.getBoatClass(),
+        result.getHelm().getInitialPI(),
     );
     return [rollingPH, rollingPI];
 }
