@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import Helm from "@/store/types/Helm";
 import Race from "@/store/types/Race";
 import { Chart } from "../HelmComparisonChart";
+import { CalendarDemo } from "../CalendarDemo";
 
 const COLORS = [
     "#d00000ff",
@@ -22,7 +23,6 @@ const COLORS = [
 const MS_IN_WEEK = 1000 * 3600 * 24 * 7;
 
 export default function HelmComparisonPage() {
-    const navigateTo = useNavigate();
     const [helmsIndex, setHelmsIndex] = useState(null);
     const [helmsIndexId, setHelmsIndexId] = useState("index0");
     const services = useServices();
@@ -177,13 +177,16 @@ export default function HelmComparisonPage() {
                         />
                     )}
                     {chartData && (
-                        <div className="mt-8 h-[50vh]">
-                            <Chart
-                                chartConfig={chartData[1]}
-                                chartData={chartData[0]}
-                                helms={Object.keys(chartData[1])}
-                            />
-                        </div>
+                        <>
+                            <CalendarDemo />
+                            <div className="mt-8">
+                                <Chart
+                                    chartConfig={chartData[1]}
+                                    chartData={chartData[0]}
+                                    helms={Object.keys(chartData[1])}
+                                />
+                            </div>
+                        </>
                     )}
                     {appState.selectedHelms?.length > 0 &&
                         appState.selectedHelms.map((helm) => (

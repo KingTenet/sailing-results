@@ -3,6 +3,9 @@ import App from "./App";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import version from "./version.js";
+import { DatePickerWithPresets } from "./components/ui/DatePickerWithPresets.js";
+import { ShadCNWrapper } from "./components/shadcn/ShadCNWrapper.js";
+import MainDebug from "./MainDebug.js";
 
 console.log(`Version ${version()}`);
 
@@ -29,7 +32,8 @@ const config = {
 const theme = extendTheme({ colors, config });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-    <ChakraProvider theme={theme}>
-        <App />
-    </ChakraProvider>,
+    <MainDebug />,
+    // <ChakraProvider theme={theme}>
+    //     <App />
+    // </ChakraProvider>,
 );

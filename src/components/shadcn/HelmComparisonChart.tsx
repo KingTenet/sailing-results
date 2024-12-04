@@ -40,7 +40,7 @@ export function Chart({
     return (
         <ChartContainer
             config={chartConfig}
-            className="h-full w-[120%] -translate-x-14"
+            className="h-full w-[120%] -translate-x-12"
         >
             <LineChart accessibilityLayer data={chartData}>
                 <CartesianGrid vertical={false} />
