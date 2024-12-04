@@ -33,7 +33,7 @@ export default function HelmComparisonPage() {
     useEffect(() => {
         const endDate = new Date();
         endDate.setUTCHours(0, 0, 0, 0);
-        let startDate = endDate.getTime() - MS_IN_WEEK * 400; // 12 weeks ago
+        let startDate = endDate.getTime() - MS_IN_WEEK * 300; // 12 weeks ago
         let race = new Race(new Date(startDate), 1);
 
         let helmPBs = !appState?.selectedHelms
@@ -148,99 +148,61 @@ export default function HelmComparisonPage() {
 
     return (
         <ShadCNWrapper>
-            <Card>
-                <CardContent className="flex w-full space-x-6 bg-slate-400 p-10">
-                    <Card className="w-[30vw]">
-                        <CardHeader>
-                            <CardTitle>Compare Helms</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {helmsIndex && (
-                                <AutocompleteShadcn
-                                    key={helmsIndexId}
-                                    heading="Select Helm"
-                                    data={helmsIndex?.data || []}
-                                    itemToString={(helm) =>
-                                        helm ? helm.getName() : ""
-                                    }
-                                    filterData={(inputValue) => {
-                                        const results =
-                                            helmsIndex?.search(inputValue);
-                                        return results.filter(
-                                            (helm) => helm instanceof Helm,
-                                        );
-                                    }}
-                                    handleSelectedItemChange={
-                                        handleSelectedHelm
-                                    }
-                                    sortFn={(helmA, helmB) =>
-                                        helmA.getName() > helmB.getName()
-                                            ? 1
-                                            : -1
-                                    }
-                                    placeholder="Enter helm name..."
-                                    forceBlurOnExactMatch={true}
-                                    getPartialMatchErrorMsg={
-                                        getHelmNameErrorMessage
-                                    }
-                                />
-                            )}
-                        </CardContent>
-
-                        {appState.selectedHelms?.length > 0 && (
-                            <CardContent>
-                                <div className="space-y-2">
-                                    {appState.selectedHelms.map((helm) => (
-                                        <div
-                                            key={helm.getName()}
-                                            className="flex items-center justify-between rounded-lg bg-secondary p-3"
-                                        >
-                                            <span className="text-sm font-medium">
-                                                {helm.getName()}
-                                            </span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    handleRemoveHelm(helm)
-                                                }
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                    {/* 
-                                    {appState.selectedHelms.length >= 2 && (
-                                        <Button
-                                            className="mt-4 w-full"
-                                            onClick={() =>
-                                                navigateTo("/compare")
-                                            }
-                                        >
-                                            Compare Selected Helms
-                                        </Button>
-                                    )} */}
-                                </div>
-                            </CardContent>
-                        )}
-                    </Card>
-
-                    <Card className="w-full">
-                        <CardHeader>
-                            <CardTitle>Personal Handicap over time</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {chartData && (
-                                <div className="h-[70vh]">
-                                    <Chart
-                                        chartConfig={chartData[1]}
-                                        chartData={chartData[0]}
-                                        helms={Object.keys(chartData[1])}
-                                    />
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+            <Card className="min-h-screen w-screen">
+                {/* <CardHeader>
+                    <CardTitle>Compare Helms</CardTitle>
+                </CardHeader> */}
+                <CardContent>
+                    {helmsIndex && (
+                        <AutocompleteShadcn
+                            key={helmsIndexId}
+                            heading="Select Helms"
+                            data={helmsIndex?.data || []}
+                            itemToString={(helm) =>
+                                helm ? helm.getName() : ""
+                            }
+                            filterData={(inputValue) => {
+                                const results = helmsIndex?.search(inputValue);
+                                return results.filter(
+                                    (helm) => helm instanceof Helm,
+                                );
+                            }}
+                            handleSelectedItemChange={handleSelectedHelm}
+                            sortFn={(helmA, helmB) =>
+                                helmA.getName() > helmB.getName() ? 1 : -1
+                            }
+                            placeholder="Enter helm name..."
+                            forceBlurOnExactMatch={true}
+                            getPartialMatchErrorMsg={getHelmNameErrorMessage}
+                        />
+                    )}
+                    {chartData && (
+                        <div className="mt-8 h-[50vh]">
+                            <Chart
+                                chartConfig={chartData[1]}
+                                chartData={chartData[0]}
+                                helms={Object.keys(chartData[1])}
+                            />
+                        </div>
+                    )}
+                    {appState.selectedHelms?.length > 0 &&
+                        appState.selectedHelms.map((helm) => (
+                            <div
+                                key={helm.getName()}
+                                className="my-1 flex items-center justify-between rounded-lg bg-secondary pl-3 pr-0"
+                            >
+                                <span className="text-sm font-medium">
+                                    {helm.getName()}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleRemoveHelm(helm)}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
                 </CardContent>
             </Card>
         </ShadCNWrapper>

@@ -38,33 +38,35 @@ export function Chart({
     chartConfig: ChartConfig;
 }) {
     return (
-        <ChartContainer config={chartConfig} className="h-full w-full">
+        <ChartContainer
+            config={chartConfig}
+            className="h-full w-[120%] -translate-x-14"
+        >
             <LineChart accessibilityLayer data={chartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                     dataKey="date"
                     tickLine={true}
-                    tickMargin={20}
+                    tickMargin={10}
                     axisLine={true}
-                    tickFormatter={(value) => value.slice(0, 8)}
+                    tickFormatter={(value) => value.slice(0, 2)}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <CartesianGrid strokeDasharray="3 3" />
+                {/* <ChartTooltip content={<ChartTooltipContent />} /> */}
+                {/* <ChartLegend content={<ChartLegendContent />} /> */}
+                {/* <CartesianGrid strokeDasharray="3 3" /> */}
                 {/* <XAxis dataKey="name" /> */}
                 <YAxis />
                 {/* <Tooltip /> */}
                 {/* <Legend /> */}
                 {helms &&
                     helms.map((helm, index) => (
-                        <>
-                            <Line
-                                type="monotone"
-                                dot={false}
-                                dataKey={helm}
-                                stroke={COLORS[index]}
-                            />
-                        </>
+                        <Line
+                            key={`line-${index}`}
+                            type="monotone"
+                            dot={false}
+                            dataKey={helm}
+                            stroke={COLORS[index]}
+                        />
                     ))}
             </LineChart>
         </ChartContainer>
