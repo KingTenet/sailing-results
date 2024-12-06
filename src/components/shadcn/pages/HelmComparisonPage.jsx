@@ -51,8 +51,9 @@ export default function HelmComparisonPage() {
     const services = useServices();
     const [appState, updateAppState] = useAppState();
     const resultsByHelm = services.getResultsByHelm();
-    const [chartData, updateChartData] = useState();
-    const [helmPBs, setHelmPBs] = useState();
+    // const [chartData, updateChartData] = useState();
+    const chartData = [];
+    // const [helmPBs, setHelmPBs] = useState();
 
     const [endDate, setEndDate] = React.useState(new Date());
     const [startDate, setStartDateState] = React.useState(
@@ -64,73 +65,88 @@ export default function HelmComparisonPage() {
         setStartDateState(date);
     };
 
-    // useEffect(() => {
-    //     if (appState?.selectedHelms?.length) {
-    //         return;
-    //     }
-
-    //     let race = new Race(new Date(startDate), 1);
-
-    //     const helmPBs = getHelmPBs(resultsByHelm, race);
-
-    //     updateAppState((state) => ({
-    //         ...state,
-    //         selectedHelms: helmPBs
-    //             .slice(0, COLORS.length)
-    //             .map(([helm]) => helm),
-    //     }));
-    // }, [appState, resultsByHelm, updateAppState, startDate]);
-
     useEffect(() => {
-        const tmpEndDate = endDate > startDate ? endDate : startDate;
-        let tmpStartDate = endDate > startDate ? startDate : endDate;
-        tmpEndDate.setUTCHours(0, 0, 0, 0);
-        tmpStartDate.setUTCHours(0, 0, 0, 0);
-
-        let race = new Race(new Date(tmpStartDate), 1);
-
-        const helms =
-            appState?.selectedHelms ||
-            getHelmPBs(resultsByHelm, race)
-                .slice(0, COLORS.length)
-                .map(([helm]) => helm);
-
-        if (!helms?.length) {
+        if (appState?.selectedHelms?.length) {
             return;
         }
 
-        const newChartData = [];
-        while (tmpEndDate >= tmpStartDate) {
-            race = new Race(new Date(tmpStartDate), 1);
-            newChartData.push({
-                date: new Date(tmpStartDate).toISOString(),
-                ...helms.reduce((acc, helm) => {
-                    const helmResults = resultsByHelm.get(helm.getName());
-                    return {
-                        ...acc,
-                        [helm.getName()]: helmResults
-                            .at(-1)
-                            .getRollingHandicapsAtRace(race)[1],
-                    };
-                }, {}),
-            });
+        let race = new Race(new Date(startDate), 1);
 
-            tmpStartDate = new Date(tmpStartDate).getTime() + MS_IN_WEEK;
-        }
+        const helmPBs = getHelmPBs(resultsByHelm, race);
 
-        const newChartConfig = helms.reduce(
-            (acc, helm, index) => ({
-                ...acc,
-                [helm.getName()]: {
-                    label: helm.getName(),
-                    color: COLORS[index],
-                },
-            }),
-            {},
-        );
+        updateAppState((state) => ({
+            ...state,
+            selectedHelms: helmPBs
+                .slice(0, COLORS.length)
+                .map(([helm]) => helm),
+        }));
+    }, [appState, resultsByHelm, updateAppState, startDate]);
 
-        updateChartData([newChartData, newChartConfig]);
-    }, [appState, startDate, endDate, helmPBs, resultsByHelm]);
+    const tmpEndDate =
+        endDate > startDate ? new Date(endDate) : new Date(startDate);
+    let tmpStartDate =
+        endDate > startDate ? new Date(startDate) : new Date(endDate);
+    tmpEndDate.setUTCHours(0, 0, 0, 0);
+    tmpStartDate.setUTCHours(0, 0, 0, 0);
+
+    let race = new Race(new Date(tmpStartDate), 1);
+
+    const helms =
+        appState?.selectedHelms ||
+        getHelmPBs(resultsByHelm, race)
+            .slice(0, COLORS.length)
+            .map(([helm]) => helm);
+
+    const newChartData = [];
+    while (tmpEndDate >= tmpStartDate) {
+        race = new Race(new Date(tmpStartDate), 1);
+        newChartData.push({
+            date: new Date(tmpStartDate).toISOString(),
+            ...helms.reduce((acc, helm) => {
+                const helmResults = resultsByHelm.get(helm.getName());
+                return {
+                    ...acc,
+                    [helm.getName()]: helmResults
+                        .at(-1)
+                        .getRollingHandicapsAtRace(race)[1],
+                };
+            }, {}),
+        });
+
+        tmpStartDate = new Date(tmpStartDate).getTime() + MS_IN_WEEK;
+    }
+
+    chartData[0] = newChartData;
+    chartData[1] = helms.reduce(
+        (acc, helm, index) => ({
+            ...acc,
+            [helm.getName()]: {
+                label: helm.getName(),
+                color: COLORS[index],
+            },
+        }),
+        {},
+    );
+
+    console.log("Rendering Comparison page");
+
+    // return (
+    //     <ShadCNWrapper>
+    //         <Card className="min-h-screen w-screen bg-slate-600/0">
+    //             <CardContent className="mx-auto flex flex-col justify-end bg-pink-300/0 lg:max-w-screen-xl">
+    //                 <DatePicker
+    //                     date={startDate}
+    //                     setDate={() => console.log("Doing notihng")}
+    //                     disabled={(date) =>
+    //                         date >
+    //                             new Date(endDate.getTime() - 3 * MS_IN_WEEK) ||
+    //                         date < new Date("2016-01-01")
+    //                     }
+    //                 />
+    //             </CardContent>
+    //         </Card>
+    //     </ShadCNWrapper>
+    // );
 
     useEffect(() => {
         setHelmsIndex(
@@ -179,34 +195,11 @@ export default function HelmComparisonPage() {
         }
     };
 
-    console.log("Rendering Comparison page");
     return (
         <ShadCNWrapper>
             <Card className="min-h-screen w-screen bg-slate-600/0">
                 <CardContent className="mx-auto flex flex-col justify-end bg-pink-300/0 lg:max-w-screen-xl">
-                    <DatePicker
-                        date={startDate}
-                        setDate={setStartDate}
-                        // disabled={(date) =>
-                        //     date >
-                        //         new Date(
-                        //             endDate.getTime() - 3 * MS_IN_WEEK,
-                        //         ) || date < new Date("2016-01-01")
-                        // }
-                    />
-                    <div className="my-1" />
-                    {/* <DatePicker
-                        date={endDate}
-                        setDate={setEndDate}
-                        disabled={(date) =>
-                            date <
-                                new Date(
-                                    startDate.getTime() +
-                                        3 * MS_IN_WEEK,
-                                ) || date > new Date()
-                        }
-                    /> */}
-                    {/* {helmsIndex && (
+                    {helmsIndex && (
                         <>
                             <AutocompleteShadcn
                                 key={helmsIndexId}
@@ -232,9 +225,31 @@ export default function HelmComparisonPage() {
                                     getHelmNameErrorMessage
                                 }
                             />
+                            <DatePicker
+                                date={startDate}
+                                setDate={setStartDate}
+                                disabled={(date) =>
+                                    date >
+                                        new Date(
+                                            endDate.getTime() - 3 * MS_IN_WEEK,
+                                        ) || date < new Date("2016-01-01")
+                                }
+                            />
+                            <div className="my-1" />
+                            <DatePicker
+                                date={endDate}
+                                setDate={setEndDate}
+                                disabled={(date) =>
+                                    date <
+                                        new Date(
+                                            startDate.getTime() +
+                                                3 * MS_IN_WEEK,
+                                        ) || date > new Date()
+                                }
+                            />
                         </>
-                    )} */}
-                    {/* {chartData && (
+                    )}
+                    {chartData && (
                         <div className="h-full w-full bg-yellow-400/0">
                             <div className="flex flex-row"></div>
                             <div className="mt-4 h-[50vh] bg-blue-800/0">
@@ -245,8 +260,8 @@ export default function HelmComparisonPage() {
                                 />
                             </div>
                         </div>
-                    )} */}
-                    {/* {appState.selectedHelms?.length > 0 &&
+                    )}
+                    {appState.selectedHelms?.length > 0 &&
                         appState.selectedHelms.map((helm) => (
                             <div
                                 key={helm.getName()}
@@ -263,7 +278,7 @@ export default function HelmComparisonPage() {
                                     <X className="h-4 w-4" />
                                 </Button>
                             </div>
-                        ))} */}
+                        ))}
                 </CardContent>
             </Card>
         </ShadCNWrapper>

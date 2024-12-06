@@ -29,8 +29,9 @@ export function DatePicker({
 
     const onDateSelected = (date: Date | undefined) => {
         setDate(date);
-        setAllDisabled(true);
-        setTimeout(() => setIsOpen(false), 200);
+        setIsOpen(false);
+        // setAllDisabled(true);
+        // setTimeout(() => setIsOpen(false), 2000);
     };
 
     console.log("Rendering date picker");
@@ -60,7 +61,7 @@ export function DatePicker({
                     <Calendar
                         // className="w-screen"
                         showOutsideDays={false}
-                        captionLayout="dropdown-buttons"
+                        captionLayout="buttons"
                         mode="single"
                         selected={date}
                         onSelect={onDateSelected}
