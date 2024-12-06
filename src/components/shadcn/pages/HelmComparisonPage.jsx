@@ -10,7 +10,7 @@ import { X } from "lucide-react";
 import Helm from "@/store/types/Helm";
 import Race from "@/store/types/Race";
 import { Chart } from "../HelmComparisonChart";
-import { CalendarDemo } from "../CalendarDemo";
+import { DatePicker } from "../DatePicker";
 
 const COLORS = [
     "#d00000ff",
@@ -21,6 +21,29 @@ const COLORS = [
 ];
 
 const MS_IN_WEEK = 1000 * 3600 * 24 * 7;
+const CHART_DATAPOINTS = 30;
+
+function getHelmPBs(resultsByHelm, race) {
+    return [...resultsByHelm]
+        .filter(([, results]) => results.length > 10)
+        .map(([, results]) => [
+            results[0].getHelm(),
+            results
+                .slice(10) // Ignore first 10 results as the average for the rolling PI is statistically questionable
+                .filter((result) => race.isBefore(result.getRace()))
+                .sort(
+                    (resultA, resultB) =>
+                        resultA.rollingOverallPIAfterRace -
+                        resultB.rollingOverallPIAfterRace,
+                ),
+        ])
+        .filter(([, results]) => results.length)
+        .sort(
+            ([, resultsA], [, resultsB]) =>
+                resultsA[0].rollingOverallPIAfterRace -
+                resultsB[0].rollingOverallPIAfterRace,
+        );
+}
 
 export default function HelmComparisonPage() {
     const [helmsIndex, setHelmsIndex] = useState(null);
@@ -29,48 +52,58 @@ export default function HelmComparisonPage() {
     const [appState, updateAppState] = useAppState();
     const resultsByHelm = services.getResultsByHelm();
     const [chartData, updateChartData] = useState();
+    const [helmPBs, setHelmPBs] = useState();
+
+    const [endDate, setEndDate] = React.useState(new Date());
+    const [startDate, setStartDateState] = React.useState(
+        new Date(new Date().getTime() - MS_IN_WEEK * 10),
+    );
+
+    const setStartDate = (date) => {
+        console.log("Setting new start date");
+        setStartDateState(date);
+    };
+
+    // useEffect(() => {
+    //     if (appState?.selectedHelms?.length) {
+    //         return;
+    //     }
+
+    //     let race = new Race(new Date(startDate), 1);
+
+    //     const helmPBs = getHelmPBs(resultsByHelm, race);
+
+    //     updateAppState((state) => ({
+    //         ...state,
+    //         selectedHelms: helmPBs
+    //             .slice(0, COLORS.length)
+    //             .map(([helm]) => helm),
+    //     }));
+    // }, [appState, resultsByHelm, updateAppState, startDate]);
 
     useEffect(() => {
-        const endDate = new Date();
-        endDate.setUTCHours(0, 0, 0, 0);
-        let startDate = endDate.getTime() - MS_IN_WEEK * 300; // 12 weeks ago
-        let race = new Race(new Date(startDate), 1);
+        const tmpEndDate = endDate > startDate ? endDate : startDate;
+        let tmpStartDate = endDate > startDate ? startDate : endDate;
+        tmpEndDate.setUTCHours(0, 0, 0, 0);
+        tmpStartDate.setUTCHours(0, 0, 0, 0);
 
-        let helmPBs = !appState?.selectedHelms
-            ? [...resultsByHelm]
-                  .filter(([, results]) => results.length > 10)
-                  .map(([, results]) => [
-                      results[0].getHelm(),
-                      results
-                          .slice(10) // Ignore first 10 results as the average for the rolling PI is statistically questionable
-                          .filter((result) => race.isBefore(result.getRace()))
-                          .sort(
-                              (resultA, resultB) =>
-                                  resultA.rollingOverallPIAfterRace -
-                                  resultB.rollingOverallPIAfterRace,
-                          ),
-                  ])
-                  .filter(([, results]) => results.length)
-                  .sort(
-                      ([, resultsA], [, resultsB]) =>
-                          resultsA[0].rollingOverallPIAfterRace -
-                          resultsB[0].rollingOverallPIAfterRace,
-                  )
-            : [];
+        let race = new Race(new Date(tmpStartDate), 1);
 
         const helms =
             appState?.selectedHelms ||
-            helmPBs.slice(0, COLORS.length).map(([helm]) => helm);
+            getHelmPBs(resultsByHelm, race)
+                .slice(0, COLORS.length)
+                .map(([helm]) => helm);
 
         if (!helms?.length) {
             return;
         }
 
         const newChartData = [];
-        while (startDate < endDate.getTime()) {
-            race = new Race(new Date(startDate), 1);
+        while (tmpEndDate >= tmpStartDate) {
+            race = new Race(new Date(tmpStartDate), 1);
             newChartData.push({
-                date: new Date(startDate).toISOString(),
+                date: new Date(tmpStartDate).toISOString(),
                 ...helms.reduce((acc, helm) => {
                     const helmResults = resultsByHelm.get(helm.getName());
                     return {
@@ -82,7 +115,7 @@ export default function HelmComparisonPage() {
                 }, {}),
             });
 
-            startDate = startDate + MS_IN_WEEK * 6;
+            tmpStartDate = new Date(tmpStartDate).getTime() + MS_IN_WEEK;
         }
 
         const newChartConfig = helms.reduce(
@@ -97,7 +130,7 @@ export default function HelmComparisonPage() {
         );
 
         updateChartData([newChartData, newChartConfig]);
-    }, [appState]);
+    }, [appState, startDate, endDate, helmPBs, resultsByHelm]);
 
     useEffect(() => {
         setHelmsIndex(
@@ -146,49 +179,74 @@ export default function HelmComparisonPage() {
         }
     };
 
+    console.log("Rendering Comparison page");
     return (
         <ShadCNWrapper>
-            <Card className="min-h-screen w-screen">
-                {/* <CardHeader>
-                    <CardTitle>Compare Helms</CardTitle>
-                </CardHeader> */}
-                <CardContent>
-                    {helmsIndex && (
-                        <AutocompleteShadcn
-                            key={helmsIndexId}
-                            heading="Select Helms"
-                            data={helmsIndex?.data || []}
-                            itemToString={(helm) =>
-                                helm ? helm.getName() : ""
-                            }
-                            filterData={(inputValue) => {
-                                const results = helmsIndex?.search(inputValue);
-                                return results.filter(
-                                    (helm) => helm instanceof Helm,
-                                );
-                            }}
-                            handleSelectedItemChange={handleSelectedHelm}
-                            sortFn={(helmA, helmB) =>
-                                helmA.getName() > helmB.getName() ? 1 : -1
-                            }
-                            placeholder="Enter helm name..."
-                            forceBlurOnExactMatch={true}
-                            getPartialMatchErrorMsg={getHelmNameErrorMessage}
-                        />
-                    )}
-                    {chartData && (
+            <Card className="min-h-screen w-screen bg-slate-600/0">
+                <CardContent className="mx-auto flex flex-col justify-end bg-pink-300/0 lg:max-w-screen-xl">
+                    <DatePicker
+                        date={startDate}
+                        setDate={setStartDate}
+                        // disabled={(date) =>
+                        //     date >
+                        //         new Date(
+                        //             endDate.getTime() - 3 * MS_IN_WEEK,
+                        //         ) || date < new Date("2016-01-01")
+                        // }
+                    />
+                    <div className="my-1" />
+                    {/* <DatePicker
+                        date={endDate}
+                        setDate={setEndDate}
+                        disabled={(date) =>
+                            date <
+                                new Date(
+                                    startDate.getTime() +
+                                        3 * MS_IN_WEEK,
+                                ) || date > new Date()
+                        }
+                    /> */}
+                    {/* {helmsIndex && (
                         <>
-                            <CalendarDemo />
-                            <div className="mt-8">
+                            <AutocompleteShadcn
+                                key={helmsIndexId}
+                                heading="Select Helms"
+                                data={helmsIndex?.data || []}
+                                itemToString={(helm) =>
+                                    helm ? helm.getName() : ""
+                                }
+                                filterData={(inputValue) => {
+                                    const results =
+                                        helmsIndex?.search(inputValue);
+                                    return results.filter(
+                                        (helm) => helm instanceof Helm,
+                                    );
+                                }}
+                                handleSelectedItemChange={handleSelectedHelm}
+                                sortFn={(helmA, helmB) =>
+                                    helmA.getName() > helmB.getName() ? 1 : -1
+                                }
+                                placeholder="Enter helm name..."
+                                forceBlurOnExactMatch={true}
+                                getPartialMatchErrorMsg={
+                                    getHelmNameErrorMessage
+                                }
+                            />
+                        </>
+                    )} */}
+                    {/* {chartData && (
+                        <div className="h-full w-full bg-yellow-400/0">
+                            <div className="flex flex-row"></div>
+                            <div className="mt-4 h-[50vh] bg-blue-800/0">
                                 <Chart
                                     chartConfig={chartData[1]}
                                     chartData={chartData[0]}
                                     helms={Object.keys(chartData[1])}
                                 />
                             </div>
-                        </>
-                    )}
-                    {appState.selectedHelms?.length > 0 &&
+                        </div>
+                    )} */}
+                    {/* {appState.selectedHelms?.length > 0 &&
                         appState.selectedHelms.map((helm) => (
                             <div
                                 key={helm.getName()}
@@ -205,7 +263,7 @@ export default function HelmComparisonPage() {
                                     <X className="h-4 w-4" />
                                 </Button>
                             </div>
-                        ))}
+                        ))} */}
                 </CardContent>
             </Card>
         </ShadCNWrapper>

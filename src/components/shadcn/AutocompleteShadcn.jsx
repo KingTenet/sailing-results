@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ShadCNWrapper } from "@/components/shadcn/ShadCNWrapper";
-import { cn } from "@/components/shadcn/utils/cn";
+import { cn } from "@/lib/utils";
 import { cx } from "class-variance-authority";
 
 function CollapseEx({ children, isOpen }) {

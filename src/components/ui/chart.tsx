@@ -6,7 +6,7 @@ import {
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent"
 
-import { cn } from "@/components/shadcn/utils/cn"
+import { cn } from "@/lib/utils"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
