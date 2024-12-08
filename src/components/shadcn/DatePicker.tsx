@@ -30,11 +30,7 @@ export function DatePicker({
     const onDateSelected = (date: Date | undefined) => {
         setDate(date);
         setIsOpen(false);
-        // setAllDisabled(true);
-        // setTimeout(() => setIsOpen(false), 2000);
     };
-
-    console.log("Rendering date picker");
 
     return (
         <>
@@ -49,7 +45,7 @@ export function DatePicker({
                     <Button
                         variant={"outline"}
                         className={cn(
-                            "justify-start text-left font-normal",
+                            "w-full justify-start text-left font-normal lg:w-[200px]",
                             !date && "text-muted-foreground",
                         )}
                     >

@@ -27,6 +27,9 @@ const COLORS = [
     "#3f88c5ff",
     "#032b43ff",
     "#136f63ff",
+    "#72389fff",
+    "#8b6300ff",
+    "#5a1a1aff",
 ];
 
 class CustomizedAxisTick extends PureComponent {
@@ -61,11 +64,13 @@ export function Chart({
     return (
         <ChartContainer
             config={chartConfig}
-            className="h-full w-[110%] -translate-x-10 lg:w-[50%] lg:translate-x-0"
+            className="h-full w-[95vw] -translate-x-10 lg:h-full lg:w-full lg:translate-x-0"
         >
             <LineChart
                 accessibilityLayer
                 data={chartData}
+                height={500}
+                width={500}
                 margin={{
                     top: 0,
                     right: 10,

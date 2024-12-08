@@ -72,11 +72,9 @@ export default function Autocomplete({
         items: inputItems,
         itemToString,
         onSelectedItemChange: ({ selectedItem }) => {
-            console.log("In onSelectedItemChange");
             setExactMatch(selectedItem);
         },
         onInputValueChange: ({ inputValue }) => {
-            console.log("In onInputValueChange");
             setPartialMatch(inputValue);
         },
     });
@@ -107,7 +105,7 @@ export default function Autocomplete({
 
     return (
         <ShadCNWrapper>
-            <div className="m-6 mx-0">
+            <div>
                 <div className="flex items-center gap-2">
                     <div className="min-w-[110px]">
                         <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -119,7 +117,7 @@ export default function Autocomplete({
                         {...getInputProps()}
                         placeholder={placeholder}
                         type={type}
-                        autoFocus={true}
+                        autoFocus={false}
                     />
                     {/* <button
                         aria-label="toggle menu"
