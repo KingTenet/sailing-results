@@ -6,6 +6,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ShadCNWrapper } from "@/components/shadcn/ShadCNWrapper";
 import { cn } from "@/lib/utils";
 import { cx } from "class-variance-authority";
+import { CalendarIcon } from "lucide-react";
 
 function CollapseEx({ children, isOpen }) {
     if (!isOpen) return null;
@@ -107,18 +108,20 @@ export default function Autocomplete({
         <ShadCNWrapper>
             <div>
                 <div className="flex items-center gap-2">
-                    <div className="min-w-[110px]">
+                    <div className="hidden min-w-[110px] lg:block">
                         <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {heading}
                         </span>
                     </div>
 
                     <Input
+                        className="w-full"
                         {...getInputProps()}
                         placeholder={placeholder}
                         type={type}
                         autoFocus={false}
                     />
+
                     {/* <button
                         aria-label="toggle menu"
                         className="px-2"

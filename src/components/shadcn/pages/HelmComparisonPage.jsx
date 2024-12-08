@@ -216,6 +216,8 @@ export default function HelmComparisonPage() {
             return;
         }
 
+        updateHelmsWereSelected(true);
+
         updateAppState((state) => ({
             ...state,
             selectedHelms: state.selectedHelms
@@ -248,8 +250,8 @@ export default function HelmComparisonPage() {
     return (
         <ShadCNWrapper>
             <Card className="mt-0 min-h-screen w-screen flex-col bg-slate-600/0 pt-0">
-                <CardTitle className="hidden flex-row justify-around lg:flex">
-                    <span className="mx-auto my-5 text-xl">
+                <CardTitle className="ml-6 flex flex-row lg:justify-around">
+                    <span className="my-5 text-xl lg:mx-auto">
                         <h1>Helm performance</h1>
                     </span>
                 </CardTitle>
@@ -259,7 +261,7 @@ export default function HelmComparisonPage() {
                             <div className="my-3">
                                 <AutocompleteShadcn
                                     key={helmsIndexId}
-                                    heading="Select Helms"
+                                    // heading=""
                                     data={helmsIndex?.data || []}
                                     itemToString={(helm) =>
                                         helm ? helm.getName() : ""
@@ -302,8 +304,7 @@ export default function HelmComparisonPage() {
                                     }
                                 />
                             </div>
-                            <div className="my-1" />
-                            <div className="flex w-full justify-between">
+                            <div className="mt-1 flex w-full justify-between">
                                 <span className="mr-5 hidden translate-y-2 text-sm font-medium leading-none lg:block">
                                     {"End Date"}
                                 </span>
@@ -329,8 +330,8 @@ export default function HelmComparisonPage() {
                         </div>
                     )}
                     {chartData && (
-                        <div className="h-full w-full bg-yellow-400/0">
-                            <div className="mt-4 h-[50vh] w-full bg-blue-800/0 lg:h-[80vh]">
+                        <div className="mt-4 h-full w-full bg-yellow-400/0">
+                            <div className="mt-4 h-[45vh] w-full bg-blue-800/0 lg:h-[80vh]">
                                 <Chart
                                     chartConfig={chartConfig}
                                     chartData={chartData}
