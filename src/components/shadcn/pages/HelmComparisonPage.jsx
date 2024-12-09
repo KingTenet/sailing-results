@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppState, useServices } from "@/useAppState";
 import { cleanName } from "@/common";
 import AutocompleteShadcn from "../AutocompleteShadcn";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShadCNWrapper } from "../ShadCNWrapper";
-import { Heading1, X } from "lucide-react";
+import { X } from "lucide-react";
 import Helm from "@/store/types/Helm";
 import Race from "@/store/types/Race";
 import { Chart } from "../HelmComparisonChart";
 import { DatePicker } from "../DatePicker";
-import { cva, cx } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const COLORS = [
@@ -251,7 +250,7 @@ export default function HelmComparisonPage() {
         <ShadCNWrapper>
             <Card className="mt-0 min-h-screen w-screen flex-col bg-slate-600/0 pt-0">
                 <CardTitle className="ml-6 flex flex-row lg:justify-around">
-                    <span className="my-5 text-xl lg:mx-auto">
+                    <span className="mt-4 text-xl lg:mx-auto">
                         <h1>Helm performance</h1>
                     </span>
                 </CardTitle>

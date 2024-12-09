@@ -44,7 +44,8 @@
     "build-staging": "tsc -b && vite build --mode staging",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "ai": "ai-digest"
+    "ai": "ai-digest",
+    "add-ui": "pnpm dlx shadcn@latest add"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
