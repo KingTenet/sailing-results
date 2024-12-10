@@ -3,7 +3,6 @@ import App from "./App";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import version from "./version.js";
-import MainDebug from "./MainDebug.js";
 
 console.log(`Version ${version()}`);
 

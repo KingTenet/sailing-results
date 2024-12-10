@@ -100,15 +100,11 @@ export default function Autocomplete({
         }
     }, [partialMatch]);
 
-    const menuIsOpen = () => {
-        return isOpen;
-    };
-
     return (
         <ShadCNWrapper>
             <div>
                 <div className="flex items-center gap-2">
-                    <div className="hidden min-w-[110px] lg:block">
+                    <div className="hidden min-w-[80px] lg:block">
                         <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             {heading}
                         </span>
@@ -121,15 +117,6 @@ export default function Autocomplete({
                         type={type}
                         autoFocus={false}
                     />
-
-                    {/* <button
-                        aria-label="toggle menu"
-                        className="px-2"
-                        type="button"
-                        {...getToggleButtonProps()}
-                    >
-                        {isOpen ? <>&#8593;</> : <>&#8595;</>}
-                    </button> */}
                 </div>
             </div>
             <div>
@@ -162,72 +149,4 @@ export default function Autocomplete({
             </div>
         </ShadCNWrapper>
     );
-
-    return (
-        <ShadCNWrapper>
-            <div>
-                <div className="flex items-center gap-2">
-                    <div className="min-w-[110px]">
-                        <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {heading}
-                        </span>
-                    </div>
-                    <div className="flex-1">
-                        <Input
-                            {...getInputProps()}
-                            placeholder={placeholder}
-                            type={type}
-                            autoFocus={true}
-                        />
-                    </div>
-                </div>
-
-                {!exactMatch && errorMessage && canShowErrors && (
-                    <Alert variant="destructive">
-                        <AlertTitle>{errorMessage}</AlertTitle>
-                    </Alert>
-                )}
-
-                <CollapseEx isOpen={menuIsOpen()}>
-                    <ul {...getMenuProps()} className="mt-2 space-y-1">
-                        {getMenuItems(inputItems, data)
-                            .slice(0, 6)
-                            .map((item, index) => [item, index])
-                            .sort(([itemA, indexA], [itemB, indexB]) =>
-                                sortFn && !partialMatch
-                                    ? sortFn(itemA, itemB)
-                                    : indexA - indexB,
-                            )
-                            .map(([item, index]) => (
-                                <li
-                                    key={`${itemToString(item)}${index}`}
-                                    {...getItemProps({ item, index })}
-                                >
-                                    <Card
-                                        className={cn(
-                                            "transition-colors",
-                                            highlightedIndex === index &&
-                                                "bg-accent",
-                                        )}
-                                    >
-                                        <CardContent className="p-3">
-                                            <span className="text-sm font-medium">
-                                                {itemToString(item)}
-                                            </span>
-                                        </CardContent>
-                                    </Card>
-                                </li>
-                            ))}
-                    </ul>
-                </CollapseEx>
-            </div>
-        </ShadCNWrapper>
-    );
-}
-
-function getMenuItems(inputItems, initialItems) {
-    if (inputItems.length) {
-        return inputItems;
-    }
-    return initialItems;
 }

@@ -67,12 +67,12 @@ function getHelmPBs(resultsByHelm, startDate, endDate) {
         );
 }
 
-function SelectedHelms({ appState, getHelmColor, handleRemoveHelm }) {
+function SelectedHelms({ title, appState, getHelmColor, handleRemoveHelm }) {
     // const appState = useAppState();
     return (
         <div className="w-full">
             {appState.selectedHelms?.length > 0 && (
-                <h1 className="mb-2 hidden lg:block">{"Selected Helms"}</h1>
+                <h1 className="mx-auto mb-2 w-full text-center">{title}</h1>
             )}
 
             {appState.selectedHelms?.length > 0 &&
@@ -105,7 +105,7 @@ export default function HelmComparisonPage() {
     const [helmsIndexId, setHelmsIndexId] = useState("index0");
     const services = useServices();
     const [appState, updateAppState] = useAppState();
-    const resultsByHelm = services.getResultsByHelm();
+    const [resultsByHelm] = useState(() => services.getResultsByHelm());
     const [helmsWereSelected, updateHelmsWereSelected] = useState(false);
 
     const NOW = new Date();
@@ -129,24 +129,16 @@ export default function HelmComparisonPage() {
     };
 
     useEffect(() => {
-        if (appState?.selectedHelms?.length || helmsWereSelected) {
+        if (helmsWereSelected) {
             return;
         }
 
         const helmPBs = getHelmPBs(resultsByHelm, startDate, endDate);
-
         updateAppState((state) => ({
             ...state,
             selectedHelms: helmPBs.slice(0, 3).map(([helm]) => helm),
         }));
-    }, [
-        appState,
-        resultsByHelm,
-        updateAppState,
-        startDate,
-        endDate,
-        helmsWereSelected,
-    ]);
+    }, [startDate, endDate, updateAppState, helmsWereSelected, resultsByHelm]);
 
     const tmpEndDate =
         endDate > startDate ? new Date(endDate) : new Date(startDate);
@@ -258,9 +250,12 @@ export default function HelmComparisonPage() {
                     {helmsIndex && (
                         <div className="flex flex-col bg-pink-300/0 pt-0 lg:h-full lg:max-w-screen-xl">
                             <div className="my-3">
+                                {/* <span className="mr-5 hidden translate-y-6 text-sm font-medium leading-none lg:block">
+                                    {"Helms"}
+                                </span> */}
                                 <AutocompleteShadcn
                                     key={helmsIndexId}
-                                    // heading=""
+                                    heading="Helms"
                                     data={helmsIndex?.data || []}
                                     itemToString={(helm) =>
                                         helm ? helm.getName() : ""
@@ -280,7 +275,7 @@ export default function HelmComparisonPage() {
                                             ? 1
                                             : -1
                                     }
-                                    placeholder="Helm name..."
+                                    placeholder="Insert name..."
                                     forceBlurOnExactMatch={true}
                                     getPartialMatchErrorMsg={
                                         getHelmNameErrorMessage
@@ -289,7 +284,7 @@ export default function HelmComparisonPage() {
                             </div>
                             <div className="flex w-full justify-between">
                                 <span className="mr-5 hidden translate-y-2 text-sm font-medium leading-none lg:block">
-                                    {"Start Date"}
+                                    {"Start"}
                                 </span>
                                 <DatePicker
                                     date={startDate}
@@ -305,7 +300,7 @@ export default function HelmComparisonPage() {
                             </div>
                             <div className="mt-1 flex w-full justify-between">
                                 <span className="mr-5 hidden translate-y-2 text-sm font-medium leading-none lg:block">
-                                    {"End Date"}
+                                    {"End"}
                                 </span>
                                 <DatePicker
                                     date={endDate}
@@ -324,6 +319,11 @@ export default function HelmComparisonPage() {
                                     appState={appState}
                                     getHelmColor={getHelmColor}
                                     handleRemoveHelm={handleRemoveHelm}
+                                    title={
+                                        helmsWereSelected
+                                            ? "Selected Helms"
+                                            : "Top 3 Helms"
+                                    }
                                 />
                             </div>
                         </div>
@@ -344,6 +344,11 @@ export default function HelmComparisonPage() {
                             appState={appState}
                             getHelmColor={getHelmColor}
                             handleRemoveHelm={handleRemoveHelm}
+                            title={
+                                helmsWereSelected
+                                    ? "Selected Helms"
+                                    : "Top 3 Helms"
+                            }
                         />
                     </div>
                 </CardContent>

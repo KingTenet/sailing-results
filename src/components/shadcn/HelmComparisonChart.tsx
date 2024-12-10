@@ -1,21 +1,10 @@
 "use client";
 
-import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Legend,
-    Line,
-    LineChart,
-    XAxis,
-    YAxis,
-} from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
     ChartConfig,
     ChartContainer,
-    ChartLegend,
-    ChartLegendContent,
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -32,9 +21,18 @@ const COLORS = [
     "#5a1a1aff",
 ];
 
-class CustomizedAxisTick extends PureComponent {
+interface CustomizedAxisTickProps {
+    x?: number;
+    y?: number;
+    payload?: {
+        value: string;
+    };
+    stroke?: string;
+}
+
+class CustomizedAxisTick extends PureComponent<CustomizedAxisTickProps> {
     render() {
-        const { x, y, payload, stroke } = this.props;
+        const { x, y, payload } = this.props;
         return (
             <g transform={`translate(${x},${y})`}>
                 <text
@@ -45,7 +43,7 @@ class CustomizedAxisTick extends PureComponent {
                     fill="#666"
                     transform="rotate(-80) translate(0 -12) scale(0.8)"
                 >
-                    {payload.value.slice(0, 10)}
+                    {payload?.value.slice(0, 10)}
                 </text>
             </g>
         );
@@ -88,13 +86,9 @@ export function Chart({
                     tickCount={10}
                     tick={<CustomizedAxisTick />}
                 />
-                {/* <ChartTooltip content={<ChartTooltipContent />} /> */}
-                {/* <ChartLegend content={<ChartLegendContent />} /> */}
-                {/* <CartesianGrid strokeDasharray="3 3" /> */}
-                {/* <XAxis dataKey="name" /> */}
+                <ChartTooltip content={<ChartTooltipContent />} />
+
                 <YAxis />
-                {/* <Tooltip /> */}
-                {/* <Legend /> */}
                 {helms &&
                     helms.map((helm, index) => (
                         <Line

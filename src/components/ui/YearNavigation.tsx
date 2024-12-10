@@ -2,7 +2,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export function YearNavigation({ month, setMonth }) {
+export function YearNavigation({
+    month,
+    setMonth,
+}: {
+    month: Date;
+    setMonth: (date: Date) => void;
+}) {
     return (
         <>
             <div className="relative m-3 mb-0 flex items-center justify-center">

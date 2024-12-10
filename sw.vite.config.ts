@@ -54,6 +54,9 @@ function getPWAOptions(base: string) {
             type: "module",
             navigateFallback: "index.html",
         },
+        workbox: {
+            maximumFileSizeToCacheInBytes: 4194304,
+        },
     };
 
     const claims = process.env.CLAIMS === "true";

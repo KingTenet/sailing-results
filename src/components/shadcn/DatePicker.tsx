@@ -18,7 +18,7 @@ export function DatePicker({
     disabled,
     setDate,
 }: {
-    date: Date | undefined;
+    date: Date;
     disabled: (date: Date) => boolean;
     setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
 }) {

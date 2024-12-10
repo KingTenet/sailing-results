@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { YearNavigation } from "./YearNavigation";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
@@ -16,8 +16,8 @@ function Calendar({
     showOutsideDays = true,
     ...props
 }: CalendarProps) {
-    const selectedDate = props.selected as Date | undefined;
-    const [month, setMonth] = React.useState<Date | undefined>(selectedDate);
+    const selectedDate = props.selected as Date;
+    const [month, setMonth] = React.useState<Date>(selectedDate);
     return (
         <>
             <YearNavigation month={month} setMonth={setMonth} />
@@ -65,12 +65,8 @@ function Calendar({
                     ...classNames,
                 }}
                 components={{
-                    IconLeft: ({ ...props }) => (
-                        <ChevronLeft className="h-4 w-4" />
-                    ),
-                    IconRight: ({ ...props }) => (
-                        <ChevronRight className="h-4 w-4" />
-                    ),
+                    IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+                    IconRight: () => <ChevronRight className="h-4 w-4" />,
                 }}
                 onMonthChange={(month) => setMonth(month)}
                 month={month}
