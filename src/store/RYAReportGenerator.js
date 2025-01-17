@@ -1,3 +1,4 @@
+import { AutoMap } from "@/common.js";
 import RemoteStore from "./RemoteStore.js";
 import StoreWrapper from "./StoreWrapper.js";
 import CorrectedResult from "./types/CorrectedResult.js";
@@ -52,8 +53,6 @@ async function newReportReady(metaStore, latestSeason) {
 }
 
 function generateResultsForReport(stores, completedSeasons) {
-    const results = [];
-
     const firstPossibleRaceOfCompletedSeason =
         completedSeasons.length > 1
             ? getNextPossibleRace(completedSeasons.at(-2)[0])
@@ -68,6 +67,7 @@ function generateResultsForReport(stores, completedSeasons) {
         (!firstPossibleRaceOfCompletedSeason ||
             firstPossibleRaceOfCompletedSeason.isBefore(race));
 
+    const results = new AutoMap(PYUpload.getId);
     stores.seriesPoints.map(([, seriesPoints]) => {
         seriesPoints.getPoints();
         seriesPoints.allClassHandicapPoints.forEach((points) => {
@@ -83,7 +83,7 @@ function generateResultsForReport(stores, completedSeasons) {
                 return;
             }
 
-            results.push(
+            results.upsert(
                 PYUpload.fromSeriesPointsFinish(
                     seriesPoints,
                     points.result.raceFinish,
@@ -93,7 +93,7 @@ function generateResultsForReport(stores, completedSeasons) {
             );
         });
     });
-    return results;
+    return [...results.values()];
 }
 
 export class RYAReportGenerator {

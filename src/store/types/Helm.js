@@ -4,7 +4,8 @@ import Race from "./Race.js";
 import ClubMember from "./ClubMember.js";
 
 const MAX_NOVICE_RACES = 12;
-const MAX_JUNIOR_AGE_BY_END_OF_YEAR = 17;
+const MAX_JUNIOR_AGE_AT_START_OF_YEAR = 18;
+const MAX_CADET_AGE_AT_START_OF_YEAR = 13;
 const INITIAL_PI_FOR_NOVICE_HELM = 20; // In percent
 const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent
 
@@ -69,14 +70,17 @@ class Helm extends StoreObject {
 
     wasCadetInRace(race) {
         assertType(race, Race);
-        return false;
+        return (
+            race.getDate().getUTCFullYear() - this.yearOfBirth <=
+            MAX_CADET_AGE_AT_START_OF_YEAR + 1
+        );
     }
 
     wasJuniorInRace(race) {
         assertType(race, Race);
         return (
             race.getDate().getUTCFullYear() - this.yearOfBirth <=
-            MAX_JUNIOR_AGE_BY_END_OF_YEAR
+            MAX_JUNIOR_AGE_AT_START_OF_YEAR + 1
         );
     }
 

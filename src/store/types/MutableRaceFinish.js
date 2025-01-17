@@ -74,15 +74,8 @@ export default class MutableRaceFinish extends Race {
         );
     }
 
-    getCorrectedResults(juniorsOnly = false) {
-        const correctedResults = this.isPursuitRace()
-            ? this.results
-            : this.correctedResults;
-        return !juniorsOnly
-            ? correctedResults
-            : correctedResults.filter((result) =>
-                  result.getHelm().wasJuniorInRace(result.getRace()),
-              );
+    getCorrectedResults() {
+        return this.isPursuitRace() ? this.results : this.correctedResults;
     }
 
     validateRaceType() {
@@ -145,24 +138,24 @@ export default class MutableRaceFinish extends Race {
             .map(([points, result]) => [result, points]);
     }
 
-    getPersonalCorrectedPointsByResult(personalHandicapAtRace, juniorsOnly) {
+    getPersonalCorrectedPointsByResult(personalHandicapAtRace) {
         const [, personalAdjustedPoints] =
             MutableRaceFinish.getPointsForResults(
-                this.getCorrectedResults(juniorsOnly),
+                this.getCorrectedResults(),
                 personalHandicapAtRace,
             );
         return this.sortResultsByPointsDesc(personalAdjustedPoints);
     }
 
-    getClassCorrectedPointsByResult(juniorsOnly) {
+    getClassCorrectedPointsByResult() {
         const [classAdjustedPoints] = MutableRaceFinish.getPointsForResults(
-            this.getCorrectedResults(juniorsOnly),
+            this.getCorrectedResults(),
         );
         return this.sortResultsByPointsDesc(classAdjustedPoints);
     }
 
-    getFinishersByFinishTime(juniorsOnly) {
-        return this.getCorrectedResults(juniorsOnly).sort((a, b) =>
+    getFinishersByFinishTime() {
+        return this.getCorrectedResults().sort((a, b) =>
             b.sortByFinishTimeDesc(a),
         );
     }

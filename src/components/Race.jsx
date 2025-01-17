@@ -357,10 +357,19 @@ export default function Race({ backButtonText }) {
     const params = useParams();
     const raceDateStr = params["raceDate"];
     const raceNumberStr = params["raceNumber"];
+    const seasonStr = params["season"];
+    const seriesStr = params["series"];
+
     const raceDate = parseURLDate(raceDateStr);
     const raceNumber = parseInt(raceNumberStr);
     const race = new StoreRace(raceDate, raceNumber);
+
     const services = useServices();
+
+    const isJuniorSeries =
+        seasonStr &&
+        services.getSeries(race, seasonStr, seriesStr)?.series.isJuniorSeries();
+
     const [raceIsMutable, setRaceIsMutable] = useState(() =>
         services.isRaceMutable(raceDate, raceNumber),
     );
@@ -601,6 +610,7 @@ export default function Race({ backButtonText }) {
                     race={race}
                     isDisabled={committingResults}
                     raceIsMutable={raceIsMutable}
+                    isJuniorSeries={isJuniorSeries}
                 />
                 <Spacer />
                 {raceIsMutable && (

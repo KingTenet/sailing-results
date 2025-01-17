@@ -71,6 +71,11 @@ export default class HelmResult extends StoreObject {
         );
     }
 
+    static wasJuniorInRace(result) {
+        assertType(result, HelmResult);
+        return result.getHelm().wasJuniorInRace(result.getRace());
+    }
+
     getRace() {
         return this.race;
     }

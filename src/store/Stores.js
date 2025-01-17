@@ -773,6 +773,7 @@ export class StoreFunctions {
         this.stores = stores;
         this.getRaces = this.getRaces;
         this.getSeriesPoints = this.getSeriesPoints;
+        this.getSeries = this.getSeries;
         this.getHelmsIndex = this.getHelmsIndex;
         this.getBoatIndexForHelmRace = this.getBoatIndexForHelmRace;
         this.createRegisteredHelm = this.createRegisteredHelm;
@@ -936,6 +937,20 @@ export class StoreFunctions {
 
     getSeriesPoints() {
         return this.stores.seriesPoints.map(([, seriesPoints]) => seriesPoints);
+    }
+
+    getSeries(race, seriesSeason, seriesName) {
+        assertType(race, Race);
+        assertType(seriesSeason, "string");
+        assertType(seriesName, "string");
+
+        return this.stores.allSeriesRacesByRace
+            .get(Race.getId(race))
+            .find(
+                (seriesRace) =>
+                    seriesRace.series.getSeriesName() === seriesName &&
+                    seriesRace.series.getSeasonName() === seriesSeason,
+            );
     }
 
     isRaceEditableByUser(race) {

@@ -108,7 +108,23 @@ export default class SeriesPoints extends Series {
             assertType(raceFinish, MutableRaceFinish),
         );
         this.seriesRaces = seriesRaces;
-        this.raceFinishes = raceFinishes;
+        this.raceFinishes = !this.isJuniorSeries()
+            ? raceFinishes
+            : raceFinishes
+                  .map((raceFinish) => {
+                      const results = raceFinish.results.filter(
+                          HelmResult.wasJuniorInRace,
+                      );
+                      return (
+                          results.length &&
+                          MutableRaceFinish.fromResults(
+                              results,
+                              raceFinish.getHelmResults,
+                              raceFinish.oods,
+                          )
+                      );
+                  })
+                  .filter(Boolean);
         this.plannedRaces = this.seriesRaces.length;
         this.finishedRaces = this.raceFinishes.length;
         this.racesToQualify = Math.ceil(this.plannedRaces / 2 + 1);
@@ -194,13 +210,10 @@ export default class SeriesPoints extends Series {
 
         const getPointsByResult = (raceFinish) => {
             if (byClassHandicap) {
-                return raceFinish.getClassCorrectedPointsByResult(
-                    this.isJuniorSeries(),
-                );
+                return raceFinish.getClassCorrectedPointsByResult();
             }
             return raceFinish.getPersonalCorrectedPointsByResult(
-                USE_PH_FROM_SERIES_START && finishes.at(0),
-                this.isJuniorSeries(),
+                USE_PH_FROM_SERIES_START && finishes.at(0)
             );
         };
 
@@ -221,7 +234,7 @@ export default class SeriesPoints extends Series {
 
         const raceResults = flatten(
             finishedRaces.map((raceFinish) =>
-                raceFinish.getCorrectedResults(this.isJuniorSeries()),
+                raceFinish.getCorrectedResults(),
             ),
         );
         const allOODs = flatten(

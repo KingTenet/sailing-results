@@ -1,16 +1,26 @@
+import MutableRaceFinish from "@/store/types/MutableRaceFinish";
 import { useAppState, useServices } from "../useAppState";
 import { useState, useEffect, useRef } from "react";
 import { useLongPress, LongPressEventType } from "use-long-press";
+import HelmResult from "@/store/types/HelmResult";
 
 const MIN_LONG_PRESS_DURATION_MS = 1200;
 const MAX_SHORT_PRESS_DURATION_MS = 400;
 
-export function useSortedResults(results, race) {
+export function useSortedResults(results, race, isJuniorSeries = false) {
     const services = useServices();
-    const [raceFinish] = useState(
+    const [storeRaceFinish] = useState(
         () => services.getRaceFinishForResults(race, results),
         [],
     );
+
+    const raceFinish = !isJuniorSeries
+        ? storeRaceFinish
+        : MutableRaceFinish.fromResults(
+              storeRaceFinish.results.filter(HelmResult.wasJuniorInRace),
+              storeRaceFinish.getHelmResults,
+              storeRaceFinish.oods,
+          );
 
     return [
         raceFinish,
