@@ -36,4 +36,8 @@ export default class Series {
     getSeriesName() {
         return this.series;
     }
+
+    isJuniorSeries() {
+        return this.series.toLowerCase().includes("youth");
+    }
 }

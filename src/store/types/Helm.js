@@ -4,7 +4,7 @@ import Race from "./Race.js";
 import ClubMember from "./ClubMember.js";
 
 const MAX_NOVICE_RACES = 12;
-
+const MAX_JUNIOR_AGE_BY_END_OF_YEAR = 17;
 const INITIAL_PI_FOR_NOVICE_HELM = 20; // In percent
 const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent
 
@@ -74,7 +74,10 @@ class Helm extends StoreObject {
 
     wasJuniorInRace(race) {
         assertType(race, Race);
-        return false;
+        return (
+            race.getDate().getUTCFullYear() - this.yearOfBirth <=
+            MAX_JUNIOR_AGE_BY_END_OF_YEAR
+        );
     }
 
     wasNoviceInRace(helmResultsAsc, race) {

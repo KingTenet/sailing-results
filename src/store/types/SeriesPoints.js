@@ -194,15 +194,14 @@ export default class SeriesPoints extends Series {
 
         const getPointsByResult = (raceFinish) => {
             if (byClassHandicap) {
-                return raceFinish.getClassCorrectedPointsByResult();
-            }
-            if (USE_PH_FROM_SERIES_START) {
-                // Use PH from first race in series..
-                return raceFinish.getPersonalCorrectedPointsByResult(
-                    finishes.at(0),
+                return raceFinish.getClassCorrectedPointsByResult(
+                    this.isJuniorSeries(),
                 );
             }
-            return raceFinish.getPersonalCorrectedPointsByResult();
+            return raceFinish.getPersonalCorrectedPointsByResult(
+                USE_PH_FROM_SERIES_START && finishes.at(0),
+                this.isJuniorSeries(),
+            );
         };
 
         const finishedRaces = finishes
@@ -221,7 +220,9 @@ export default class SeriesPoints extends Series {
         );
 
         const raceResults = flatten(
-            finishedRaces.map((raceFinish) => raceFinish.getCorrectedResults()),
+            finishedRaces.map((raceFinish) =>
+                raceFinish.getCorrectedResults(this.isJuniorSeries()),
+            ),
         );
         const allOODs = flatten(
             finishes.map((raceFinish) => raceFinish.getOODs()),

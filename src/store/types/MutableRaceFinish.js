@@ -4,6 +4,7 @@ import { calculateSCTFromRaceResults } from "../../common/personalHandicapHelper
 import Race from "./Race.js";
 import CorrectedResult from "./CorrectedResult.js";
 import HelmResult from "./HelmResult.js";
+import Helm from "./Helm.js";
 
 export default class MutableRaceFinish extends Race {
     constructor(raceDate, raceNumber, results = [], getHelmResults, oods) {
@@ -73,24 +74,16 @@ export default class MutableRaceFinish extends Race {
         );
     }
 
-    getCorrectedResults() {
-        return this.isPursuitRace() ? this.results : this.correctedResults;
+    getCorrectedResults(juniorsOnly = false) {
+        const correctedResults = this.isPursuitRace()
+            ? this.results
+            : this.correctedResults;
+        return !juniorsOnly
+            ? correctedResults
+            : correctedResults.filter((result) =>
+                  result.getHelm().wasJuniorInRace(result.getRace()),
+              );
     }
-
-    // addResult(result) {
-    //     assertType(result, Result);
-    //     assert(Result.getRaceId(result) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
-    //     assert(!this.hasImmutableResults(), "Cannot add results to an immutable race finish");
-    //     this.results.push(result);
-    //     this.processResults();
-    // }
-
-    // addOOD(ood) {
-    //     assertType(ood, HelmResult);
-    //     assert(HelmResult.getRaceId(ood) === Race.getId(this), "RaceFinish requires that OODs and results are from same race.");
-    //     assert(!this.hasImmutableResults(), "Cannot add oods to an immutable race finish");
-    //     this.oods = [...this.oods, ood];
-    // }
 
     validateRaceType() {
         assert(
@@ -108,10 +101,6 @@ export default class MutableRaceFinish extends Race {
     }
 
     setCorrectedResults() {
-        // const allResultsByRaceAsc = this.previousResults.sort(Result.sortByRaceAsc);
-        // const helmResultsByRaceAsc = new Map(groupBy(allResultsByRaceAsc, Result.getHelmId));
-        // const getHelmResults = (helmId) => helmResultsByRaceAsc.get(helmId) || [];
-
         this.correctedResults = this.results.map((result) =>
             CorrectedResult.fromResult(
                 result,
@@ -156,24 +145,24 @@ export default class MutableRaceFinish extends Race {
             .map(([points, result]) => [result, points]);
     }
 
-    getPersonalCorrectedPointsByResult(personalHandicapAtRace) {
+    getPersonalCorrectedPointsByResult(personalHandicapAtRace, juniorsOnly) {
         const [, personalAdjustedPoints] =
             MutableRaceFinish.getPointsForResults(
-                this.getCorrectedResults(),
+                this.getCorrectedResults(juniorsOnly),
                 personalHandicapAtRace,
             );
         return this.sortResultsByPointsDesc(personalAdjustedPoints);
     }
 
-    getClassCorrectedPointsByResult() {
+    getClassCorrectedPointsByResult(juniorsOnly) {
         const [classAdjustedPoints] = MutableRaceFinish.getPointsForResults(
-            this.getCorrectedResults(),
+            this.getCorrectedResults(juniorsOnly),
         );
         return this.sortResultsByPointsDesc(classAdjustedPoints);
     }
 
-    getFinishersByFinishTime() {
-        return this.getCorrectedResults().sort((a, b) =>
+    getFinishersByFinishTime(juniorsOnly) {
+        return this.getCorrectedResults(juniorsOnly).sort((a, b) =>
             b.sortByFinishTimeDesc(a),
         );
     }
