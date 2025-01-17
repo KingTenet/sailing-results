@@ -34,7 +34,7 @@ export default class Race {
     }
 
     prettyPrint() {
-        // const prettyNumber = ["1st", "2nd", "3rd"];
+        // const prettyNumber = ["1st", "2nd", "3rd","4th","5th","6th"];
         // const prettyDate = this.date.toISOString().slice(0, 10)
         // return `${prettyDate}, ${prettyNumber[this.raceNumber]} race`;
         return `Date=${this.date.toISOString().slice(0, 10)}, Number=${this.raceNumber}`;

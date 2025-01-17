@@ -36,7 +36,7 @@ function RaceDimension({ children, isTruncated = false, ...props }) {
 
 function RaceListItem({ raceDate, raceNumber, onClick }) {
     const formatRaceNumber = (raceNumber) =>
-        ["1st", "2nd", "3rd"][raceNumber - 1];
+        ["1st", "2nd", "3rd", "4th", "5th", "6th"][raceNumber - 1];
     return (
         <>
             <Flex
@@ -81,7 +81,7 @@ function ImmutableRaceListItem({
     onClick,
 }) {
     const formatRaceNumber = (raceNumber) =>
-        ["1st", "2nd", "3rd"][raceNumber - 1];
+        ["1st", "2nd", "3rd", "4th", "5th", "6th"][raceNumber - 1];
     const [classWinner, phWinner] = wonBy;
 
     return (

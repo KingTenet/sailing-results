@@ -379,7 +379,7 @@ export default function Race({ backButtonText }) {
     );
 
     const formatRaceNumber = (raceNumber) =>
-        ["1st", "2nd", "3rd"][raceNumber - 1];
+        ["1st", "2nd", "3rd", "4th", "5th", "6th"][raceNumber - 1];
     const committingResultsStarted = () => {
         setCommittingResults(true);
     };
