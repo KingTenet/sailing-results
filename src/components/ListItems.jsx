@@ -126,7 +126,7 @@ function Slider({
     });
 
     return (
-        <div className="container">
+        <div className="item-container">
             <animated.div className={"item"}>
                 <div className={"item slider-background"}>
                     <animated.div
