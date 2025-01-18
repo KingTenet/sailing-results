@@ -7,6 +7,7 @@ import {
 import StoreObject from "./StoreObject.js";
 import Helm from "./Helm.js";
 import Race from "./Race.js";
+import Series from "./Series.js";
 
 export default class HelmResult extends StoreObject {
     constructor(race, helm, metadata) {
@@ -79,6 +80,21 @@ export default class HelmResult extends StoreObject {
     static wasCadetInRace(result) {
         assertType(result, HelmResult);
         return result.getHelm().wasCadetInRace(result.getRace());
+    }
+
+    static isFemale(result) {
+        assertType(result, HelmResult);
+        return result.getHelm().gender == Helm.Gender.FEMALE;
+    }
+
+    static isQualified(result, series) {
+        assertType(series, Series);
+
+        return (
+            (!series.isJuniorSeries() || HelmResult.wasJuniorInRace(result)) &&
+            (!series.isCadetSeries() || HelmResult.wasCadetInRace(result)) &&
+            (!series.isWomensSeries() || HelmResult.isFemale(result))
+        );
     }
 
     getRace() {

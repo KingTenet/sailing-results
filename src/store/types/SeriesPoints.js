@@ -108,26 +108,7 @@ export default class SeriesPoints extends Series {
             assertType(raceFinish, MutableRaceFinish),
         );
         this.seriesRaces = seriesRaces;
-        this.raceFinishes =
-            !this.isJuniorSeries() && !this.isCadetSeries()
-                ? raceFinishes
-                : raceFinishes
-                      .map((raceFinish) => {
-                          const results = raceFinish.results.filter(
-                              this.isJuniorSeries()
-                                  ? HelmResult.wasJuniorInRace
-                                  : HelmResult.wasCadetInRace,
-                          );
-                          return (
-                              results.length &&
-                              MutableRaceFinish.fromResults(
-                                  results,
-                                  raceFinish.getHelmResults,
-                                  raceFinish.oods,
-                              )
-                          );
-                      })
-                      .filter(Boolean);
+        this.raceFinishes = this.restrictedRaceFinishes(raceFinishes);
         this.plannedRaces = this.seriesRaces.length;
         this.finishedRaces = this.raceFinishes.length;
         this.racesToQualify = Math.ceil(this.plannedRaces / 2 + 1);
@@ -138,6 +119,18 @@ export default class SeriesPoints extends Series {
 
         this.validateSeriesRaces();
         this.validateRaceFinishes();
+    }
+
+    restrictedRaceFinishes(raceFinishes) {
+        if (!this.hasRestrictedField()) {
+            return raceFinishes;
+        }
+
+        return raceFinishes
+            .map((raceFinish) =>
+                MutableRaceFinish.fromRestrictedRaceFinish(raceFinish, this),
+            )
+            .filter(Boolean);
     }
 
     validateSeriesRaces() {
