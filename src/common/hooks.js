@@ -7,20 +7,30 @@ import HelmResult from "@/store/types/HelmResult";
 const MIN_LONG_PRESS_DURATION_MS = 1200;
 const MAX_SHORT_PRESS_DURATION_MS = 400;
 
-export function useSortedResults(results, race, isJuniorSeries = false) {
+export function useSortedResults(results, race, series) {
     const services = useServices();
     const [storeRaceFinish] = useState(
         () => services.getRaceFinishForResults(race, results),
         [],
     );
 
-    const raceFinish = !isJuniorSeries
-        ? storeRaceFinish
-        : MutableRaceFinish.fromResults(
-              storeRaceFinish.results.filter(HelmResult.wasJuniorInRace),
-              storeRaceFinish.getHelmResults,
-              storeRaceFinish.oods,
-          );
+    const isJuniorSeries = series?.series.isJuniorSeries();
+    const isCadetSeries = series?.series.isCadetSeries();
+
+    const raceFinish =
+        !isJuniorSeries && !isCadetSeries
+            ? storeRaceFinish
+            : MutableRaceFinish.fromResults(
+                  isCadetSeries
+                      ? storeRaceFinish.results.filter(
+                            HelmResult.wasCadetInRace,
+                        )
+                      : storeRaceFinish.results.filter(
+                            HelmResult.wasJuniorInRace,
+                        ),
+                  storeRaceFinish.getHelmResults,
+                  storeRaceFinish.oods,
+              );
 
     return [
         raceFinish,

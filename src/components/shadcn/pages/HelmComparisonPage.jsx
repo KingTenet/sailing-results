@@ -240,7 +240,7 @@ export default function HelmComparisonPage() {
 
     return (
         <ShadCNWrapper>
-            <Card className="mt-0 min-h-screen w-screen flex-col bg-slate-600/0 pt-0">
+            <Card className="mt-0 min-h-screen w-screen flex-col bg-white pt-0">
                 <CardTitle className="ml-6 flex flex-row lg:justify-around">
                     <span className="mt-4 text-xl lg:mx-auto">
                         <h1>Helm performance</h1>

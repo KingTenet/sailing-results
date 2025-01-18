@@ -366,9 +366,9 @@ export default function Race({ backButtonText }) {
 
     const services = useServices();
 
-    const isJuniorSeries =
+    const series =
         seasonStr &&
-        services.getSeries(race, seasonStr, seriesStr)?.series.isJuniorSeries();
+        services.getSeries(race, seasonStr, seriesStr);
 
     const [raceIsMutable, setRaceIsMutable] = useState(() =>
         services.isRaceMutable(raceDate, raceNumber),
@@ -610,7 +610,7 @@ export default function Race({ backButtonText }) {
                     race={race}
                     isDisabled={committingResults}
                     raceIsMutable={raceIsMutable}
-                    isJuniorSeries={isJuniorSeries}
+                    series={series}
                 />
                 <Spacer />
                 {raceIsMutable && (

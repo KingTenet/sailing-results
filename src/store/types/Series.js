@@ -1,6 +1,9 @@
 import { assertType, generateId, fromId } from "../../common.js";
 import SeriesRace from "./SeriesRace.js";
 
+const CADET_SERIES_NAMES = ["cadet"];
+const JUNIOR_SERIES_NAMES = ["junior", "youth"];
+
 export default class Series {
     constructor(season, series) {
         this.season = assertType(season, "string");
@@ -38,6 +41,14 @@ export default class Series {
     }
 
     isJuniorSeries() {
-        return this.series.toLowerCase().includes("youth");
+        return JUNIOR_SERIES_NAMES.some((name) =>
+            this.series.toLowerCase().includes(name),
+        );
+    }
+
+    isCadetSeries() {
+        return CADET_SERIES_NAMES.some((name) =>
+            this.series.toLowerCase().includes(name),
+        );
     }
 }
