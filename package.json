@@ -40,10 +40,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build-prod": "tsc -b && vite build",
     "build-staging": "tsc -b && vite build --mode staging",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
+    "preview": "tsc -b && vite build --mode preview && vite preview",
     "ai": "ai-digest",
     "add-ui": "pnpm dlx shadcn@latest add"
   },
