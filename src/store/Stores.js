@@ -22,6 +22,7 @@ import SearchIndex from "../SearchIndex.js";
 import ClubMember from "./types/ClubMember.js";
 import RemoteStore from "./RemoteStore.js";
 import { RYAReportGenerator } from "./RYAReportGenerator.js";
+import getVersion from "../version.js";
 
 export class Stores {
     constructor(auth, raceResultsSheetId, readOnly) {
@@ -35,7 +36,7 @@ export class Stores {
             this.raceResultsDocument,
             "Meta Data",
             true,
-            ["Last Updated"],
+            ["Last Updated", "Version"],
         ).then((remoteStore) => (this.metaStore = remoteStore));
         this.promiseStoresLastUpdated = this.getStoreLastUpdated();
     }
@@ -57,7 +58,10 @@ export class Stores {
         try {
             await this.promiseMetaStore;
             return await this.metaStore.replace([
-                { "Last Updated": new Date().toISOString() },
+                {
+                    "Last Updated": new Date().toISOString(),
+                    Version: getVersion(),
+                },
             ]);
         } catch (err) {
             console.log(err);
@@ -950,7 +954,8 @@ export class StoreFunctions {
                 (seriesRace) =>
                     seriesRace.series.getSeriesName() === seriesName &&
                     seriesRace.series.getSeasonName() === seriesSeason,
-            );
+            )
+            ?.getSeries();
     }
 
     isRaceEditableByUser(race) {

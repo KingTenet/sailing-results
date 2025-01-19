@@ -13,7 +13,7 @@ export function useSortedResults(results, race, series) {
         [],
     );
 
-    const raceFinish = !series?.isRestrictedSeries()
+    const raceFinish = !series?.hasRestrictedField()
         ? storeRaceFinish
         : MutableRaceFinish.fromRestrictedRaceFinish(storeRaceFinish, series);
 
