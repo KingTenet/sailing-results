@@ -122,7 +122,11 @@ export default class SeriesPoints extends Series {
     }
 
     restrictedRaceFinishes(raceFinishes) {
-        if (!this.hasRestrictedField()) {
+        if (
+            !this.seriesRaces.some((seriesRace) =>
+                seriesRace.hasRestrictedField(),
+            )
+        ) {
             return raceFinishes;
         }
 
@@ -132,7 +136,8 @@ export default class SeriesPoints extends Series {
                     raceFinish,
                     this.seriesRaces.find(
                         (seriesRace) =>
-                            seriesRace.getRaceId() === raceFinish.getId(),
+                            SeriesRace.getRaceId(seriesRace) ===
+                            MutableRaceFinish.getId(raceFinish),
                     ),
                 ),
             )

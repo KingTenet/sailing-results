@@ -4,7 +4,7 @@ import Race from "./Race.js";
 import ClubMember from "./ClubMember.js";
 
 const MAX_NOVICE_RACES = 12;
-const MAX_JUNIOR_AGE_AT_START_OF_YEAR = 18;
+const MAX_JUNIOR_AGE_AT_START_OF_YEAR = 17;
 const MAX_CADET_AGE_AT_START_OF_YEAR = 13;
 const INITIAL_PI_FOR_NOVICE_HELM = 20; // In percent
 const INITIAL_PI_FOR_EXPERIENCED_HELM = 0; // In percent

@@ -103,19 +103,19 @@ export default class SeriesRace extends StoreObject {
 
     isJuniorSeries() {
         return JUNIOR_SERIES_NAMES.some((name) =>
-            this.series.toLowerCase().includes(name),
+            this.series.getSeriesName().toLowerCase().includes(name),
         );
     }
 
     isCadetSeries() {
         return CADET_SERIES_NAMES.some((name) =>
-            this.series.toLowerCase().includes(name),
+            this.series.getSeriesName().toLowerCase().includes(name),
         );
     }
 
     isWomensSeries() {
         return WOMENS_SERIES_NAMES.some((name) =>
-            this.series.toLowerCase().includes(name),
+            this.series.getSeriesName().toLowerCase().includes(name),
         );
     }
 

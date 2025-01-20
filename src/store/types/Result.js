@@ -14,6 +14,8 @@ import FinishCode from "./FinishCode.js";
 import { calculateClassCorrectedTime } from "../../common/classHandicapHelpers.js";
 import HelmResult from "./HelmResult.js";
 import MutableRaceResult from "./MutableRaceResult.js";
+import Series from "./Series.js";
+import SeriesRace from "./SeriesRace.js";
 
 export default class Result extends HelmResult {
     constructor(
@@ -234,6 +236,31 @@ export default class Result extends HelmResult {
 
     isValidFinish() {
         return this.finishCode.validFinish();
+    }
+
+    static wasJuniorInRace(result) {
+        assertType(result, Result);
+        return result.getHelm().wasJuniorInRace(result.getRace());
+    }
+
+    static wasCadetInRace(result) {
+        assertType(result, Result);
+        return result.getHelm().wasCadetInRace(result.getRace());
+    }
+
+    static isFemale(result) {
+        assertType(result, Result);
+        return result.getHelm().gender == Helm.Gender.FEMALE;
+    }
+
+    static isQualified(result, seriesRace) {
+        assertType(seriesRace, SeriesRace);
+
+        return (
+            (!seriesRace.isJuniorSeries() || Result.wasJuniorInRace(result)) &&
+            (!seriesRace.isCadetSeries() || Result.wasCadetInRace(result)) &&
+            (!seriesRace.isWomensSeries() || Result.isFemale(result))
+        );
     }
 
     toStore() {

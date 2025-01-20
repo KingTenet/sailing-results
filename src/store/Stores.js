@@ -777,7 +777,7 @@ export class StoreFunctions {
         this.stores = stores;
         this.getRaces = this.getRaces;
         this.getSeriesPoints = this.getSeriesPoints;
-        this.getSeries = this.getSeries;
+        this.getSeriesRace = this.getSeriesRace;
         this.getHelmsIndex = this.getHelmsIndex;
         this.getBoatIndexForHelmRace = this.getBoatIndexForHelmRace;
         this.createRegisteredHelm = this.createRegisteredHelm;

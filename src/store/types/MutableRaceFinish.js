@@ -15,9 +15,12 @@ export default class MutableRaceFinish extends Race {
         results = [],
         getHelmResults,
         oods,
-        restrictedField,
+        restrictedSeriesRace,
     ) {
         super(raceDate, raceNumber);
+        if (restrictedSeriesRace) {
+            assertType(restrictedSeriesRace, SeriesRace);
+        }
         results.forEach((result) => assertType(result, Result));
         // (previousResults || []).forEach((result) => assertType(result, CorrectedResult));
         (oods || []).forEach((ood) => assertType(ood, HelmResult));
@@ -34,7 +37,7 @@ export default class MutableRaceFinish extends Race {
             ),
         );
 
-        this.restrictedField = restrictedField;
+        this.restrictedSeriesRace = restrictedSeriesRace;
         this.results = results;
         // this.previousResults = previousResults;
         this.getHelmResults = getHelmResults;
@@ -48,6 +51,7 @@ export default class MutableRaceFinish extends Race {
             this.validateRaceType();
             if (!this.isPursuitRace()) {
                 if (!this.getHelmResults) {
+                    debugger;
                     throw new Error(
                         "Cannot process race results without previous results",
                     );
@@ -71,6 +75,10 @@ export default class MutableRaceFinish extends Race {
     }
 
     isPursuitRace() {
+        if (this.restrictedSeriesRace?.isPursuit()) {
+            return true;
+        }
+
         if (!this.hasResults()) {
             throw new Error("Cannot determine race type without race results");
         }
@@ -90,7 +98,7 @@ export default class MutableRaceFinish extends Race {
 
     validateRaceType() {
         assert(
-            this.restrictedField ||
+            this.restrictedSeriesRace ||
                 this.results.some((result) => result.finishCode.validFinish()),
             `RaceFinish date:${this.date} number:${this.raceNumber} has no valid finishers`,
         );
@@ -222,7 +230,7 @@ export default class MutableRaceFinish extends Race {
         return [classAdjustedPoints, personalAdjustedPoints];
     }
 
-    static fromResults(results, getHelmResults, oods, restrictedField = false) {
+    static fromResults(results, getHelmResults, oods, restrictedSeriesRace) {
         assert(
             results.length,
             "Minimum number of results to create a race finish is 1",
@@ -235,7 +243,7 @@ export default class MutableRaceFinish extends Race {
             results,
             getHelmResults,
             oods,
-            restrictedField,
+            restrictedSeriesRace,
         );
     }
 
@@ -264,7 +272,7 @@ export default class MutableRaceFinish extends Race {
         }
 
         const restrictedResults = raceFinish.results.filter((result) =>
-            HelmResult.isQualified(result, seriesRace),
+            Result.isQualified(result, seriesRace),
         );
 
         return (
@@ -273,7 +281,7 @@ export default class MutableRaceFinish extends Race {
                 restrictedResults,
                 raceFinish.getHelmResults,
                 raceFinish.oods,
-                seriesRace.hasRestrictedField(),
+                seriesRace.hasRestrictedField() && seriesRace,
             )
         );
     }

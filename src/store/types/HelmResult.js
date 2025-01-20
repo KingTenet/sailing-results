@@ -73,34 +73,6 @@ export default class HelmResult extends StoreObject {
         );
     }
 
-    static wasJuniorInRace(result) {
-        assertType(result, HelmResult);
-        return result.getHelm().wasJuniorInRace(result.getRace());
-    }
-
-    static wasCadetInRace(result) {
-        assertType(result, HelmResult);
-        return result.getHelm().wasCadetInRace(result.getRace());
-    }
-
-    static isFemale(result) {
-        assertType(result, HelmResult);
-        return result.getHelm().gender == Helm.Gender.FEMALE;
-    }
-
-    static isQualified(result, seriesRace) {
-        assertType(seriesRace, SeriesRace);
-        assert(seriesRace.getRaceId() === this.race.getId());
-
-        return (
-            (!seriesRace.isJuniorSeries() ||
-                HelmResult.wasJuniorInRace(result)) &&
-            (!seriesRace.isCadetSeries() ||
-                HelmResult.wasCadetInRace(result)) &&
-            (!seriesRace.isWomensSeries() || HelmResult.isFemale(result))
-        );
-    }
-
     getRace() {
         return this.race;
     }
