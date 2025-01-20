@@ -100,20 +100,21 @@ export default class BoatClass extends StoreObject {
         if (secondBoatClass.validFrom.getTime() === this.validFrom.getTime()) {
             return 0;
         }
-        return this.isAfter(secondBoatClass.validFrom) ? 1 : -1;
+        return this.isClassValidAfterRace(secondBoatClass.validFrom) ? 1 : -1;
     }
 
-    isAfter(date) {
+    isClassValidAfterRace(date) {
         assertType(date, Date);
         return this.validFrom.getTime() > date.getTime();
     }
 
     isValidAtRace(race) {
         assertType(race, Race);
-        return !this.isAfter(race.getDate());
+        return !this.isClassValidAfterRace(race.getDate());
     }
 
     static getLatestValidClassAtRace(allClasses, race) {
+        // Get the latest boatClass that's valid before the race
         return allClasses
             .filter((boatClass) => boatClass.isValidAtRace(race))
             .sort((classA, classB) => classA.sortByValidFromAsc(classB))
@@ -126,6 +127,39 @@ export default class BoatClass extends StoreObject {
         clubClasses = [],
         excludeDeprecated,
     ) {
+        /**
+         * 
+        ryaClasses = [
+            [
+                {className: "LASER", validFrom: "2019-03-01", "deprecated": false, PY: r1}, 
+                {className: "LASER", validFrom: "2020-03-01", "deprecated": false, PY: r2}, 
+                {className: "LASER", validFrom: "2021-03-01", "deprecated": false, PY: r3}, 
+                {className: "LASER", validFrom: "2022-03-01", "deprecated": false, PY: r4}, 
+            ]
+        ]
+        
+        clubClasses = [
+            [
+                {className: "LASER", validFrom: "2019-03-01", "deprecated": false, PY: c1}, 
+                {className: "LASER", validFrom: "2020-03-01", "deprecated": false, PY: c2}, 
+                {className: "LASER", validFrom: "2021-03-01", "deprecated": true,  PY: c3}, 
+                {className: "LASER", validFrom: "2022-03-01", "deprecated": false, PY: c4}, 
+                
+            ]
+        ]
+        
+        For race === 2021-03-01,
+            with excludeDeprecated===false,
+                -> Map(
+                    "LASER": {className: "LASER", validFrom: "2021-06-01", "deprecated": true, PY: c3}
+                )
+        
+            with excludeDeprecated===true,
+                -> Map(
+                    "LASER": {className: "LASER", validFrom: "2021-06-01", "deprecated": false, PY: r3}
+            )        
+        */
+
         const allClasses = new AutoMap(BoatClass.getClassName);
         const validRYA = ryaClasses.map((classes) =>
             BoatClass.getLatestValidClassAtRace(classes, race),
@@ -143,7 +177,9 @@ export default class BoatClass extends StoreObject {
             )
             .forEach((boatClass) =>
                 allClasses.upsert(boatClass, (prev, next) =>
-                    prev && prev.isAfter(next.validFrom) ? prev : next,
+                    prev && prev.isClassValidAfterRace(next.validFrom)
+                        ? prev
+                        : next,
                 ),
             );
 
