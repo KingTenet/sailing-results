@@ -51,7 +51,6 @@ export default class MutableRaceFinish extends Race {
             this.validateRaceType();
             if (!this.isPursuitRace()) {
                 if (!this.getHelmResults) {
-                    debugger;
                     throw new Error(
                         "Cannot process race results without previous results",
                     );
