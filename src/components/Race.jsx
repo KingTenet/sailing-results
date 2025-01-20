@@ -367,8 +367,7 @@ export default function Race({ backButtonText }) {
     const services = useServices();
 
     const seriesRace =
-        seasonStr &&
-        services.getSeriesRace(race, seasonStr, seriesStr);
+        seasonStr && services.getSeriesRace(race, seasonStr, seriesStr);
 
     const [raceIsMutable, setRaceIsMutable] = useState(() =>
         services.isRaceMutable(raceDate, raceNumber),
@@ -573,8 +572,11 @@ export default function Race({ backButtonText }) {
                             </GreenButton>
                         )}
                     {((isPursuitRace &&
-                        raceRegistered.length + raceResults.length > 2) ||
-                        (!raceRegistered.length && raceResults.length > 2)) && (
+                        raceRegistered.length + raceResults.length >
+                            dnf.length) ||
+                        (!raceRegistered.length &&
+                            raceResults.length > 2 &&
+                            finished.length > 0)) && (
                         <GreenButton
                             onClick={() => updateEditingRace(false)}
                             autoFocus
