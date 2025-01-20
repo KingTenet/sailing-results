@@ -2,10 +2,6 @@ import { assertType, generateId, fromId } from "../../common.js";
 import HelmResult from "./HelmResult.js";
 import SeriesRace from "./SeriesRace.js";
 
-const CADET_SERIES_NAMES = ["cadet"];
-const JUNIOR_SERIES_NAMES = ["junior", "youth"];
-const WOMENS_SERIES_NAMES = ["woman", "women", "lady", "ladies", "female"];
-
 export default class Series {
     constructor(season, series) {
         this.season = assertType(season, "string");
@@ -40,27 +36,5 @@ export default class Series {
 
     getSeriesName() {
         return this.series;
-    }
-
-    isJuniorSeries() {
-        return JUNIOR_SERIES_NAMES.some((name) =>
-            this.series.toLowerCase().includes(name),
-        );
-    }
-
-    isCadetSeries() {
-        return CADET_SERIES_NAMES.some((name) =>
-            this.series.toLowerCase().includes(name),
-        );
-    }
-
-    isWomensSeries() {
-        return WOMENS_SERIES_NAMES.some((name) =>
-            this.series.toLowerCase().includes(name),
-        );
-    }
-
-    hasRestrictedField() {
-        return this.isJuniorSeries() || this.isCadetSeries() || this.isWomensSeries;
     }
 }

@@ -366,9 +366,9 @@ export default function Race({ backButtonText }) {
 
     const services = useServices();
 
-    const series =
+    const seriesRace =
         seasonStr &&
-        services.getSeries(race, seasonStr, seriesStr);
+        services.getSeriesRace(race, seasonStr, seriesStr);
 
     const [raceIsMutable, setRaceIsMutable] = useState(() =>
         services.isRaceMutable(raceDate, raceNumber),
@@ -610,7 +610,7 @@ export default function Race({ backButtonText }) {
                     race={race}
                     isDisabled={committingResults}
                     raceIsMutable={raceIsMutable}
-                    series={series}
+                    seriesRace={seriesRace}
                 />
                 <Spacer />
                 {raceIsMutable && (

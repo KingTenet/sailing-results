@@ -6,6 +6,7 @@ import CorrectedResult from "./CorrectedResult.js";
 import HelmResult from "./HelmResult.js";
 import Helm from "./Helm.js";
 import Series from "./Series.js";
+import SeriesRace from "./SeriesRace.js";
 
 export default class MutableRaceFinish extends Race {
     constructor(
@@ -254,16 +255,16 @@ export default class MutableRaceFinish extends Race {
         );
     }
 
-    static fromRestrictedRaceFinish(raceFinish, series) {
+    static fromRestrictedRaceFinish(raceFinish, seriesRace) {
         assertType(raceFinish, MutableRaceFinish);
-        assertType(series, Series);
+        assertType(seriesRace, SeriesRace);
 
-        if (!series.hasRestrictedField()) {
+        if (!seriesRace.hasRestrictedField()) {
             return raceFinish;
         }
 
         const restrictedResults = raceFinish.results.filter((result) =>
-            HelmResult.isQualified(result, series),
+            HelmResult.isQualified(result, seriesRace),
         );
 
         return (
@@ -272,7 +273,7 @@ export default class MutableRaceFinish extends Race {
                 restrictedResults,
                 raceFinish.getHelmResults,
                 raceFinish.oods,
-                series.hasRestrictedField(),
+                seriesRace.hasRestrictedField(),
             )
         );
     }

@@ -317,7 +317,7 @@ export function RaceResultsView({
     oods,
     race,
     raceIsMutable,
-    series,
+    seriesRace,
     ...props
 }) {
     const [
@@ -328,7 +328,7 @@ export function RaceResultsView({
         correctedLaps,
         SCT,
         isPursuitRace,
-    ] = useSortedResults(results, race, series);
+    ] = useSortedResults(results, race, seriesRace);
     const RACE_VIEWS = isPursuitRace ? PURSUIT_RACE_VIEW : FLEET_RACE_VIEWS;
     const [raceView, updateRaceView] = useState(RACE_VIEWS[0]);
     const [dimension1, toggleDimension1] = useDimensionsToggle(

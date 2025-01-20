@@ -943,7 +943,7 @@ export class StoreFunctions {
         return this.stores.seriesPoints.map(([, seriesPoints]) => seriesPoints);
     }
 
-    getSeries(race, seriesSeason, seriesName) {
+    getSeriesRace(race, seriesSeason, seriesName) {
         assertType(race, Race);
         assertType(seriesSeason, "string");
         assertType(seriesName, "string");
@@ -954,8 +954,7 @@ export class StoreFunctions {
                 (seriesRace) =>
                     seriesRace.series.getSeriesName() === seriesName &&
                     seriesRace.series.getSeasonName() === seriesSeason,
-            )
-            ?.getSeries();
+            );
     }
 
     isRaceEditableByUser(race) {

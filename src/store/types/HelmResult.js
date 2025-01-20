@@ -3,11 +3,12 @@ import {
     getURLDate,
     parseURLDate,
     generateId,
+    assert,
 } from "../../common.js";
 import StoreObject from "./StoreObject.js";
 import Helm from "./Helm.js";
 import Race from "./Race.js";
-import Series from "./Series.js";
+import SeriesRace from "./SeriesRace.js";
 
 export default class HelmResult extends StoreObject {
     constructor(race, helm, metadata) {
@@ -87,13 +88,16 @@ export default class HelmResult extends StoreObject {
         return result.getHelm().gender == Helm.Gender.FEMALE;
     }
 
-    static isQualified(result, series) {
-        assertType(series, Series);
+    static isQualified(result, seriesRace) {
+        assertType(seriesRace, SeriesRace);
+        assert(seriesRace.getRaceId() === this.race.getId());
 
         return (
-            (!series.isJuniorSeries() || HelmResult.wasJuniorInRace(result)) &&
-            (!series.isCadetSeries() || HelmResult.wasCadetInRace(result)) &&
-            (!series.isWomensSeries() || HelmResult.isFemale(result))
+            (!seriesRace.isJuniorSeries() ||
+                HelmResult.wasJuniorInRace(result)) &&
+            (!seriesRace.isCadetSeries() ||
+                HelmResult.wasCadetInRace(result)) &&
+            (!seriesRace.isWomensSeries() || HelmResult.isFemale(result))
         );
     }
 

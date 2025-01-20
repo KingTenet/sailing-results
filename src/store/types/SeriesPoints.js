@@ -128,7 +128,13 @@ export default class SeriesPoints extends Series {
 
         return raceFinishes
             .map((raceFinish) =>
-                MutableRaceFinish.fromRestrictedRaceFinish(raceFinish, this),
+                MutableRaceFinish.fromRestrictedRaceFinish(
+                    raceFinish,
+                    this.seriesRaces.find(
+                        (seriesRace) =>
+                            seriesRace.getRaceId() === raceFinish.getId(),
+                    ),
+                ),
             )
             .filter(Boolean);
     }

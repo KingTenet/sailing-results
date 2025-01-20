@@ -6,16 +6,19 @@ import { useLongPress, LongPressEventType } from "use-long-press";
 const MIN_LONG_PRESS_DURATION_MS = 1200;
 const MAX_SHORT_PRESS_DURATION_MS = 400;
 
-export function useSortedResults(results, race, series) {
+export function useSortedResults(results, race, seriesRace) {
     const services = useServices();
     const [storeRaceFinish] = useState(
         () => services.getRaceFinishForResults(race, results),
         [],
     );
 
-    const raceFinish = !series?.hasRestrictedField()
+    const raceFinish = !seriesRace?.hasRestrictedField()
         ? storeRaceFinish
-        : MutableRaceFinish.fromRestrictedRaceFinish(storeRaceFinish, series);
+        : MutableRaceFinish.fromRestrictedRaceFinish(
+              storeRaceFinish,
+              seriesRace,
+          );
 
     return [
         raceFinish,

@@ -11,6 +11,12 @@ import {
 } from "../../common.js";
 import Series from "./Series.js";
 
+const CADET_SERIES_NAMES = ["cadet"];
+const JUNIOR_SERIES_NAMES = ["junior", "youth"];
+const WOMENS_SERIES_NAMES = ["woman", "women", "lady", "ladies", "female"];
+const LASER_SERIES_NAMES = ["laser"];
+const SOLO_SERIES_NAMES = ["solo"];
+
 export default class SeriesRace extends StoreObject {
     constructor(series, race, lastImported, isPursuit, metaData) {
         super(metaData);
@@ -93,5 +99,29 @@ export default class SeriesRace extends StoreObject {
             "Is Pursuit": this.isPursuit(),
             ...super.toStore(this),
         };
+    }
+
+    isJuniorSeries() {
+        return JUNIOR_SERIES_NAMES.some((name) =>
+            this.series.toLowerCase().includes(name),
+        );
+    }
+
+    isCadetSeries() {
+        return CADET_SERIES_NAMES.some((name) =>
+            this.series.toLowerCase().includes(name),
+        );
+    }
+
+    isWomensSeries() {
+        return WOMENS_SERIES_NAMES.some((name) =>
+            this.series.toLowerCase().includes(name),
+        );
+    }
+
+    hasRestrictedField() {
+        return (
+            this.isJuniorSeries() || this.isCadetSeries() || this.isWomensSeries
+        );
     }
 }
