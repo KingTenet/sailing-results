@@ -11,6 +11,14 @@ import {
 import BoatConfiguration from "./BoatConfiguration.js";
 import Race from "./Race.js";
 
+const LASER_CLASSNAMES = [
+    "LASER",
+    "LASER RADIAL",
+    "LASER 4.7 (ADULT)",
+    "LASER 4.7",
+];
+const SOLO_CLASSNAMES = ["SOLO"];
+
 export default class BoatClass extends StoreObject {
     constructor(
         className,
@@ -119,6 +127,20 @@ export default class BoatClass extends StoreObject {
             .filter((boatClass) => boatClass.isValidAtRace(race))
             .sort((classA, classB) => classA.sortByValidFromAsc(classB))
             .at(-1);
+    }
+
+    isLaser() {
+        return LASER_CLASSNAMES.some(
+            (className) =>
+                className.toLowerCase() === this.className.toLowerCase(),
+        );
+    }
+
+    isSolo() {
+        return SOLO_CLASSNAMES.some(
+            (className) =>
+                className.toLowerCase() === this.className.toLowerCase(),
+        );
     }
 
     static getBoatClassesForRace(

@@ -104,6 +104,10 @@ class Helm extends StoreObject {
         // return race.getDate().getTime() < lastNoviceResultDateThreshold;
     }
 
+    isFemale() {
+        return this.gender == Helm.Gender.FEMALE;
+    }
+
     getName() {
         return this.name;
     }

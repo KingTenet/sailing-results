@@ -250,7 +250,17 @@ export default class Result extends HelmResult {
 
     static isFemale(result) {
         assertType(result, Result);
-        return result.getHelm().gender == Helm.Gender.FEMALE;
+        return result.getHelm().isFemale();
+    }
+
+    static isLaser(result) {
+        assertType(result, Result);
+        return result.getBoatClass().isLaser();
+    }
+
+    static isSolo(result) {
+        assertType(result, Result);
+        return result.getBoatClass().isSolo();
     }
 
     static isQualified(result, seriesRace) {
@@ -259,7 +269,9 @@ export default class Result extends HelmResult {
         return (
             (!seriesRace.isJuniorSeries() || Result.wasJuniorInRace(result)) &&
             (!seriesRace.isCadetSeries() || Result.wasCadetInRace(result)) &&
-            (!seriesRace.isWomensSeries() || Result.isFemale(result))
+            (!seriesRace.isWomensSeries() || Result.isFemale(result)) &&
+            (!seriesRace.isLaserSeries() || Result.isLaser(result)) &&
+            (!seriesRace.isSoloSeries() || Result.isSolo(result))
         );
     }
 

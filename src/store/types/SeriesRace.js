@@ -119,9 +119,25 @@ export default class SeriesRace extends StoreObject {
         );
     }
 
+    isLaserSeries() {
+        return LASER_SERIES_NAMES.some((name) =>
+            this.series.getSeriesName().toLowerCase().includes(name),
+        );
+    }
+
+    isSoloSeries() {
+        return SOLO_SERIES_NAMES.some((name) =>
+            this.series.getSeriesName().toLowerCase().includes(name),
+        );
+    }
+
     hasRestrictedField() {
         return (
-            this.isJuniorSeries() || this.isCadetSeries() || this.isWomensSeries
+            this.isJuniorSeries() ||
+            this.isCadetSeries() ||
+            this.isWomensSeries() ||
+            this.isLaserSeries() ||
+            this.isSoloSeries()
         );
     }
 }
