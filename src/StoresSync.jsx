@@ -4,6 +4,7 @@ import { Box, Text, Flex } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import getVersion from "./version";
 import { useStoreStatus, useAdminToggle } from "./common/hooks";
+import { useNavigate } from "react-router-dom";
 
 function StoreSync({ store }) {
     const [syncronizing, updateSyncronizing] = useState(false);
@@ -15,7 +16,10 @@ function StoreSync({ store }) {
         services
             .syncroniseStore(store)
             .then(() => updateSyncronizing(false))
-            .catch(() => updateFailed(true));
+            .catch((error) => {
+                services.logError(error);
+                updateFailed(true);
+            });
     };
 
     return (
@@ -44,6 +48,7 @@ export default function StoresSync({ verbose }) {
     const VERBOSE = verbose;
     const [syncing, updateSyncing] = useState(false);
     const [failed, updateFailed] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!syncing && storesStatus) {
@@ -55,6 +60,12 @@ export default function StoresSync({ verbose }) {
             }
         }
     }, [storesStatus]);
+
+    useEffect(() => {
+        if (isAdmin) {
+            navigate("/");
+        }
+    }, [isAdmin]);
 
     useEffect(() => {
         if (syncing) {
@@ -73,7 +84,7 @@ export default function StoresSync({ verbose }) {
                 })
                 .catch((err) => {
                     console.log("Stores failed to sync successfully");
-                    console.log(err);
+                    services.logError(err);
                     updateSyncing(false);
                     updateFailed(true);
                 });

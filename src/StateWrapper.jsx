@@ -15,6 +15,8 @@ import Spinner from "./components/Spinner";
 import { StoreFunctions } from "./store/Stores";
 import StoresSync from "./StoresSync";
 import readOnlyAuth from "./auth";
+import ErrorDisplay from "./components/ErrorDisplay.tsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 const REACT_STATE_EXPIRY_PERIOD = 86400000 * 2; // React state expires after 2 days
 const liveSourceResultsURL =
@@ -177,11 +179,13 @@ function ServicesWrapper({ token }) {
 
     if (services.error) {
         console.log(services.error);
+
         return (
-            <>
-                <Text>{`${services.error}`}</Text>
-                <Text>{JSON.stringify(services.error.stack)}</Text>
-            </>
+            <ErrorDisplay
+                title={services.error.message}
+                description={services.error.message}
+                error={services.error}
+            />
         );
     }
 
@@ -189,7 +193,11 @@ function ServicesWrapper({ token }) {
         return <Spinner />;
     }
 
-    return <StateWrapper />;
+    return (
+        <ErrorBoundary>
+            <StateWrapper />
+        </ErrorBoundary>
+    );
 }
 
 function StateWrapper() {
@@ -225,38 +233,6 @@ function StateOutlet() {
             {!state && <p>Loading state...</p>}
             {!services.ready && <p>Initialising services...</p>}
             {state && services.ready && <Outlet />}
-        </>
-    );
-}
-
-function StoreSync({ store }) {
-    const [syncronizing, updateSyncronizing] = useState(false);
-    const [failed, updateFailed] = useState(false);
-    const services = useServices();
-
-    const syncStore = (store) => {
-        updateSyncronizing(true);
-        services
-            .syncroniseStore(store)
-            .then(() => updateSyncronizing(false))
-            .catch(() => updateFailed(true));
-    };
-
-    return (
-        <>
-            {!failed && (
-                <RedButton
-                    onClick={() => syncStore(store)}
-                    isLoading={syncronizing}
-                    loadingText={`Syncronizing Store: ${store}`}
-                >{`Synchronise store: ${store}`}</RedButton>
-            )}
-            {failed && (
-                <RedButton
-                    onClick={() => syncStore(store)}
-                    disabled={true}
-                >{`Synchronise store: ${store} failed`}</RedButton>
-            )}
         </>
     );
 }

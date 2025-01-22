@@ -23,9 +23,10 @@ import ClubMember from "./types/ClubMember.js";
 import RemoteStore from "./RemoteStore.js";
 import { RYAReportGenerator } from "./RYAReportGenerator.js";
 import getVersion from "../version.js";
+import ErrorLog from "./types/ErrorLog.js";
 
 export class Stores {
-    constructor(auth, raceResultsSheetId, readOnly) {
+    constructor(auth, raceResultsSheetId, readOnly, forceCacheRefresh) {
         this.readOnly = readOnly;
         this.raceResultsDocument = RemoteStore.retryCreateSheetsDoc(
             raceResultsSheetId,
@@ -39,6 +40,7 @@ export class Stores {
             ["Last Updated", "Version"],
         ).then((remoteStore) => (this.metaStore = remoteStore));
         this.promiseStoresLastUpdated = this.getStoreLastUpdated();
+        this.forceCacheRefresh = forceCacheRefresh;
     }
 
     async getStoreLastUpdated() {
@@ -74,11 +76,56 @@ export class Stores {
         window.location.reload();
     }
 
-    async init(forceCacheRefresh) {
-        await promiseSleep(10); // Required to get spinner to render!?
+    async createErrorsStore() {
+        this.promiseErrorsStore = StoreWrapper.create(
+            this.forceCacheRefresh,
+            "Errors Log",
+            this.raceResultsDocument,
+            this,
+            ErrorLog,
+        );
 
+        this.errorsStore = await this.promiseErrorsStore;
+
+        let maxErrorCount = 10;
+        this.errorsStore
+            .all()
+            .sort(ErrorLog.sortByDateDesc)
+            .forEach((errorLog) => {
+                if (maxErrorCount <= 0) {
+                    this.errorsStore.delete(errorLog);
+                }
+                maxErrorCount -= 1;
+            });
+    }
+
+    async logError(error) {
+        try {
+            console.error(error);
+            const errorsStore = await this.promiseErrorsStore;
+            errorsStore.add(ErrorLog.fromError(error));
+            await errorsStore.sync();
+        } catch (remoteError) {
+            console.log("Failed to log error to remote store");
+            console.log(remoteError);
+        }
+    }
+
+    async init() {
+        await promiseSleep(10); // Required to get spinner to render!?
+        this.createErrorsStore();
+
+        try {
+            return await this.createStoreAndProcessResults();
+        } catch (error) {
+            this.logError(error);
+            throw error;
+        }
+    }
+
+    async createStoreAndProcessResults() {
         const createStoreWrapper = (...args) =>
-            StoreWrapper.create(forceCacheRefresh, ...args);
+            StoreWrapper.create(this.forceCacheRefresh, ...args);
 
         const promiseClubMembers = createStoreWrapper(
             "Active Membership",
@@ -213,7 +260,7 @@ export class Stores {
         return this.getStores().reduce(
             (acc, store) => ({
                 ...acc,
-                [store.storeName]: store.storesInSync(),
+                [store.storeName]: store.localStoreIsUnchanged(),
             }),
             {},
         );
@@ -226,7 +273,7 @@ export class Stores {
                 await reportGenerator.generatePYReports();
                 console.log("RYA reports are up to date");
             } catch (err) {
-                console.log(err);
+                this.logError(err);
                 console.log("Failed to update RYA reports");
             }
         }
@@ -237,7 +284,7 @@ export class Stores {
             (store) => store.storeName === storeName,
         );
 
-        await store.syncRemoteStateToLocalState();
+        await store.pushLocalChangesToRemote();
     }
 
     async syncroniseStores(storeNames = this.getStoresNames()) {
@@ -396,9 +443,9 @@ export class Stores {
         [...allSeriesRacesByRace].forEach(([, seriesRaces]) => {
             const firstRace = seriesRaces.at(0);
             if (seriesRaces.length > 1) {
-                console.log(
-                    `Duplicate series for race ${SeriesRace.getId(firstRace)}`,
-                );
+                // console.log(
+                //     `Duplicate series for race ${SeriesRace.getId(firstRace)}`,
+                // );
                 const inconsistent = seriesRaces.find(
                     (seriesRace) =>
                         seriesRace.isPursuit() !== firstRace.isPursuit(),
@@ -450,10 +497,15 @@ export class Stores {
         skipStoreInit,
     ) {
         await bootstrapLocalStorage();
-        const stores = new Stores(auth, raceResultsSheetId, readOnly);
+        const stores = new Stores(
+            auth,
+            raceResultsSheetId,
+            readOnly,
+            forceCacheRefresh,
+        );
         const started = Date.now();
         console.log(`Started loading`);
-        skipStoreInit || (await stores.init(forceCacheRefresh));
+        skipStoreInit || (await stores.init());
         console.log(`Loaded results in ${Math.round(Date.now() - started)} ms`);
         return stores;
     }
@@ -775,41 +827,8 @@ class Indexes {
 export class StoreFunctions {
     constructor(stores, superUser, editableRaceDate, readOnly, isLive) {
         this.stores = stores;
-        this.getRaces = this.getRaces;
-        this.getSeriesPoints = this.getSeriesPoints;
-        this.getSeriesRace = this.getSeriesRace;
-        this.getHelmsIndex = this.getHelmsIndex;
-        this.getBoatIndexForHelmRace = this.getBoatIndexForHelmRace;
-        this.createRegisteredHelm = this.createRegisteredHelm;
-        this.createOOD = this.createOOD;
-        this.deserialiseResult = this.deserialiseResult;
-        this.deserialiseOOD = this.deserialiseOOD;
-        this.deserialiseHelm = this.deserialiseHelm;
-        this.assertResultNotStored = this.assertResultNotStored;
-        this.assertOODNotStored = this.assertOODNotStored;
-        this.createHelmFinish = this.createHelmFinish;
-        this.deserialiseRegistered = this.deserialiseRegistered;
-        this.getRaceFinishForResults = this.getRaceFinishForResults;
-        this.isPursuitRace = this.isPursuitRace;
-        this.isRaceMutable = this.isRaceMutable;
-        this.isRaceEditableByUser = this.isRaceEditableByUser;
-        this.getSailNumberIndexForHelmBoat = this.getSailNumberIndexForHelmBoat;
-        this.setSailNumberCounts = this.setSailNumberCounts;
-        this.commitResultsForRace = this.commitResultsForRace;
-        this.commitNewHelmsForResults = this.commitNewHelmsForResults;
-        this.getResultsOODsForRace = this.getResultsOODsForRace;
-        this.createHelmFromClubMember = this.createHelmFromClubMember;
-        this.assertHelmNotStored = this.assertHelmNotStored;
-        this.getStoresStatus = this.getStoresStatus;
-        this.updateStoresStatus = this.updateStoresStatus;
-        this.syncroniseStore = this.syncroniseStore;
-        this.syncroniseStores = this.syncroniseStores;
-        this.reprocessStoredResults = this.reprocessStoredResults;
-        this.getLatestHelmPersonalHandicap = this.getLatestHelmPersonalHandicap;
-        this.helmIsClubMember = this.helmIsClubMember;
         this.superUser = superUser;
         this.editableRaceDate = editableRaceDate;
-        this.getResultsByHelm = this.getResultsByHelm;
         this.readOnly = readOnly;
         this.isLive = isLive;
         this.indexes = new Indexes(this.stores);
@@ -832,13 +851,33 @@ export class StoreFunctions {
             forceRefresh,
             readOnly,
         );
-        return new StoreFunctions(
+
+        const storeFunctions = new StoreFunctions(
             stores,
             superUser,
             editableRaceDateStr && parseURLDate(editableRaceDateStr),
             readOnly,
             isLive,
         );
+
+        const methods = Object.getOwnPropertyNames(
+            StoreFunctions.prototype,
+        ).filter(
+            (name) =>
+                typeof StoreFunctions.prototype[name] === "function" &&
+                name !== "constructor",
+        );
+
+        for (const method of methods) {
+            storeFunctions[method] =
+                storeFunctions[method].bind(storeFunctions);
+        }
+
+        return storeFunctions;
+    }
+
+    logError(error) {
+        this.stores.logError(error);
     }
 
     reprocessStoredResults() {

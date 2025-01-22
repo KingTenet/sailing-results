@@ -42,7 +42,7 @@ export default class StoreObject {
     }
 
     hasStaleRemote() {
-        return !this?.store || this.lastUpdated > this.store.getLastSyncDate();
+        return !this?.store || this.lastUpdated > this.store.getLastLocalPushDate();
     }
 
     static sheetHeaders() {

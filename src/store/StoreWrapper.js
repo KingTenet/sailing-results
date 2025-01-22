@@ -70,7 +70,7 @@ export default class StoreWrapper {
     }
 
     async sync(force = false) {
-        return await this.store.syncRemoteStateToLocalState(force);
+        return await this.store.pushLocalChangesToRemote(force);
     }
 
     static async create(
