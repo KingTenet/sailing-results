@@ -1,4 +1,4 @@
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShadCNWrapper } from "./shadcn/ShadCNWrapper";
