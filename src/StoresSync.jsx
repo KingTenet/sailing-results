@@ -1,6 +1,6 @@
 import { useServices } from "./useAppState";
 import React, { useEffect, useState } from "react";
-import { Box, Text, Flex } from "@chakra-ui/react";
+import { Box, Text, Flex, Center } from "@chakra-ui/react";
 import { GreenButton, RedButton } from "./components/Buttons";
 import getVersion from "./version";
 import { useStoreStatus, useAdminToggle } from "./common/hooks";
@@ -99,19 +99,30 @@ export default function StoresSync({ verbose }) {
         return (
             <>
                 {Object.entries(storesStatus).map(([store, synced], index) => (
-                    <Box key={`StoreSync${index}`}>
+                    <Box
+                        key={`StoreSync${index}`}
+                        backgroundColor={"rgba(0,100,100,0.2)"}
+                        borderRadius={"2xl"}
+                        padding={"2"}
+                        alignItems={"center"}
+                        justifyContent={"center"}
+                        marginY={"4"}
+                    >
                         {synced && (
-                            <Box>
+                            <Center>
                                 <GreenButton
                                     disabled={true}
                                 >{`Store: ${store} is in sync`}</GreenButton>
-                            </Box>
+                            </Center>
                         )}
                         {!synced && (
                             <Box>
                                 <StoreSync store={store} />
                             </Box>
                         )}
+                        <Center>
+                            {`Last synced ${localStorage.getItem(`metadata::${store}`)}`}
+                        </Center>
                     </Box>
                 ))}
             </>
