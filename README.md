@@ -23,3 +23,8 @@ export const devReadWrite = {
 }
 _EOF_
 ```
+
+# Documentation
+
+See [docs/TECHNICAL_DEBT.md](docs/TECHNICAL_DEBT.md) for details on architectural decisions and known technical debt, including the usage of `google-auth-library` in the browser.
+

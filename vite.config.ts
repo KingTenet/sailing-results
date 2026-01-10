@@ -20,12 +20,20 @@ export default defineConfig(({ mode }: UserConfig) => {
                     process: false,
                 },
             }), // https://www.npmjs.com/package/vite-plugin-node-polyfills
+            nodePolyfills({
+                exclude: ["process"],
+                globals: {
+                    process: false,
+                },
+            }), // https://www.npmjs.com/package/vite-plugin-node-polyfills
         ],
         server: {
             host: "0.0.0.0",
             port: 3000
+            port: 3000
         },
         preview: {
+            host: "0.0.0.0"
             host: "0.0.0.0"
         },
         resolve: {
