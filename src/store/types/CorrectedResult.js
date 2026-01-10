@@ -23,6 +23,7 @@ export default class CorrectedResult extends Result {
             result.pursuitFinishPosition,
             result.finishTime,
             result.finishCode,
+            result.crew,
             new StoreObject(result),
         );
         const validFinish = result.finishCode.validFinish();

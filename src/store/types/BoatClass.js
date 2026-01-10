@@ -143,6 +143,10 @@ export default class BoatClass extends StoreObject {
         );
     }
 
+    isDoubleHander() {
+        return this.boatConfiguration.crew > 1;
+    }
+
     static getBoatClassesForRace(
         race,
         ryaClasses = [],

@@ -76,7 +76,8 @@ export default class RemoteStore {
             } catch (err) {
                 if (
                     err?.code === "ENOTFOUND" ||
-                    (err.request && err.response)
+                    (err.request && err.response) ||
+                    err.message.includes("Missing Google Service Account credentials")
                 ) {
                     throw err;
                 }

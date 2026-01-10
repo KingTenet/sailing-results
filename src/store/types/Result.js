@@ -27,9 +27,10 @@ export default class Result extends HelmResult {
         pursuitFinishPosition,
         finishTime,
         finishCode,
+        crew,
         metadata,
     ) {
-        super(race, helm, metadata);
+        super(race, helm, crew, metadata);
         this.boatClass = assertType(boatClass, BoatClass);
         this.boatSailNumber = assertType(boatSailNumber, "number");
         this.laps = laps && assertType(laps, "number");
@@ -89,6 +90,7 @@ export default class Result extends HelmResult {
             "Pursuit Finish Position": pursuitFinishPosition,
             "Finish Time": finishTime,
             "Finish Code": finishCodeString,
+            "Crew": crewId,
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
         const finishCode = new FinishCode(finishCodeString);
@@ -101,6 +103,7 @@ export default class Result extends HelmResult {
             parseIntOrUndefined(pursuitFinishPosition),
             parseIntOrUndefined(finishTime),
             finishCode,
+            crewId ? getHelm(crewId) : undefined,
             StoreObject.fromStore(storeResult),
         );
     }
@@ -145,6 +148,7 @@ export default class Result extends HelmResult {
             pursuitFinishPosition,
             finishTime,
             finishCode,
+            mutableResult.getCrew(),
             StoreObject.fromStore({}),
         );
     }
@@ -156,6 +160,7 @@ export default class Result extends HelmResult {
             helmResult.getHelm(),
             helmResult.getBoatClass(),
             helmResult.getSailNumber(),
+            helmResult.getCrew(),
         );
         if (!pursuitFinishPosition) {
             return Result.fromMutableRaceResult(
@@ -263,6 +268,11 @@ export default class Result extends HelmResult {
         return result.getBoatClass().isSolo();
     }
 
+    static isDoubleHander(result) {
+        assertType(result, Result);
+        return result.getBoatClass().isDoubleHander();
+    }
+
     static isQualified(result, seriesRace) {
         assertType(seriesRace, SeriesRace);
 
@@ -271,7 +281,8 @@ export default class Result extends HelmResult {
             (!seriesRace.isCadetSeries() || Result.wasCadetInRace(result)) &&
             (!seriesRace.isWomensSeries() || Result.isFemale(result)) &&
             (!seriesRace.isLaserSeries() || Result.isLaser(result)) &&
-            (!seriesRace.isSoloSeries() || Result.isSolo(result))
+            (!seriesRace.isSoloSeries() || Result.isSolo(result)) &&
+            (!seriesRace.isDoubleHandedSeries() || Result.isDoubleHander(result))
         );
     }
 

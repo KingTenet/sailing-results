@@ -28,7 +28,7 @@ function useDimensionsToggle(dimensions) {
     ];
 }
 
-export default function NewHelm({ clubMember, onNewHelm }) {
+export default function NewHelm({ clubMember, onNewHelm, label }) {
     const [gender, toggleGender] = useDimensionsToggle(NEW_HELM_GENDERS);
     const [experience, toggleExperience] =
         useDimensionsToggle(NEW_HELM_EXPERIENCE);
@@ -74,7 +74,7 @@ export default function NewHelm({ clubMember, onNewHelm }) {
             >
                 <Flex direction={"row"} width="100%">
                     <Box minWidth="110px" paddingTop="5px">
-                        <Text fontSize={"lg"}>{"Helm"}</Text>
+                        <Text fontSize={"lg"}>{label}</Text>
                     </Box>
                     <Box width="100%">
                         <InputGroup>

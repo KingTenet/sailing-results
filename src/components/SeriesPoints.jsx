@@ -44,27 +44,37 @@ function formatPoints(points, showLabel) {
     const isOOD = points.isOOD();
     const isPNS = points.isPNS();
     const isDNF = points.isDNF();
+    const isCrew = points.isCrew();
 
-    if (showLabel) {
-        if (isOOD) {
-            return "OOD";
+    // if(isCrew) {
+    //     return `Crew ${points.getTotal()}`;
+    // }
+    const format = () => {
+
+        
+        if (showLabel) {
+            if (isOOD) {
+                return "OOD";
+            }
+            if (isPNS) {
+                return "";
+            }
+            if (Math.round(points.getTotal()) !== points.getTotal()) {
+                return `${Math.floor(points.getTotal())}=`;
+            }
+            return points.getTotal();
         }
+        
         if (isPNS) {
             return "";
         }
-        if (Math.round(points.getTotal()) !== points.getTotal()) {
-            return `${Math.floor(points.getTotal())}=`;
-        }
-        return points.getTotal();
-    }
-
-    if (isPNS) {
-        return "";
-    }
-
-    return points.isCounted
+        
+        return points.isCounted
         ? round2sf(points.getTotal())
         : `[${round2sf(points.getTotal())}]`;
+    };
+
+    return isCrew ? `${format()}*` : format();
 }
 
 const StyledTd = ({ children, ...props }) => {
@@ -103,7 +113,14 @@ const StyledTh = ({ children, ...props }) => {
     );
 };
 
-function HelmRow({ helmId, index, totalPoints, racePoints, sortedRaces }) {
+// function HelmOrCrewBoat({rowIndex, sortedRaces, helmId, boatIndex, boatClass, racePoints, totalPoints, totalPNS}) {
+//     return (
+//     );
+// }
+
+function HelmRow({ helmId, index:rowIndex, totalPoints, racePoints, sortedRaces }) {
+    // const crewPoints = new Map([...allPoints].filter(([rp]) => rp.isCrew()));
+    // const racePoints = new Map([...allPoints].filter(([rp]) => !rp.isCrew()));
     const boats = [
         ...new Set(
             flatten(
@@ -135,58 +152,53 @@ function HelmRow({ helmId, index, totalPoints, racePoints, sortedRaces }) {
         <>
             {boats &&
                 boats.length &&
-                boats.map((boatClass, boatIndex) => {
-                    return (
-                        <Tr
-                            key={boatIndex}
-                            borderTop={!boatIndex ? "1px" : "0px"}
-                            bg={index % 2 ? "" : "whiteAlpha.600"}
+                boats.map((boatClass, boatIndex) => (
+                    <Tr
+                        key={boatIndex}
+                        borderTop={!boatIndex ? "1px" : "0px"}
+                        bg={rowIndex % 2 ? "" : "whiteAlpha.600"}
+                    >
+                        <StyledTd>{!Boolean(boatIndex) && helmId}</StyledTd>
+                        <StyledTd
+                            borderRightColor={STRONG_EMPHASIS}
+                            paddingRight="5px"
                         >
-                            <StyledTd>{!Boolean(boatIndex) && helmId}</StyledTd>
-                            <StyledTd
-                                borderRightColor={STRONG_EMPHASIS}
-                                paddingRight="5px"
-                            >
-                                {boatClass}
-                            </StyledTd>
-                            {sortedRaces.map((race, index) => {
-                                const points =
-                                    racePoints.has(Race.getId(race)) &&
-                                    racePoints
+                            {boatClass}
+                        </StyledTd>
+                        {sortedRaces.map((race, index) => {
+                            const points =
+                                racePoints.has(Race.getId(race)) && racePoints.get(Race.getId(race)).has(boatClass)
+                                    ? racePoints
                                         .get(Race.getId(race))
-                                        .has(boatClass)
-                                        ? racePoints
-                                              .get(Race.getId(race))
-                                              .get(boatClass)
-                                              .at(0)
-                                        : undefined;
-                                return (
-                                    <StyledTd
-                                        key={index}
-                                        borderRightColor={
-                                            index === sortedRaces.length - 1
-                                                ? STRONG_EMPHASIS
-                                                : LIGHT_EMPHASIS
-                                        }
-                                        isNumeric
-                                    >
-                                        {formatPoints(points, true)}
-                                    </StyledTd>
-                                );
-                            })}
-                            <StyledTd
-                                borderRightColor={STRONG_EMPHASIS}
-                                isNumeric
-                            >
-                                {!Boolean(boatIndex) && (totalPNS || "")}
-                            </StyledTd>
-                            <StyledTd isNumeric>
-                                {!Boolean(boatIndex) && round2sf(totalPoints)}
-                            </StyledTd>
-                        </Tr>
-                    );
-                })}
-            <Tr bg={index % 2 ? "" : "whiteAlpha.600"}>
+                                        .get(boatClass)
+                                        .at(0)
+                                    : undefined;
+                            return (
+                                <StyledTd
+                                    key={index}
+                                    borderRightColor={
+                                        index === sortedRaces.length - 1
+                                            ? STRONG_EMPHASIS
+                                            : LIGHT_EMPHASIS
+                                    }
+                                    isNumeric
+                                >
+                                    {formatPoints(points, true)}
+                                </StyledTd>
+                            );
+                        })}
+                        <StyledTd
+                            borderRightColor={STRONG_EMPHASIS}
+                            isNumeric
+                        >
+                            {!Boolean(boatIndex) && (totalPNS || "")}
+                        </StyledTd>
+                        <StyledTd isNumeric>
+                            {!Boolean(boatIndex) && round2sf(totalPoints)}
+                        </StyledTd>
+                    </Tr>)
+                )}
+            <Tr bg={rowIndex % 2 ? "" : "whiteAlpha.600"}>
                 <StyledTd></StyledTd>
                 <StyledTd borderRightColor={STRONG_EMPHASIS}></StyledTd>
                 {sortedRaces.map((race, index) => {
@@ -232,7 +244,10 @@ export default function SeriesPoints() {
                 seriesPoints.getSeriesName() === series,
         );
 
-    const personalHandicapRaces =
+    const isDoubleHandedSeries = seriesPoints.isDoubleHandedSeries();
+    debugger;
+
+    const personalHandicapRaces = !isDoubleHandedSeries && 
         seriesPoints.getPersonalHandicapRacesToCount(new Date()) - 1;
 
     const [sortedRaces, totalPointsByHelm, allPoints, numRaceStarters] =
@@ -253,7 +268,7 @@ export default function SeriesPoints() {
                             <Thead>
                                 <Tr>
                                     <StyledTh borderBottomWidth="0px">
-                                        Helm
+                                        Helm / Crew
                                     </StyledTh>
                                     <StyledTh
                                         borderBottomWidth="0px"
@@ -351,7 +366,7 @@ export default function SeriesPoints() {
                                             index={index}
                                             helmId={helmId}
                                             totalPoints={totalPoints}
-                                            racePoints={allPoints.get(helmId)}
+                                            racePoints={allPoints.has(helmId) ? allPoints.get(helmId) : new Map()}
                                             sortedRaces={sortedRaces}
                                         />
                                     ),

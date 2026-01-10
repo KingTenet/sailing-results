@@ -918,22 +918,41 @@ export class StoreFunctions {
         const helmsToCommit = new AutoMap(Helm.getId);
         const newMembersToCommit = new AutoMap(ClubMember.getId);
         for (let result of raceResults) {
-            if (newHelmsById.has(Result.getHelmId(result))) {
-                helmsToCommit.upsert(result.getHelm());
+            const helm = result.getHelm();
+            const helmId = Helm.getId(helm);
+            
+            if (newHelmsById.has(helmId)) {
+                helmsToCommit.upsert(helm);
             }
-            if (!this.helmIsClubMember(result.getHelm())) {
+            if (!this.helmIsClubMember(helm)) {
                 newMembersToCommit.upsert(
-                    ClubMember.fromName(Result.getHelmId(result)),
+                    ClubMember.fromName(helmId),
                 );
+            }
+
+            const crew = result.getCrew();
+            if (crew) {
+                const crewId = Helm.getId(crew);
+                
+                if (newHelmsById.has(crewId)) {
+                    helmsToCommit.upsert(crew);
+                }
+                if (!this.helmIsClubMember(crew)) {
+                    newMembersToCommit.upsert(
+                        ClubMember.fromName(crewId),
+                    );
+                }
             }
         }
         for (let ood of raceOODs) {
-            if (newHelmsById.has(HelmResult.getHelmId(ood))) {
-                helmsToCommit.upsert(ood.getHelm());
+            const helm = ood.getHelm();
+            const helmId = Helm.getId(helm);
+            if (newHelmsById.has(helmId)) {
+                helmsToCommit.upsert(helm);
             }
-            if (!this.helmIsClubMember(ood.getHelm())) {
+            if (!this.helmIsClubMember(helm)) {
                 newMembersToCommit.upsert(
-                    ClubMember.fromName(Result.getHelmId(ood)),
+                    ClubMember.fromName(helmId),
                 );
             }
         }
@@ -1063,6 +1082,7 @@ export class StoreFunctions {
     }
 
     createOOD(race, helm, newHelms = []) {
+        // TODO - do we need to support crew here
         const ood = HelmResult.fromHelmRace(
             this.stores.getHelmFromHelmId(Helm.getId(helm), newHelms),
             race,
@@ -1081,12 +1101,13 @@ export class StoreFunctions {
         return newHelm;
     }
 
-    createRegisteredHelm(race, helm, boatClass, boatSailNumber, newHelms = []) {
+    createRegisteredHelm(race, helm, boatClass, boatSailNumber, crew, newHelms = []) {
         const result = MutableRaceResult.fromUser(
             race,
             this.stores.getHelmFromHelmId(Helm.getId(helm), newHelms),
             this.stores.getBoatClassForRace(boatClass.getClassName(), race),
             boatSailNumber,
+            crew,
         );
         this.assertResultNotStored(result);
         return result;

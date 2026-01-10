@@ -17,17 +17,28 @@ import SeriesRace from "./SeriesRace.js";
 import StoreObject from "./StoreObject.js";
 
 export default class ResultPoints extends HelmResult {
-    constructor(result, racePoints, oodPoints, pnsPoints, isCounted = true) {
-        super(result.race, result.helm, StoreObject.fromStore({}));
+    constructor(result, racePoints, oodPoints, pnsPoints, crewPoints, isCounted = true) {
+        super(result.race, result.helm, result.crew, StoreObject.fromStore({}));
         this.result = result;
         this.racePoints = racePoints;
         this.oodPoints = oodPoints;
         this.pnsPoints = pnsPoints;
+        this.crewPoints = crewPoints;
         this.isCounted = isCounted;
     }
 
+    static getId(resultPoints) {
+        assertType(resultPoints, ResultPoints);
+        return resultPoints.isCrew() ? HelmResult.getCrewResultId(resultPoints): HelmResult.getId(resultPoints);
+    }
+
+    static getPersonId(resultPoints) {
+        assertType(resultPoints, ResultPoints);
+        return resultPoints.isCrew() ? HelmResult.getCrewId(resultPoints): HelmResult.getHelmId(resultPoints);
+    }
+
     getTotal() {
-        return this.racePoints + this.oodPoints + this.pnsPoints;
+        return this.racePoints + this.oodPoints + this.pnsPoints + this.crewPoints;
     }
 
     sortAllPointsDesc(secondPoints) {
@@ -44,6 +55,10 @@ export default class ResultPoints extends HelmResult {
 
     isDNF() {
         return Boolean(this.result?.finishCode?.validFinish());
+    }
+
+    isCrew() {
+        return Boolean(this.crewPoints);
     }
 
     static getBoatClassName(points) {
@@ -71,6 +86,7 @@ export default class ResultPoints extends HelmResult {
             points.racePoints,
             points.oodPoints,
             points.pnsPoints,
+            points.crewPoints,
             isCounted,
         );
     }
