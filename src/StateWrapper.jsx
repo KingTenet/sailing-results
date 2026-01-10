@@ -58,6 +58,17 @@ async function initialiseReadOnlyServices(refreshCache) {
     console.log(
         `https://docs.google.com/spreadsheets/d/${liveSourceResultsSheetId}`,
     );
+    if (!readOnlyAuth.clientEmail || !readOnlyAuth.privateKey) {
+        console.warn(
+            "Missing read-only credentials. Waiting for token or manual login.",
+        );
+        return {
+            ready: false,
+            error: new Error(
+                "Missing credentials. Please provide a token in the URL.",
+            ),
+        };
+    }
     return await StoreFunctions.create(
         refreshCache,
         readOnlyAuth,
@@ -180,6 +191,8 @@ function ServicesWrapper({ token }) {
     if (services.error) {
         console.log(services.error);
 
+        // If the error is missing credentials, we might want to show a specific UI
+        // For now, ErrorDisplay is fine, but maybe we can make it friendlier?
         return (
             <ErrorDisplay
                 title={services.error.message}
