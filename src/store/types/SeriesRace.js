@@ -16,6 +16,7 @@ const JUNIOR_SERIES_NAMES = ["junior", "youth"];
 const WOMENS_SERIES_NAMES = ["woman", "women", "lady", "ladies", "female"];
 const LASER_SERIES_NAMES = ["laser"];
 const SOLO_SERIES_NAMES = ["solo"];
+const CREW_SERIES_NAMES = ["double hand", "crew", "icicle"];
 
 export default class SeriesRace extends StoreObject {
     constructor(series, race, lastImported, isPursuit, metaData) {
@@ -101,34 +102,34 @@ export default class SeriesRace extends StoreObject {
         };
     }
 
-    isJuniorSeries() {
-        return JUNIOR_SERIES_NAMES.some((name) =>
-            this.series.getSeriesName().toLowerCase().includes(name),
+    isSeriesMatch(matchNames) {
+        return matchNames.some((name) =>
+            this.series.getSeriesName().toLowerCase().includes(name.toLowerCase()),
         );
+    }
+
+    isJuniorSeries() {
+        return this.isSeriesMatch(JUNIOR_SERIES_NAMES);
     }
 
     isCadetSeries() {
-        return CADET_SERIES_NAMES.some((name) =>
-            this.series.getSeriesName().toLowerCase().includes(name),
-        );
+        return this.isSeriesMatch(CADET_SERIES_NAMES);
     }
 
     isWomensSeries() {
-        return WOMENS_SERIES_NAMES.some((name) =>
-            this.series.getSeriesName().toLowerCase().includes(name),
-        );
+        return this.isSeriesMatch(WOMENS_SERIES_NAMES);
     }
 
     isLaserSeries() {
-        return LASER_SERIES_NAMES.some((name) =>
-            this.series.getSeriesName().toLowerCase().includes(name),
-        );
+        return this.isSeriesMatch(LASER_SERIES_NAMES);
+    }
+    
+    isSoloSeries() {
+        return this.isSeriesMatch(SOLO_SERIES_NAMES);
     }
 
-    isSoloSeries() {
-        return SOLO_SERIES_NAMES.some((name) =>
-            this.series.getSeriesName().toLowerCase().includes(name),
-        );
+    isDoubleHandedSeries() {
+        return this.isSeriesMatch(CREW_SERIES_NAMES);
     }
 
     hasRestrictedField() {
@@ -137,7 +138,8 @@ export default class SeriesRace extends StoreObject {
             this.isCadetSeries() ||
             this.isWomensSeries() ||
             this.isLaserSeries() ||
-            this.isSoloSeries()
+            this.isSoloSeries() ||
+            this.isDoubleHandedSeries()
         );
     }
 }

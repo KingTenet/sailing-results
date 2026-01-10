@@ -6,8 +6,8 @@ import HelmResult from "./HelmResult.js";
 import Result from "./Result.js";
 
 export default class MutableRaceResult extends HelmResult {
-    constructor(race, helm, boatClass, boatSailNumber, metadata) {
-        super(race, helm, metadata);
+    constructor(race, helm, boatClass, boatSailNumber, crew, metadata) {
+        super(race, helm, crew, metadata);
         this.boatClass = assertType(boatClass, BoatClass);
         this.boatSailNumber = assertType(boatSailNumber, "number");
     }
@@ -28,6 +28,7 @@ export default class MutableRaceResult extends HelmResult {
             Helm: helmId,
             "Sail Number": boatSailNumber,
             Class: boatClassName,
+            "Crew": crewId,
         } = storeResult;
         const race = new Race(parseURLDate(dateString), parseInt(raceNumber));
         return new MutableRaceResult(
@@ -35,16 +36,18 @@ export default class MutableRaceResult extends HelmResult {
             getHelm(helmId),
             getBoatClassForRace(boatClassName, race),
             parseInt(boatSailNumber),
+            getHelm(crewId),
             StoreObject.fromStore(storeResult),
         );
     }
 
-    static fromUser(race, helm, boatClass, boatSailNumber) {
+    static fromUser(race, helm, boatClass, boatSailNumber, crew) {
         return new MutableRaceResult(
             race,
             helm,
             boatClass,
             boatSailNumber,
+            crew,
             StoreObject.fromStore({}),
         );
     }
@@ -56,6 +59,7 @@ export default class MutableRaceResult extends HelmResult {
             result.getHelm(),
             result.getBoatClass(),
             result.boatSailNumber,
+            result.getCrew(),
         );
     }
 
@@ -66,6 +70,7 @@ export default class MutableRaceResult extends HelmResult {
             previousResult.getHelm(),
             previousResult.getBoatClass(),
             previousResult.boatSailNumber,
+            previousResult.getCrew(),
         );
     }
 

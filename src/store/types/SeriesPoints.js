@@ -170,13 +170,13 @@ export default class SeriesPoints extends Series {
         }
     }
 
-    getOODPointsFromResults(results, oods, racesToCount) {
+    getOODPointsFromResults(results, oods, racesToCount, crewResults) {
         const pnsCount = Math.max(
             0,
-            racesToCount - results.length - oods.length,
+            racesToCount - results.length - crewResults.length - oods.length,
         );
         const pointsCount = racesToCount - pnsCount - oods.length;
-        const totalPoints = results
+        const totalPoints = [...results, ...crewResults]
             .map(([, points]) => points)
             .sort((a, b) => b - a)
             .slice(-pointsCount);
@@ -211,6 +211,9 @@ export default class SeriesPoints extends Series {
      * Flag points that won't be counted (if the helm has sailed more than races to count)
      */
     getPointsByAllResults(date = new Date(), byClassHandicap = true) {
+        // TODO - if we want to display results the old way this needs tweaking
+        const shouldAssignCrewPoints = byClassHandicap;
+
         const finishes = this.raceFinishes
             .filter((race) => race.isBefore(new Race(date, 1)))
             .sort((raceA, raceB) => raceA.sortByRaceAsc(raceB));
@@ -235,8 +238,13 @@ export default class SeriesPoints extends Series {
         const pointsByRaceResult = flatten(
             finishedRaces.map((raceFinish) => getPointsByResult(raceFinish)),
         );
+
         const pointsByHelm = new Map(
             groupBy(pointsByRaceResult, ([result]) => Result.getHelmId(result)),
+        );
+
+        const pointsByCrew = new Map(
+            groupBy(pointsByRaceResult, ([result]) => Result.getCrewId(result)),
         );
 
         const raceResults = flatten(
@@ -249,36 +257,59 @@ export default class SeriesPoints extends Series {
         const allHelms = groupBy(raceResults, Result.getHelmId).map(
             ([, results]) => [results.at(0).getHelm(), results],
         );
+
+        const allCrew = groupBy(raceResults.filter((result) => result.getCrew()), (result) => Helm.getId(result.getCrew())).map(
+            ([, results]) => [results.at(0).getCrew(), results],
+        );
+
+
         const allOODHelms = new Map(groupBy(allOODs, Result.getHelmId));
 
         const numberOfHelms = allHelms.length;
         const pointsNotScored = numberOfHelms + 1;
 
         const pointResultsMap = new AutoMap(ResultPoints.getId);
+
+        debugger;
+
         for (let race of finishes) {
             if (race.hasResults() && (byClassHandicap || race.getSCT())) {
                 for (let [helm] of allHelms) {
                     const pnsResult = HelmResult.fromHelmRace(helm, race);
                     pointResultsMap.upsert(
-                        new ResultPoints(pnsResult, 0, 0, pointsNotScored),
+                        new ResultPoints(pnsResult, 0, 0, pointsNotScored, 0),
                     );
+                }
+                if (shouldAssignCrewPoints) {
+                    for (let [crew] of allCrew) {
+                        const pnsResult = HelmResult.fromHelmRace(crew, race);
+                        pointResultsMap.upsert(
+                            new ResultPoints(pnsResult, 0, 0, pointsNotScored, 0),
+                        );
+                    }
                 }
                 for (let [result, finishPoints] of getPointsByResult(race)) {
                     pointResultsMap.upsert(
-                        new ResultPoints(result, finishPoints, 0, 0),
+                        new ResultPoints(result, finishPoints, 0, 0, 0),
                     );
+                    if (shouldAssignCrewPoints && result.getCrew()) {
+                        pointResultsMap.upsert(
+                            new ResultPoints(result, 0, 0, 0, finishPoints),
+                        );
+                    }
                 }
             }
             for (let oodResult of race.getOODs()) {
-                const helmId = Result.getHelmId(oodResult);
-                if (pointsByHelm.has(helmId)) {
+                const oodHelmId = Result.getHelmId(oodResult);
+                if (pointsByHelm.has(oodHelmId)) {
                     const oodPoints = this.getOODPointsFromResults(
-                        pointsByHelm.get(helmId),
-                        allOODHelms.get(helmId),
+                        pointsByHelm.get(oodHelmId),
+                        allOODHelms.get(oodHelmId),
                         racesToCount,
+                        pointsByCrew.get(oodHelmId) || [],
                     );
                     pointResultsMap.upsert(
-                        new ResultPoints(oodResult, 0, oodPoints, 0),
+                        new ResultPoints(oodResult, 0, oodPoints, 0, 0),
                     );
                 } else {
                     // console.log(`Warning: no points found for ${helmId} for ${Race.getId(race)}`);
@@ -289,8 +320,9 @@ export default class SeriesPoints extends Series {
         const allPointResults = [...pointResultsMap].map(
             ([, pointResult]) => pointResult,
         );
+
         return flatten(
-            groupBy(allPointResults, HelmResult.getHelmId).map(
+            groupBy(allPointResults, ResultPoints.getPersonId).map(
                 ([, helmPointResults]) =>
                     helmPointResults
                         .sort((a, b) => a.sortAllPointsDesc(b))
@@ -314,19 +346,20 @@ export default class SeriesPoints extends Series {
 
     getAllRacePointsByClassHandicap() {
         this.getPoints();
-        return this.getRacePointsByHelmBoat(this.allClassHandicapPoints);
+        return this.getRacePointsByPersonBoat(this.allClassHandicapPoints);
     }
 
     getAllRacePointsByPersonalHandicap() {
         this.getPoints();
-        return this.getRacePointsByHelmBoat(this.allPersonalHandicapPoints);
+        return this.getRacePointsByPersonBoat(this.allPersonalHandicapPoints);
     }
 
-    getRacePointsByHelmBoat(allResultPoints) {
+    getRacePointsByPersonBoat(allResultPoints) {
         // row groups
+
         const totalPointsByHelmDesc = groupBy(
             allResultPoints,
-            [HelmResult.getHelmId],
+            [ResultPoints.getPersonId],
             ResultPoints.aggregate,
         ).sort(([, pointsA], [, pointsB]) => pointsA - pointsB);
 
@@ -336,13 +369,14 @@ export default class SeriesPoints extends Series {
             .sort((a, b) => a.sortByRaceAsc(b));
 
         const helmPointsMap = mapGroupBy(allResultPoints, [
-            HelmResult.getHelmId,
+            ResultPoints.getPersonId,
             HelmResult.getRaceId,
             ResultPoints.getBoatClassName,
         ]);
 
+        // TODO - this seems weird.. why is num race entrants cummulative on points??
         const numRaceEntrants = mapGroupBy(
-            allResultPoints,
+            allResultPoints.filter(rp => !rp.isCrew()),
             [HelmResult.getRaceId],
             (allPoints) =>
                 allPoints.reduce(
@@ -355,7 +389,7 @@ export default class SeriesPoints extends Series {
             sortedRaces,
             totalPointsByHelmDesc,
             helmPointsMap,
-            numRaceEntrants,
+            numRaceEntrants
         ];
     }
 
@@ -529,6 +563,10 @@ export default class SeriesPoints extends Series {
         }
         const series = Series.fromSeriesRace(seriesRaces[0]);
         return new SeriesPoints(series, seriesRaces, raceFinishes);
+    }
+
+    isDoubleHandedSeries() {
+        return this.seriesRaces.some((seriesRace) => seriesRace.isDoubleHandedSeries());
     }
 
     getFirstRace() {
