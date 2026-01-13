@@ -210,9 +210,9 @@ export default class SeriesPoints extends Series {
      * If they didn't take part in race, create a PNS result for them (and associated points).
      * Flag points that won't be counted (if the helm has sailed more than races to count)
      */
-    getPointsByAllResults(date = new Date(), byClassHandicap = true) {
+    getPointsByAllResults(date = new Date(), byClassHandicap = true, shouldAssignCrewPoints) {
         // TODO - if we want to display results the old way this needs tweaking
-        const shouldAssignCrewPoints = byClassHandicap;
+        // const shouldAssignCrewPoints = byClassHandicap;
 
         const finishes = this.raceFinishes
             .filter((race) => race.isBefore(new Race(date, 1)))
@@ -269,8 +269,6 @@ export default class SeriesPoints extends Series {
         const pointsNotScored = numberOfHelms + 1;
 
         const pointResultsMap = new AutoMap(ResultPoints.getId);
-
-        debugger;
 
         for (let race of finishes) {
             if (race.hasResults() && (byClassHandicap || race.getSCT())) {
@@ -344,9 +342,18 @@ export default class SeriesPoints extends Series {
         return this.getPointsByAllResults(date, true);
     }
 
+    getClassHandicapPointsByCrew(date) {
+        return this.getPointsByAllResults(date, true, true);
+    }
+
     getAllRacePointsByClassHandicap() {
         this.getPoints();
         return this.getRacePointsByPersonBoat(this.allClassHandicapPoints);
+    }
+
+    getAllRacePointsByClassHandicapWithCrew() {
+        this.getPoints();
+        return this.getRacePointsByPersonBoat(this.allClassHandicapPointsWithCrew);
     }
 
     getAllRacePointsByPersonalHandicap() {
@@ -423,6 +430,10 @@ export default class SeriesPoints extends Series {
     getPoints(date = new Date()) {
         if (!this.allClassHandicapPoints) {
             this.allClassHandicapPoints = this.getClassHandicapPoints(date);
+        }
+
+        if (!this.allClassHandicapPointsWithCrew) {
+            this.allClassHandicapPointsWithCrew = this.getClassHandicapPointsByCrew(date);
         }
 
         if (!this.allPersonalHandicapPoints) {

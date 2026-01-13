@@ -228,14 +228,15 @@ function HelmRow({ helmId, index:rowIndex, totalPoints, racePoints, sortedRaces 
     );
 }
 
+const resultsTypeLabels = {"personalHandicap": "personal handicap", "classHandicap": "class handicap", "classHandicapWithCrew": "class handicap with crew"};
+
 export default function SeriesPoints() {
     const services = useServices();
     const navigateTo = useNavigate();
     const params = useParams();
     const season = params["season"];
     const series = params["series"];
-    const [resultsByPersonalHandicap, updateResultsByPersonalHandicap] =
-        useState(false);
+
     const seriesPoints = services
         .getSeriesPoints()
         .find(
@@ -245,13 +246,29 @@ export default function SeriesPoints() {
         );
 
     const isDoubleHandedSeries = seriesPoints.isDoubleHandedSeries();
-
     const personalHandicapRaces = !isDoubleHandedSeries && 
         seriesPoints.getPersonalHandicapRacesToCount(new Date()) - 1;
 
+    const [resultsTypes] = useState(() => {
+        if (isDoubleHandedSeries) {
+            return ["classHandicapWithCrew"];
+        }
+        else if (!personalHandicapRaces) {
+            return  ["classHandicap"];
+        }
+        return ["classHandicap", "classHandicapWithCrew", "personalHandicap"];
+    });
+
+    const [resultsTypeIndex, updateResultsTypeIndex] = useState(0);
+
+    const resultsByPersonalHandicap = resultsTypes[resultsTypeIndex] === "personalHandicap";
+    const resultsByClassHandicapWithCrew = resultsTypes[resultsTypeIndex] === "classHandicapWithCrew";
+    const toggleResultsType = () => updateResultsTypeIndex((resultsTypeIndex + 1) % resultsTypes.length);
+
+
     const [sortedRaces, totalPointsByHelm, allPoints, numRaceStarters] =
-        resultsByPersonalHandicap && personalHandicapRaces
-            ? seriesPoints.getAllRacePointsByPersonalHandicap()
+        resultsByPersonalHandicap && personalHandicapRaces ? seriesPoints.getAllRacePointsByPersonalHandicap()
+            : resultsByClassHandicapWithCrew ? seriesPoints.getAllRacePointsByClassHandicapWithCrew()
             : seriesPoints.getAllRacePointsByClassHandicap();
 
     return (
@@ -260,7 +277,7 @@ export default function SeriesPoints() {
             <Flex direction="column" style={{ display: "inline-block" }}>
                 <RacesCard display="inline-block">
                     <DroppableHeader
-                        heading={`${series} ${season} series points by ${resultsByPersonalHandicap && personalHandicapRaces ? "personal handicap" : "class handicap"}`}
+                        heading={`${series} ${season} series points by ${resultsTypeLabels[resultsTypes[resultsTypeIndex]]}`}
                     />
                     <Box padding="10px">
                         <Table size="sm" variant="simple">
@@ -380,15 +397,11 @@ export default function SeriesPoints() {
                         <GreenButton
                             maxWidth="100vw"
                             onClick={() =>
-                                updateResultsByPersonalHandicap(
-                                    !resultsByPersonalHandicap,
-                                )
+                                toggleResultsType()
                             }
                             autoFocus
                         >
-                            {resultsByPersonalHandicap
-                                ? "Show points by class handicap"
-                                : "Show points by personal handicap"}
+                            {`Show points by ${resultsTypeLabels[resultsTypes[(resultsTypeIndex + 1) % resultsTypes.length]]}`}
                         </GreenButton>
                     )}
                     <BackButton maxWidth="100vw">{"Back to series"}</BackButton>
