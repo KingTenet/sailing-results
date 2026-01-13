@@ -515,10 +515,12 @@ class Indexes {
     constructor(stores) {
         this.stores = stores;
         this.setHelmCounts();
+        this.setCrewCounts();
     }
 
     updateFromResults(results = []) {
         this.setHelmCounts(results);
+        this.setCrewCounts(results);
         this.setBoatCounts(results);
         this.setSailNumberCounts(results);
     }
@@ -535,6 +537,13 @@ class Indexes {
         this.helms = new Map(
             Indexes.getHelmCounts(this.getAllResults(results)),
         );
+    }
+
+    setCrewCounts(results = []) {
+        this.crews = new Map(
+            Indexes.getCrewCounts(this.getAllResults(results)),
+        );
+        this.crewsByHelm = Indexes.getCrewsForHelm(this.getAllResults(results));
     }
 
     setBoatCounts(results = []) {
@@ -716,6 +725,70 @@ class Indexes {
         );
     }
 
+
+    getCrewIndexForHelm(helm, excludedHelms = [], newHelms = []) {
+        const helmIdsToExclude = excludedHelms.map(Helm.getId);
+
+        const getScore = (count, time) => {
+            return time;
+        };
+
+        const getScores = (crewsOrHelms, scoreWeighting) => {
+            return new Map(
+                [...crewsOrHelms].map(([crewId, [count, time]]) => [
+                    crewId,
+                    getScore(count, time) * scoreWeighting,
+                ]),
+            );
+        }
+
+        const scoresByHelmId = getScores(this.helms, 1);
+        const scoresByCrewId = getScores(this.crews, 100);
+        const scoresByCrewIdForHelm = getScores(this.crewsByHelm.get(Helm.getId(helm)), 1000) || new Map();
+
+        const getHelmForId = (helmId) => {
+            try {
+                return this.stores.getHelmFromHelmId(helmId, newHelms);
+            } catch (err) {
+                return false;
+            }
+        };
+
+        const crewOptions = 
+            [
+                ...this.stores.clubMembers.all(),
+                ...this.stores.newMembers.all(),
+                ...this.stores.helms
+                    .all()
+                    .filter((helm) => helm.isGuestHelm())
+                    .map((guestHelm) =>
+                        ClubMember.fromName(guestHelm.getName()),
+                    ),
+            ]
+                .map((clubMember) => {
+                    const helmId = ClubMember.getId(clubMember);
+                    if (helmIdsToExclude.includes(helmId)) {
+                        return false;
+                    }
+                    return [
+                        getHelmForId(helmId) || clubMember,
+                        scoresByCrewIdForHelm.get(helmId) 
+                            || scoresByCrewId.get(helmId)
+                                || scoresByHelmId.get(helmId)
+                                    || 0,
+                    ];
+                })
+                .filter(Boolean)
+                .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+                .map(([helm]) => helm);
+
+        return new SearchIndex(
+            crewOptions,
+            "name",
+        );
+    }
+
+
     getSailNumberIndexForHelmBoat(helm, boat) {
         const getScore = (count, time) => {
             if (count > 2) {
@@ -797,6 +870,29 @@ class Indexes {
         }
 
         return [...helmCounts];
+    }
+
+    static getCrewCounts(results) {
+        const crewCounts = new AutoMap(HelmResult.getCrewId, () => [0, 0]);
+        for (let result of results) {
+            if (!result.getCrew()) {
+                continue;
+            }
+            crewCounts.upsert(result, ([count, last]) => [
+                count + 1,
+                Math.max(last, result.getRace().getDate().getTime()),
+            ]);
+        }
+
+        return [...crewCounts];
+    }
+
+    static getCrewsForHelm(results) {
+        return mapGroupBy(
+            results,
+            [HelmResult.getHelmId],
+            Indexes.getCrewCounts,
+        );
     }
 
     static getBoatsForHelm(results) {

@@ -245,7 +245,6 @@ export default function SeriesPoints() {
         );
 
     const isDoubleHandedSeries = seriesPoints.isDoubleHandedSeries();
-    debugger;
 
     const personalHandicapRaces = !isDoubleHandedSeries && 
         seriesPoints.getPersonalHandicapRacesToCount(new Date()) - 1;

@@ -13,9 +13,10 @@ import {
     Alert,
     AlertIcon,
     AlertTitle,
+    CloseButton,
 } from "@chakra-ui/react";
 
-import { CheckCircleIcon } from "@chakra-ui/icons";
+import { CloseIcon } from "@chakra-ui/icons";
 
 function CollapseEx({ children, isOpen }) {
     return (
@@ -50,6 +51,7 @@ export default function ({
     forceBlurOnExactMatch,
     handleOnBlur,
     getPartialMatchErrorMsg,
+    onCloseButtonClick,
 }) {
     const [inputItems, setInputItems] = useState(data);
     const [partialMatch, setPartialMatch] = useState();
@@ -183,7 +185,7 @@ export default function ({
                         <Box minWidth="110px" paddingTop="5px">
                             <Text fontSize={"lg"}>{heading}</Text>
                         </Box>
-                        <Box width="100%">
+                        <Flex direction={"row"} width={"100%"} className={"autocomplete-input"} justifyItems={"center"} alignItems={"center"}>
                             <InputGroup>
                                 <Input
                                     bgColor="white"
@@ -193,7 +195,8 @@ export default function ({
                                     type={type}
                                 />
                             </InputGroup>
-                        </Box>
+                                {onCloseButtonClick && <CloseButton backgroundColor={"rgba(1,1,1, 0.1)"} marginLeft={"20px"} marginRight={"10px"} onClick={onCloseButtonClick} />}
+                        </Flex>
                     </Flex>
                     {!exactMatch && errorMessage && canShowErrors && (
                         <Box className={"autocomplete-error"}>
