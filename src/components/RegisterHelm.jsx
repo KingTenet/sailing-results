@@ -31,6 +31,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
     const [selectedCrew, setSelectedCrew] = useState(null);
     const [selectedCrewNewMember, setSelectedCrewNewMember] = useState(null);
     const [selectedCrewClubMember, setSelectedCrewClubMember] = useState(null);
+    const [showSelectedCrew, setShowSelectedCrew] = useState(true);
     const [selectedBoat, setSelectedBoat] = useState(null);
     const [sailNumber, setSailNumber] = useState();
     const [showCommit, setShowCommit] = useState();
@@ -59,9 +60,25 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         ].map((result) => result.getHelm()),
     );
 
+    const [excludedCrewIds] = useState(() =>
+        [
+            ...appState.results.filter(
+                (result) => HelmResult.getRaceId(result) === Race.getId(race),
+            ),
+            ...appState.registered.filter(
+                (result) => HelmResult.getRaceId(result) === Race.getId(race),
+            ),
+            ...appState.oods.filter(
+                (result) => HelmResult.getRaceId(result) === Race.getId(race),
+            ),
+        ].map((result) => result.getCrew())
+        .filter(Boolean),
+    );
+
     const [helmsIndex, setHelmsIndex] = useState(null);
     const [boatsIndex, setBoatsIndex] = useState(null);
     const [sailNumberIndex, setSailNumberIndex] = useState(null);
+    const [crewIndex, setCrewIndex] = useState(null);
 
     const navigateTo = useNavigate();
 
@@ -69,7 +86,6 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         if (!sailNumber) {
             return;
         }
-        debugger;
         const newRegisteration = services.createRegisteredHelm(
             race,
             selectedHelm,
@@ -137,7 +153,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
         if (!selectedHelm) {
             setHelmsIndex(
                 services.indexes.getHelmsIndex(
-                    excludedHelmIds,
+                    [...excludedHelmIds, ...excludedCrewIds],
                     appState.newHelms,
                 ),
             );
@@ -152,11 +168,25 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
             );
 
             setSailNumberIndex(index);
+            setShowSelectedCrew(true);
         } else {
             setSailNumber(undefined);
             setSailNumberIndex(undefined);
         }
     }, [selectedBoat]);
+
+    useEffect(() => {
+        services.indexes.updateFromResults(appState.results);
+        if (selectedHelm && !selectedCrew) {
+            setCrewIndex(
+                services.indexes.getCrewIndexForHelm(
+                    selectedHelm,
+                    [...excludedHelmIds, ...excludedCrewIds, selectedHelm],
+                    appState.newHelms,
+                ),
+            );
+        }
+    }, [selectedHelm, appState.results]);
 
     useEffect(() => {
         if (selectedHelm) {
@@ -287,7 +317,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
     };
 
     const crewNumber = selectedBoat && selectedBoat.boatConfiguration && selectedBoat.boatConfiguration.crew;
-    const needCrewSelection = crewNumber && crewNumber > 1 && !selectedCrew;
+    const needCrewSelection = crewNumber && crewNumber > 1 && !selectedCrew && showSelectedCrew;
 
     return (
         <>
@@ -368,7 +398,7 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                                 triggerExactMatchOnBlurIfValid={true}
                             />
                         )}
-                        {crewNumber && crewNumber > 1 && helmsIndex && !selectedCrewClubMember && (
+                        {crewNumber && crewNumber > 1 && helmsIndex && !selectedCrewClubMember && showSelectedCrew && crewIndex &&(
                             <AlertDialogWrapper
                                 providedDisclosure={{ isOpen: newCrewIsOpen, onClose: onNewCrewClose }}
                                 onConfirm={() => onConfirmNewCrewClubMember()}
@@ -380,12 +410,12 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                                 <Autocomplete
                                     customClassName="input-container-1 input-container"
                                     heading={"Crew"}
-                                    data={helmsIndex.data}
+                                    data={crewIndex.data}
                                     itemToString={(helm) =>
                                         helm ? helm.getName() : ""
                                     }
                                     filterData={(inputValue) =>
-                                        helmsIndex.search(inputValue)
+                                        crewIndex.search(inputValue)
                                     }
                                     handleSelectedItemChange={
                                         handleSelectedCrew
@@ -401,10 +431,11 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
                                     getPartialMatchErrorMsg={
                                         getHelmNameErrorMessage
                                     }
+                                    onCloseButtonClick={() => setShowSelectedCrew(false)}
                                     />
                             </AlertDialogWrapper>
                         )}
-                        {selectedCrewClubMember && (
+                        {selectedCrewClubMember && showSelectedCrew && (
                             <NewHelm
                                 onNewHelm={onNewCrew}
                                 clubMember={selectedCrewClubMember}

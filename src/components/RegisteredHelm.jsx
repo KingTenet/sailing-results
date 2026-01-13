@@ -17,7 +17,7 @@ import {
     Spacer,
 } from "@chakra-ui/react";
 
-import { CheckCircleIcon } from "@chakra-ui/icons";
+import { CheckCircleIcon, CloseIcon } from "@chakra-ui/icons";
 import SpinnerWithTimeout from "./Spinner";
 import BackHeader from "./BackHeader";
 
@@ -62,6 +62,8 @@ function RegisteredHelm({ backHeading, children }) {
         );
     }
 
+    const crewName = HelmResult.getCrewId(registeredResult);
+
     return (
         <>
             <form onSubmit={(evt) => evt.preventDefault()}>
@@ -100,8 +102,8 @@ function RegisteredHelm({ backHeading, children }) {
                                             placeholder={
                                                 registeredResult
                                                     ? HelmResult.getHelmId(
-                                                          registeredResult,
-                                                      )
+                                                        registeredResult,
+                                                    )
                                                     : ""
                                             }
                                         />
@@ -137,8 +139,8 @@ function RegisteredHelm({ backHeading, children }) {
                                             placeholder={
                                                 registeredResult
                                                     ? registeredResult
-                                                          .getBoatClass()
-                                                          .getClassName()
+                                                        .getBoatClass()
+                                                        .getClassName()
                                                     : ""
                                             }
                                         />
@@ -151,6 +153,39 @@ function RegisteredHelm({ backHeading, children }) {
                                 </Box>
                             </Flex>
                         </Box>
+                        {crewName &&
+                            <Box
+                                borderRadius={"12px"}
+                                borderWidth="1px"
+                                style={{ padding: "8px 15px 8px 15px" }}
+                                width="100%"
+                                className={"input-container-1 input-container"}
+                            >
+                                <Flex direction={"row"}>
+                                    <Box minWidth="110px" paddingTop="5px">
+                                        <Text fontSize={"lg"}>{"Crew"}</Text>
+                                    </Box>
+                                    <Box width="100%">
+                                        <InputGroup>
+                                            <Input
+                                                bgColor="white"
+                                                _placeholder={{ opacity: 1 }}
+                                                readOnly={true}
+                                                disabled={true}
+                                                onFocus="this.blur()"
+                                                tabIndex="-1"
+                                                placeholder={crewName}
+                                            />
+                                            <InputRightElement
+                                                children={
+                                                    <CheckCircleIcon color="green.500" />
+                                                }
+                                            />
+                                        </InputGroup>
+                                    </Box>
+                                </Flex>
+                            </Box>
+                        }
                         <Box
                             borderRadius={"12px"}
                             borderWidth="1px"

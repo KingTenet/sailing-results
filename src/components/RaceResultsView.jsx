@@ -29,10 +29,10 @@ const PURSUIT_RACE_VIEW = ["PURSUIT_POSITIONS"];
 const PURSUIT_START_TIMES_VIEW = ["PURSUIT_START_TIMES"];
 
 const COLUMN_1_DIMENSIONS = {
-    PERSONAL_HANDICAP: ["NAME", "SAIL_NUMBER"],
-    CLASS_HANDICAP: ["NAME", "SAIL_NUMBER"],
-    FINISH_TIME: ["SAIL_NUMBER", "NAME"],
-    PURSUIT_POSITIONS: ["NAME", "SAIL_NUMBER"],
+    PERSONAL_HANDICAP: ["NAME", "SAIL_NUMBER", "CREW"],
+    CLASS_HANDICAP: ["NAME", "SAIL_NUMBER", "CREW"],
+    FINISH_TIME: ["SAIL_NUMBER", "NAME", "CREW"],
+    PURSUIT_POSITIONS: ["NAME", "SAIL_NUMBER", "CREW"],
     PURSUIT_START_TIMES: ["CLASS_NAME", "CLASS_HANDICAP"],
 };
 
@@ -56,7 +56,7 @@ const COLUMN_3_DIMENSIONS = {
 };
 
 const DIMENSION_LABELS = {
-    NAME: "Name",
+    NAME: "Helm",
     SAIL_NUMBER: "Sail Number",
     CLASS_NAME: "Class",
     PERSONAL_HANDICAP: "Personal PY",
@@ -69,6 +69,7 @@ const DIMENSION_LABELS = {
     RAW_CLASS_CORRECTED_TIME: "Seconds",
     FINISH_TIME: "Time",
     LAPS: "Laps",
+    CREW: "Crew"
 };
 
 const SECONDS_IN_MINUTE = 60;
@@ -155,6 +156,8 @@ function getDimensionValue(dimension, result, sct, correctedLaps) {
     switch (dimension) {
         case "NAME":
             return Result.getHelmId(result);
+        case "CREW":
+            return Result.getCrewId(result) || "N/A";
         case "SAIL_NUMBER":
             return result.getSailNumber();
         case "CLASS_NAME":

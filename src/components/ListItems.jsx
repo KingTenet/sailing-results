@@ -20,6 +20,14 @@ import Result from "../store/types/Result";
 import { useSpring, animated } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
 
+const formatHelmCrew = (helmName, crewName) => {
+    if (crewName) {
+        return `${helmName}, ${crewName}`;
+    } else {
+        return helmName;
+    }
+};
+
 const SwipeIcon = (props) => (
     <Icon viewBox="200 200 400 400" {...props}>
         <path d="M506.5 362.32v-2.633 2.106c0 1.578 0 3.683.527 5.261-.527-1.578-.527-3.156-.527-4.734zM484.4 365.48c-5.79 0-11.051 1.578-15.262 4.21-4.734-9.995-14.734-16.84-26.309-16.84-5.79 0-11.051 1.579-15.262 4.212-4.734-9.996-14.734-16.84-26.309-16.84-4.21 0-8.945 1.05-12.629 2.633v-78.93c0-16.312-13.156-28.941-28.941-28.941s-28.941 13.156-28.941 28.94v131.55l-8.945-18.417c-4.211-11.051-15.262-18.941-27.363-18.941-3.157 0-6.84.527-9.996 1.578-7.368 2.633-13.156 7.894-16.312 15.262-3.157 6.84-3.684 14.734-1.051 22.102 0 0 0 .527.527.527l60.512 128.39c0 .527.527.527.527 1.05 6.313 9.474 13.68 17.892 22.625 25.259.528.527 1.051.527 1.579 1.05l1.05 1.051c17.363 12.63 37.887 19.47 59.461 19.47 53.672 0 97.875-42.099 99.977-95.243v-10.519l.004-73.676c.528-15.785-12.629-28.941-28.94-28.941zm-71.035 192.06c-17.891 0-34.73-5.262-48.938-15.785l-1.05-1.05c-1.052-1.052-2.106-1.579-3.157-2.106-6.84-5.79-12.629-12.102-17.363-19.47l-59.992-127.34c-1.05-3.156-1.05-6.312.527-9.472 1.578-3.156 3.684-5.262 6.84-6.313 6.313-2.105 13.68 1.051 15.785 7.368 0 0 0 .527.527.527l24.73 52.621c1.579 3.684 5.79 5.262 9.473 4.734 3.684-1.05 6.313-4.21 6.313-7.894V263.92c0-6.84 5.789-12.63 12.629-12.63s12.629 5.79 12.629 12.63v105.24c0 4.734 3.683 8.418 8.418 8.418s8.418-3.684 8.418-8.418c0-6.84 5.789-12.63 12.629-12.63s12.629 5.79 12.629 12.63v12.629c0 4.734 3.683 8.418 8.418 8.418s8.418-3.684 8.418-8.418c0-6.84 5.789-12.63 12.629-12.63s12.629 5.79 12.629 12.63v12.629c0 4.734 3.683 8.418 8.418 8.418s8.418-3.684 8.418-8.418c0-6.84 5.789-12.63 12.629-12.63s12.629 5.79 12.629 12.63v84.195c-4.2 44.2-40.508 78.927-85.234 78.927z" />
@@ -254,13 +262,14 @@ function ListItemWrapper({
 
 export function RegisteredListItem({ registered, onClick, ...props }) {
     const helmName = Result.getHelmId(registered);
+    const crewName = Result.getCrewId(registered);
     const boatClass = formatBoatClass(registered.getBoatClass().getClassName());
     const sailNumber = registered.getSailNumber();
 
     return (
         <ListItemWrapper onClick={onClick} {...props}>
             <Grid templateColumns="repeat(16, 1fr)" gap={5} width={"100%"}>
-                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={6}>{formatHelmCrew(helmName, crewName)}</ResultDimension>
                 <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                 <ResultDimension colSpan={4}>{sailNumber}</ResultDimension>
             </Grid>
@@ -270,13 +279,14 @@ export function RegisteredListItem({ registered, onClick, ...props }) {
 
 export function DNFListItem({ result, onClick, ...props }) {
     const helmName = Result.getHelmId(result);
+    const crewName = Result.getCrewId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
     const sailNumber = result.getSailNumber();
 
     return (
         <ListItemWrapper onClick={onClick} {...props}>
             <Grid templateColumns="repeat(16, 1fr)" gap={5} width={"100%"}>
-                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={6}>{formatHelmCrew(helmName, crewName)}</ResultDimension>
                 <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                 <ResultDimension colSpan={4}>{sailNumber}</ResultDimension>
             </Grid>
@@ -286,6 +296,7 @@ export function DNFListItem({ result, onClick, ...props }) {
 
 export function PursuitFinishListItem({ result, index, ...props }) {
     const helmName = Result.getHelmId(result);
+    const crewName = Result.getCrewId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
     const sailNumber = result.getSailNumber();
 
@@ -293,7 +304,7 @@ export function PursuitFinishListItem({ result, index, ...props }) {
         <ListItemWrapper {...props}>
             <Grid templateColumns="repeat(16, 1fr)" gap={3} width={"100%"}>
                 <ResultDimension colSpan={1}>{index + 1}</ResultDimension>
-                <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                <ResultDimension colSpan={6}>{formatHelmCrew(helmName, crewName)}</ResultDimension>
                 <ResultDimension colSpan={6}>{boatClass}</ResultDimension>
                 <ResultDimension colSpan={3}>{sailNumber}</ResultDimension>
             </Grid>
@@ -315,6 +326,7 @@ export function OODListItem({ ood, ...props }) {
 
 export function FinisherListItem({ result, ...props }) {
     const helmName = Result.getHelmId(result);
+    const crewName = Result.getCrewId(result);
     const boatClass = formatBoatClass(result.getBoatClass().getClassName());
     const sailNumber = result.getSailNumber();
     const finishTime = formatMinutesSeconds(
@@ -327,7 +339,7 @@ export function FinisherListItem({ result, ...props }) {
         <>
             <ListItemWrapper {...props}>
                 <Grid templateColumns="repeat(17, 1fr)" gap={3} width={"100%"}>
-                    <ResultDimension colSpan={6}>{helmName}</ResultDimension>
+                    <ResultDimension colSpan={6}>{formatHelmCrew(helmName, crewName)}</ResultDimension>
                     <ResultDimension
                         colSpan={5}
                     >{`${sailNumber}, ${boatClass}`}</ResultDimension>

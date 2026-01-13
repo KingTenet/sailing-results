@@ -16,7 +16,7 @@ const JUNIOR_SERIES_NAMES = ["junior", "youth"];
 const WOMENS_SERIES_NAMES = ["woman", "women", "lady", "ladies", "female"];
 const LASER_SERIES_NAMES = ["laser"];
 const SOLO_SERIES_NAMES = ["solo"];
-const CREW_SERIES_NAMES = ["double hand", "crew", "icicle"];
+const CREW_SERIES_NAMES = ["double hand", "crew"];
 
 export default class SeriesRace extends StoreObject {
     constructor(series, race, lastImported, isPursuit, metaData) {
