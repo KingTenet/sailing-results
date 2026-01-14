@@ -44,14 +44,8 @@ function formatPoints(points, showLabel) {
     const isOOD = points.isOOD();
     const isPNS = points.isPNS();
     const isDNF = points.isDNF();
-    const isCrew = points.isCrew();
 
-    // if(isCrew) {
-    //     return `Crew ${points.getTotal()}`;
-    // }
     const format = () => {
-
-        
         if (showLabel) {
             if (isOOD) {
                 return "OOD";
@@ -74,7 +68,7 @@ function formatPoints(points, showLabel) {
         : `[${round2sf(points.getTotal())}]`;
     };
 
-    return isCrew ? `${format()}*` : format();
+    return points.isCrew() ? `${format()}*` : format();
 }
 
 const StyledTd = ({ children, ...props }) => {
@@ -113,14 +107,7 @@ const StyledTh = ({ children, ...props }) => {
     );
 };
 
-// function HelmOrCrewBoat({rowIndex, sortedRaces, helmId, boatIndex, boatClass, racePoints, totalPoints, totalPNS}) {
-//     return (
-//     );
-// }
-
 function HelmRow({ helmId, index:rowIndex, totalPoints, racePoints, sortedRaces }) {
-    // const crewPoints = new Map([...allPoints].filter(([rp]) => rp.isCrew()));
-    // const racePoints = new Map([...allPoints].filter(([rp]) => !rp.isCrew()));
     const boats = [
         ...new Set(
             flatten(

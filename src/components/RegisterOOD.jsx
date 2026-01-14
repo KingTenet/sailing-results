@@ -44,6 +44,21 @@ export default function RegisterOOD() {
         ].map((result) => result.getHelm()),
     );
 
+    const [excludedCrewIds] = useState(() =>
+        [
+            ...appState.results.filter(
+                (result) => HelmResult.getRaceId(result) === Race.getId(race),
+            ),
+            ...appState.registered.filter(
+                (result) => HelmResult.getRaceId(result) === Race.getId(race),
+            ),
+            ...appState.oods.filter(
+                (result) => HelmResult.getRaceId(result) === Race.getId(race),
+            ),
+        ].map((result) => result.getCrew())
+        .filter(Boolean),
+    );
+
     const [helmsIndex, setHelmsIndex] = useState(null);
 
     const processHelmResult = (event) => {
@@ -91,7 +106,7 @@ export default function RegisterOOD() {
         if (!selectedHelm) {
             setHelmsIndex(
                 services.indexes.getHelmsIndex(
-                    excludedHelmIds,
+                    [...excludedHelmIds, ...excludedCrewIds],
                     appState.newHelms,
                 ),
             );
