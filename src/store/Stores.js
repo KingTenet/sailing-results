@@ -744,7 +744,7 @@ class Indexes {
 
         const scoresByHelmId = getScores(this.helms, 1);
         const scoresByCrewId = getScores(this.crews, 100);
-        const scoresByCrewIdForHelm = getScores(this.crewsByHelm.get(Helm.getId(helm)), 1000) || new Map();
+        const scoresByCrewIdForHelm = getScores(this.crewsByHelm.get(Helm.getId(helm)) || [], 1000);
 
         const getHelmForId = (helmId) => {
             try {
