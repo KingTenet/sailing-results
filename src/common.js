@@ -181,10 +181,15 @@ export function isOnline() {
 }
 
 export async function getGoogleSheetDoc(sheetId, clientEmail, privateKey) {
+    if (!clientEmail || !privateKey) {
+        throw new Error(
+            "Missing Google Service Account credentials. Please set VITE_CLIENT_EMAIL and VITE_PRIVATE_KEY.",
+        );
+    }
     try {
         const serviceAccountJWT = new JWT({
             email: clientEmail,
-            key: privateKey,
+            key: privateKey.replace(/\\n/g, "\n"),
             scopes: [
                 "https://www.googleapis.com/auth/spreadsheets",
                 "https://www.googleapis.com/auth/drive.file",

@@ -14,16 +14,24 @@ export default defineConfig(({ mode }: UserConfig) => {
         plugins: [
             react(),
             VitePWAPlugin(env.VITE_APP_URL),
-            nodePolyfills(), // https://www.npmjs.com/package/vite-plugin-node-polyfills
+            nodePolyfills({
+                exclude: ["process"],
+                globals: {
+                    process: false,
+                },
+            }), // https://www.npmjs.com/package/vite-plugin-node-polyfills
         ],
         server: {
             host: "0.0.0.0",
+            port: 3000
         },
         preview: {
-            host: "0.0.0.0",
+            host: "0.0.0.0"
         },
         resolve: {
             alias: {
+                "process": path.resolve(process.cwd(), "src/process-polyfill.js"),
+                "node:process": path.resolve(process.cwd(), "src/process-polyfill.js"),
                 "@": path.resolve(__dirname, "./src"),
             },
         },
