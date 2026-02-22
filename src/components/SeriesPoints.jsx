@@ -380,7 +380,7 @@ export default function SeriesPoints() {
                 </RacesCard>
 
                 <Flex direction="column" width="100%" marginTop="20px">
-                    {Boolean(personalHandicapRaces) && (
+                    {resultsTypes.length && (
                         <GreenButton
                             maxWidth="100vw"
                             onClick={() =>

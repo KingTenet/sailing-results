@@ -40,7 +40,7 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node dev.js",
     "build": "node build.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "tsc -b && vite build --mode preview && vite preview",
