@@ -18,6 +18,8 @@ import StoreObject from "./StoreObject.js";
 import ResultPoints from "./ResultPoints.js";
 
 const USE_PH_FROM_SERIES_START = false;
+// New points formula is in theory sailwave compatible but needs testing
+const NEW_POINTS_FORMULA_START_DATE = false; //new Date("2026-03-26");
 
 class AsciiTable {
     constructor(columnHeaders, rowHeaders, cells) {
@@ -175,7 +177,10 @@ export default class SeriesPoints extends Series {
             0,
             racesToCount - results.length - crewResults.length - oods.length,
         );
-        const pointsCount = racesToCount - pnsCount - oods.length;
+        const useNewPointsFormula = NEW_POINTS_FORMULA_START_DATE && !this.firstRace.isBefore(NEW_POINTS_FORMULA_START_DATE);
+        const pointsCount = useNewPointsFormula
+            ? Math.min(results.length + crewResults.length, racesToCount) 
+            : (racesToCount - pnsCount - oods.length);
         const totalPoints = [...results, ...crewResults]
             .map(([, points]) => points)
             .sort((a, b) => b - a)

@@ -26,7 +26,7 @@ async function run(
 ) {
     if (!date) {
         console.log(
-            "Usage: node scripts/urlGenerator.js {date} [isLive=false] [isSuperUser=false] [resultsURLOverride]",
+            "Usage: node scripts/urlGenerator.js {date} [isLive=false] [isSuperUser=false]  [isPersistent=false] [resultsURLOverride]",
         );
         return;
     }

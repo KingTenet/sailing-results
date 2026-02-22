@@ -36,7 +36,8 @@
     "vite-plugin-pwa": "^0.20.5",
     "workbox-core": "^7.3.0",
     "workbox-precaching": "^7.3.0",
-    "workbox-routing": "^7.3.0"
+    "workbox-routing": "^7.3.0",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "dev": "vite",
