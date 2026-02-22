@@ -1,7 +1,7 @@
 {
   "name": "my-app",
   "private": true,
-  "version": "2.10.1",
+  "version": "2.11.0",
   "type": "module",
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
