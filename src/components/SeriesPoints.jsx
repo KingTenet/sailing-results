@@ -241,7 +241,7 @@ export default function SeriesPoints() {
             return ["classHandicapWithCrew"];
         }
         else if (!personalHandicapRaces) {
-            return  ["classHandicap"];
+            return  ["classHandicap", "classHandicapWithCrew"];
         }
         return ["classHandicap", "classHandicapWithCrew", "personalHandicap"];
     });
