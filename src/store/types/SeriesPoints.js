@@ -110,6 +110,7 @@ export default class SeriesPoints extends Series {
             assertType(raceFinish, MutableRaceFinish),
         );
         this.seriesRaces = seriesRaces;
+        this.seriesRacesMap = mapGroupBy(seriesRaces, [SeriesRace.getRaceId]);
         this.raceFinishes = this.restrictedRaceFinishes(raceFinishes);
         this.plannedRaces = this.seriesRaces.length;
         this.finishedRaces = this.raceFinishes.length;
@@ -195,6 +196,10 @@ export default class SeriesPoints extends Series {
             .filter((race) => race.hasResults());
     }
 
+    hasPursuitRaces() {
+        return this.raceFinishes.some((raceFinish) => raceFinish.isPursuitRace());
+    }
+
     getPersonalHandicapRacesToCount(date) {
         return SeriesPoints.getRacesToCount(
             this.getFinishesWithResults(date).filter((race) => race.getSCT()),
@@ -243,14 +248,28 @@ export default class SeriesPoints extends Series {
         const pointsByRaceResult = flatten(
             finishedRaces.map((raceFinish) => getPointsByResult(raceFinish)),
         );
+        
+        const getSeriesRace = (race) => this.seriesRacesMap.get(Race.getId(race))[0];
 
         const pointsByHelm = new Map(
-            groupBy(pointsByRaceResult, ([result]) => Result.getHelmId(result)),
+            groupBy(
+                pointsByRaceResult,
+                ([result]) => Result.getHelmId(result),
+                (results) => results.filter(([result]) => Result.isHelmQualified(result, getSeriesRace(result.getRace()))))
+                .filter(([_, results]) => results.length),
         );
 
         const pointsByCrew = new Map(
-            groupBy(pointsByRaceResult, ([result]) => Result.getCrewId(result)),
+            groupBy(
+                pointsByRaceResult,
+                ([result]) => Result.getCrewId(result),
+                (results) => results.filter(([result]) => Result.isCrewQualified(result, getSeriesRace(result.getRace()))))
+                .filter(([_, results]) => results.length),
         );
+
+        const helmsWithAnyPoints = [...pointsByHelm].map(([,results]) => results[0][0].getHelm());
+
+        const crewsWithAnyPoints = [...pointsByCrew].map(([,results]) =>  results[0][0].getCrew());
 
         const raceResults = flatten(
             finishedRaces.map((raceFinish) => raceFinish.getCorrectedResults()),
@@ -267,7 +286,6 @@ export default class SeriesPoints extends Series {
             ([, results]) => [results.at(0).getCrew(), results],
         );
 
-
         const allOODHelms = new Map(groupBy(allOODs, Result.getHelmId));
 
         const numberOfHelms = allHelms.length;
@@ -276,15 +294,18 @@ export default class SeriesPoints extends Series {
         const pointResultsMap = new AutoMap(ResultPoints.getId);
 
         for (let race of finishes) {
+            const seriesRace = getSeriesRace(race);
+
             if (race.hasResults() && (byClassHandicap || race.getSCT())) {
-                for (let [helm] of allHelms) {
+                for (let helm of helmsWithAnyPoints) {
                     const pnsResult = HelmResult.fromHelmRace(helm, race);
+                    
                     pointResultsMap.upsert(
                         new ResultPoints(pnsResult, 0, 0, pointsNotScored, 0),
                     );
                 }
                 if (shouldAssignCrewPoints) {
-                    for (let [crew] of allCrew) {
+                    for (let crew of crewsWithAnyPoints) {
                         const pnsResult = HelmResult.fromHelmRace(crew, race);
                         pointResultsMap.upsert(
                             new ResultPoints(pnsResult, 0, 0, pointsNotScored, 0),
@@ -292,10 +313,15 @@ export default class SeriesPoints extends Series {
                     }
                 }
                 for (let [result, finishPoints] of getPointsByResult(race)) {
-                    pointResultsMap.upsert(
-                        new ResultPoints(result, finishPoints, 0, 0, 0),
-                    );
-                    if (shouldAssignCrewPoints && result.getCrew()) {
+                    if (Result.isHelmQualified(result, seriesRace)) {
+                        pointResultsMap.upsert(
+                            new ResultPoints(result, finishPoints, 0, 0, 0),
+                        );
+                    }
+
+                    if (shouldAssignCrewPoints
+                            && result.getCrew()
+                            && Result.isCrewQualified(result, seriesRace)) {
                         pointResultsMap.upsert(
                             new ResultPoints(result, 0, 0, 0, finishPoints),
                         );
@@ -578,7 +604,13 @@ export default class SeriesPoints extends Series {
             throw new Error("Series points requires at least one series race");
         }
         const series = Series.fromSeriesRace(seriesRaces[0]);
-        return new SeriesPoints(series, seriesRaces, raceFinishes);
+        try {
+            return new SeriesPoints(series, seriesRaces, raceFinishes);
+        }
+        catch(err) {
+            console.error(`Error creating series points for series ${series.getSheetName()}`);
+            throw err;
+        }
     }
 
     isDoubleHandedSeries() {

@@ -17,6 +17,7 @@ const WOMENS_SERIES_NAMES = ["woman", "women", "lady", "ladies", "female"];
 const LASER_SERIES_NAMES = ["laser"];
 const SOLO_SERIES_NAMES = ["solo"];
 const CREW_SERIES_NAMES = ["double hand", "crew"];
+const NOVICE_SERIES_NAMES = ["novice", "beginner", "newcomer", "social"];
 
 export default class SeriesRace extends StoreObject {
     constructor(series, race, lastImported, isPursuit, metaData) {
@@ -132,6 +133,10 @@ export default class SeriesRace extends StoreObject {
         return this.isSeriesMatch(CREW_SERIES_NAMES);
     }
 
+    isNoviceSeries() {
+        return this.isSeriesMatch(NOVICE_SERIES_NAMES);
+    }
+
     hasRestrictedField() {
         return (
             this.isJuniorSeries() ||
@@ -139,7 +144,8 @@ export default class SeriesRace extends StoreObject {
             this.isWomensSeries() ||
             this.isLaserSeries() ||
             this.isSoloSeries() ||
-            this.isDoubleHandedSeries()
+            this.isDoubleHandedSeries() || 
+            this.isNoviceSeries()
         );
     }
 }

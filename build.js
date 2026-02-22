@@ -13,8 +13,9 @@ if (!fs.existsSync(KEY_PATH)) {
 }
 
 const creds = JSON.parse(fs.readFileSync(KEY_PATH, "utf-8"));
+const preview = process.argv.includes("--preview") ? "--mode preview" : "";
 
-execSync("tsc -b && vite build", {
+execSync(`tsc -b && vite build ${preview}`, {
     stdio: "inherit",
     env: {
         ...process.env,

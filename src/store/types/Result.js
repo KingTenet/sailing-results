@@ -153,6 +153,35 @@ export default class Result extends HelmResult {
         );
     }
 
+    static fromResult(
+        result,
+        helm,
+    ) {
+        assertType(result, Result);
+        return new Result(
+            result.getRace(),
+            helm,
+            result.getBoatClass(),
+            result.boatSailNumber,
+            result.laps,
+            result.pursuitFinishPosition,
+            result.finishTime,
+            result.finishCode,
+            undefined,
+            StoreObject.fromStore({}),
+        );
+    }
+
+    static fromResultWithoutCrew(result) {
+        assertType(result, Result);
+        return Result.fromResult(result, result.getHelm());
+    }
+
+    static fromResultWithoutHelm(result) {
+        assertType(result, Result);
+        return Result.fromResult(result, result.getCrew());
+    }
+
     static fromRegistered(helmResult, pursuitFinishPosition) {
         assertType(helmResult, HelmResult);
         const mutableResult = MutableRaceResult.fromUser(
@@ -245,17 +274,22 @@ export default class Result extends HelmResult {
 
     static wasJuniorInRace(result) {
         assertType(result, Result);
-        return result.getHelm().wasJuniorInRace(result.getRace());
+        return result.getHelm().wasJuniorInRace(result.getRace()) || result.getCrew()?.wasJuniorInRace(result.getRace());
     }
 
     static wasCadetInRace(result) {
         assertType(result, Result);
-        return result.getHelm().wasCadetInRace(result.getRace());
+        return result.getHelm().wasCadetInRace(result.getRace()) || result.getCrew()?.wasCadetInRace(result.getRace());
     }
 
     static isFemale(result) {
         assertType(result, Result);
-        return result.getHelm().isFemale();
+        return result.getHelm().isFemale() || result.getCrew()?.isFemale();
+    }
+
+    static isNovice(result) {
+        assertType(result, Result);
+        return result.getHelm().isNovice() || result.getCrew()?.isNovice();
     }
 
     static isLaser(result) {
@@ -273,8 +307,23 @@ export default class Result extends HelmResult {
         return result.getBoatClass().isDoubleHander();
     }
 
+
+    static isHelmQualified(result, seriesRace) {
+        assertType(seriesRace, SeriesRace);
+        assertType(result, Result);
+        return Result.isQualified(Result.fromResultWithoutCrew(result), seriesRace);
+    }
+
+    static isCrewQualified(result, seriesRace) {
+        assertType(seriesRace, SeriesRace);
+        assertType(result, Result);
+        
+        return result.crew && Result.isQualified(Result.fromResultWithoutHelm(result), seriesRace);
+    }
+
     static isQualified(result, seriesRace) {
         assertType(seriesRace, SeriesRace);
+        assertType(result, Result);
 
         return (
             (!seriesRace.isJuniorSeries() || Result.wasJuniorInRace(result)) &&
@@ -282,7 +331,8 @@ export default class Result extends HelmResult {
             (!seriesRace.isWomensSeries() || Result.isFemale(result)) &&
             (!seriesRace.isLaserSeries() || Result.isLaser(result)) &&
             (!seriesRace.isSoloSeries() || Result.isSolo(result)) &&
-            (!seriesRace.isDoubleHandedSeries() || Result.isDoubleHander(result))
+            (!seriesRace.isDoubleHandedSeries() || Result.isDoubleHander(result)) &&
+            (!seriesRace.isNoviceSeries() || Result.isNovice(result))
         );
     }
 

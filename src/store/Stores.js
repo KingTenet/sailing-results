@@ -423,7 +423,7 @@ export class Stores {
             const raceFinish = MutableRaceFinish.fromResults(
                 raceResults,
                 (helmId) =>
-                    helmResultsByRaceAsc.get(helmId) ||
+                    helmResultsByRaceAsc.get(helmId) || // TODO this looks like a bug, looking at the AutoMap func
                     initialResultsByHelm.get(helmId) ||
                     [],
                 oodsByRace.get(Race.getId(race)) || [],

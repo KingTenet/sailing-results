@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,7 +14,7 @@ if (!fs.existsSync(KEY_PATH)) {
 
 const creds = JSON.parse(fs.readFileSync(KEY_PATH, "utf-8"));
 
-execSync("vite", {
+const child = spawn("vite", {
     stdio: "inherit",
     env: {
         ...process.env,
@@ -22,3 +22,5 @@ execSync("vite", {
         VITE_CLIENT_EMAIL: creds.client_email,
     },
 });
+
+child.on("exit", (code) => process.exit(code));

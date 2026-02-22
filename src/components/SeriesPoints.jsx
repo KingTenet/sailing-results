@@ -215,7 +215,16 @@ function HelmRow({ helmId, index:rowIndex, totalPoints, racePoints, sortedRaces 
     );
 }
 
-const resultsTypeLabels = {"personalHandicap": "personal handicap", "classHandicap": "class handicap", "classHandicapWithCrew": "class handicap with crew"};
+const resultsTypeLabels = {
+    "personalHandicap": " by personal handicap",
+    "classHandicap": " by class handicap",
+    "classHandicapWithCrew": " by class handicap with crew"
+};
+const pursuitSeriesLabels = {
+    "personalHandicap": "",
+    "classHandicap": "",
+    "classHandicapWithCrew": " with crew"
+};
 
 export default function SeriesPoints() {
     const services = useServices();
@@ -229,9 +238,11 @@ export default function SeriesPoints() {
         .find(
             (seriesPoints) =>
                 seriesPoints.getSeasonName() === season &&
-                seriesPoints.getSeriesName() === series,
+                seriesPoints.getSeriesName() === series
         );
 
+    const hasPursuitRaces = seriesPoints.hasPursuitRaces();
+    const labelsToUse = hasPursuitRaces ? pursuitSeriesLabels : resultsTypeLabels;
     const isDoubleHandedSeries = seriesPoints.isDoubleHandedSeries();
     const personalHandicapRaces = !isDoubleHandedSeries && 
         seriesPoints.getPersonalHandicapRacesToCount(new Date()) - 1;
@@ -264,7 +275,7 @@ export default function SeriesPoints() {
             <Flex direction="column" style={{ display: "inline-block" }}>
                 <RacesCard display="inline-block">
                     <DroppableHeader
-                        heading={`${series} ${season} series points by ${resultsTypeLabels[resultsTypes[resultsTypeIndex]]}`}
+                        heading={`${series} ${season} series points${labelsToUse[resultsTypes[resultsTypeIndex]]}`}
                     />
                     <Box padding="10px">
                         <Table size="sm" variant="simple">
@@ -388,7 +399,7 @@ export default function SeriesPoints() {
                             }
                             autoFocus
                         >
-                            {`Show points by ${resultsTypeLabels[resultsTypes[(resultsTypeIndex + 1) % resultsTypes.length]]}`}
+                            {`Show points${labelsToUse[resultsTypes[(resultsTypeIndex + 1) % resultsTypes.length]]}`}
                         </GreenButton>
                     )}
                     <BackButton maxWidth="100vw">{"Back to series"}</BackButton>
