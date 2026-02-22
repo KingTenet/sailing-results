@@ -241,7 +241,7 @@ export default function SeriesPoints() {
                 seriesPoints.getSeriesName() === series
         );
 
-    const hasPursuitRaces = seriesPoints.hasPursuitRaces();
+    const hasPursuitRaces = seriesPoints && seriesPoints.hasPursuitRaces();
     const labelsToUse = hasPursuitRaces ? pursuitSeriesLabels : resultsTypeLabels;
     const isDoubleHandedSeries = seriesPoints.isDoubleHandedSeries();
     const personalHandicapRaces = !isDoubleHandedSeries && 
