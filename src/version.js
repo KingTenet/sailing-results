@@ -1,5 +1,5 @@
-const VERSION = "2.8.0";
+import { version } from "../../package.json";
 
 export default function getVersion() {
-    return VERSION;
+    return version;
 }

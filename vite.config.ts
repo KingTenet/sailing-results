@@ -10,7 +10,7 @@ export default defineConfig(({ mode }: UserConfig) => {
     // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
     const env = loadEnv(mode || "development", process.cwd(), "");
     return {
-        base: env.VITE_APP_URL,
+        base: env.VITE_APP_URL || "./",
         plugins: [
             react(),
             VitePWAPlugin(env.VITE_APP_URL),
