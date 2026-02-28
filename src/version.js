@@ -1,4 +1,4 @@
-const VERSION = "2.6.0";
+const VERSION = "2.7.0";
 
 export default function getVersion() {
     return VERSION;
