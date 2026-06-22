@@ -37,6 +37,7 @@ try {
         user: "ahvpqthm",
         password,
         secure: true,
+        secureOptions: { rejectUnauthorized: false },
     });
 
     console.log("Connected. Uploading dist/ →", REMOTE_PATH);
