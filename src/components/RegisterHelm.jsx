@@ -221,18 +221,10 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
 
     const onNewHelm = (newHelm) => {
         updateAppState(({ newHelms, ...state }) => {
-            if (
-                newHelms.find(
-                    (prev) => Helm.getId(prev) === Helm.getId(newHelm),
-                )
-            ) {
-                throw new Error("Cannot add helm that already exists");
-            } else {
-                return {
-                    ...state,
-                    newHelms: [...newHelms, newHelm],
-                };
+            if (newHelms.find((prev) => Helm.getId(prev) === Helm.getId(newHelm))) {
+                return { ...state, newHelms };
             }
+            return { ...state, newHelms: [...newHelms, newHelm] };
         });
 
         setSelectedHelm(newHelm);
@@ -241,18 +233,10 @@ function RegisterHelm({ addAnotherHelmWorkflow }) {
 
     const onNewCrew = (newHelm) => {
         updateAppState(({ newHelms, ...state }) => {
-            if (
-                newHelms.find(
-                    (prev) => Helm.getId(prev) === Helm.getId(newHelm),
-                )
-            ) {
-                throw new Error("Cannot add helm that already exists");
-            } else {
-                return {
-                    ...state,
-                    newHelms: [...newHelms, newHelm],
-                };
+            if (newHelms.find((prev) => Helm.getId(prev) === Helm.getId(newHelm))) {
+                return { ...state, newHelms };
             }
+            return { ...state, newHelms: [...newHelms, newHelm] };
         });
 
         setSelectedCrew(newHelm);

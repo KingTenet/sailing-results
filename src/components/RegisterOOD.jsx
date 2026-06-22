@@ -126,18 +126,10 @@ export default function RegisterOOD() {
 
     const onNewHelm = (newHelm) => {
         updateAppState(({ newHelms, ...state }) => {
-            if (
-                newHelms.find(
-                    (prev) => Helm.getId(prev) === Helm.getId(newHelm),
-                )
-            ) {
-                throw new Error("Cannot add helm that already exists");
-            } else {
-                return {
-                    ...state,
-                    newHelms: [...newHelms, newHelm],
-                };
+            if (newHelms.find((prev) => Helm.getId(prev) === Helm.getId(newHelm))) {
+                return { ...state, newHelms };
             }
+            return { ...state, newHelms: [...newHelms, newHelm] };
         });
 
         setSelectedHelm(newHelm);

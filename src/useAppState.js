@@ -56,7 +56,7 @@ export function useCachedState(
         }
 
         const storedValue = JSON.parse(serialisedValue);
-        if (Date.now() > storedValue.expiry) {
+        if (!storedValue || Date.now() > storedValue.expiry) {
             localStorage.removeItem(key);
             return defaultValue;
         }
