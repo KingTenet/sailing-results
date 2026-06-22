@@ -36,7 +36,7 @@ try {
         host: "nhebsc.org.uk",
         user: "ahvpqthm",
         password,
-        secure: false,
+        secure: true,
     });
 
     console.log("Connected. Uploading dist/ →", REMOTE_PATH);
