@@ -42,7 +42,13 @@ export default class LocalStore {
 
     bootstrap(keyValues) {
         for (let [key, value] of keyValues) {
-            this.addToLocalStorage(key, this.toStore(value));
+            const storeKey = this.keyToStoreKey(key);
+            const stored = this.toStore(value);
+            if (this.localStorage.getItem(storeKey)) {
+                this.localStorage.setItem(storeKey, JSON.stringify(stored));
+            } else {
+                this.addToLocalStorage(key, stored);
+            }
         }
         this.fillCache();
     }
