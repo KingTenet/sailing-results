@@ -15,7 +15,7 @@ import {
     Spacer,
     Icon,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Result from "../store/types/Result";
 import { useSpring, animated } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
@@ -80,6 +80,7 @@ function Slider({
         isActive: 0,
     }));
     const [latchedX, updateLatchedX] = useState();
+    const swipedRef = useRef(false);
 
     useEffect(() => {
         if (latchedX) {
@@ -114,6 +115,7 @@ function Slider({
                 !latchedX &&
                 (xToUse === MAX_X || xToUse === -MAX_X)
             ) {
+                swipedRef.current = true;
                 updateLatchedX(xToUse);
             }
 
@@ -125,6 +127,14 @@ function Slider({
         },
         // { axis: 'x' }
     );
+
+    const handleClick = (e) => {
+        if (swipedRef.current) {
+            swipedRef.current = false;
+            return;
+        }
+        onClick?.(e);
+    };
 
     const avSize = x.to({
         map: Math.abs,
@@ -202,7 +212,7 @@ function Slider({
                 </animated.div>
                 <div
                     className={"fg slide-handle"}
-                    onClick={onClick}
+                    onClick={handleClick}
                     {...bind()}
                 />
             </animated.div>
