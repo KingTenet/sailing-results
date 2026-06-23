@@ -15,7 +15,7 @@ if (fs.existsSync(envPath)) {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DIST = path.join(__dirname, "dist");
-const REMOTE_PATH = "/public_html/results/test/";
+const REMOTE_PATH = "/public_html/results/app/";
 
 if (!fs.existsSync(DIST)) {
     console.error("dist/ not found — run `node build.js` first");
